@@ -62,7 +62,7 @@ private val DarkColorPalette = DeepSeaColors(
     brand = Shadow1,
     brandSecondary = Ocean2,
     uiBackground = Neutral8,
-    uiBorder = Neutral3,
+    uiBorder = Neutral7,
     uiFloated = FunctionalDarkGrey,
     textPrimary = Shadow1,
     textSecondary = Neutral0,
@@ -126,7 +126,7 @@ fun DeepSeaTheme(
 
     ProvideDeepSeaColors(colors) {
         MaterialTheme(
-            colorScheme = debugColors(darkTheme),
+            colorScheme = deepSeaColorScheme(colors),
             typography = Typography,
             shapes = Shapes,
             content = content
@@ -156,44 +156,32 @@ private val LocalDeepSeaColors = staticCompositionLocalOf<DeepSeaColors> {
  * A Material [Colors] implementation which sets all colors to [debugColor] to discourage usage of
  * [MaterialTheme.colorScheme] in preference to [DeepSeaTheme.colors].
  */
-fun debugColors(
-    darkTheme: Boolean,
-    debugColor: Color = Color.Magenta
-) = ColorScheme(
-    primary = debugColor,
-    onPrimary = debugColor,
-    primaryContainer = debugColor,
-    onPrimaryContainer = debugColor,
-    inversePrimary = debugColor,
-    secondary = debugColor,
-    onSecondary = debugColor,
-    secondaryContainer = debugColor,
-    onSecondaryContainer = debugColor,
-    tertiary = debugColor,
-    onTertiary = debugColor,
-    tertiaryContainer = debugColor,
-    onTertiaryContainer = debugColor,
-    background = debugColor,
-    onBackground = debugColor,
-    surface = debugColor,
-    onSurface = debugColor,
-    surfaceVariant = debugColor,
-    onSurfaceVariant = debugColor,
-    surfaceTint = debugColor,
-    inverseSurface = debugColor,
-    inverseOnSurface = debugColor,
-    error = debugColor,
-    onError = debugColor,
-    errorContainer = debugColor,
-    onErrorContainer = debugColor,
-    outline = debugColor,
-    outlineVariant = debugColor,
-    scrim = debugColor,
-    surfaceBright = debugColor,
-    surfaceDim = debugColor,
-    surfaceContainer = debugColor,
-    surfaceContainerHigh = debugColor,
-    surfaceContainerHighest = debugColor,
-    surfaceContainerLow = debugColor,
-    surfaceContainerLowest = debugColor,
-)
+fun deepSeaColorScheme(colors: DeepSeaColors): ColorScheme {
+    return if (colors.isDark) {
+        darkColorScheme(
+            primary = colors.brand,
+            secondary = colors.brandSecondary,
+            background = colors.uiBackground,
+            surface = colors.uiFloated,
+            onPrimary = colors.textInteractive,
+            onSecondary = colors.textSecondary,
+            onBackground = colors.textPrimary,
+            onSurface = colors.textSecondary,
+            error = colors.error,
+            onError = colors.textHelp
+        )
+    } else {
+        lightColorScheme(
+            primary = colors.brand,
+            secondary = colors.brandSecondary,
+            background = colors.uiBackground,
+            surface = colors.uiFloated,
+            onPrimary = colors.textInteractive,
+            onSecondary = colors.textSecondary,
+            onBackground = colors.textPrimary,
+            onSurface = colors.textSecondary,
+            error = colors.error,
+            onError = colors.textHelp
+        )
+    }
+}

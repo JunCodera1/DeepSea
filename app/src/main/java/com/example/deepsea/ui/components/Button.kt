@@ -104,7 +104,7 @@ private fun ButtonPreview() {
 @Preview("dark theme", "rectangle", uiMode = UI_MODE_NIGHT_YES)
 @Preview("large font", "rectangle", fontScale = 2f)
 @Composable
-private     fun RectangleButtonPreview() {
+private fun RectangleButtonPreview() {
     DeepSeaTheme {
         DeepSeaButton(
             onClick = {}, shape = RectangleShape
@@ -113,3 +113,5 @@ private     fun RectangleButtonPreview() {
         }
     }
 }
+
+
