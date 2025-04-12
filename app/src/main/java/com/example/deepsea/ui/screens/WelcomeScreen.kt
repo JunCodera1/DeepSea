@@ -24,7 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
 import com.example.deepsea.ui.components.DeepSeaButton
 import com.example.deepsea.ui.components.ImageButton
 import com.example.deepsea.ui.theme.DeepSeaTheme
