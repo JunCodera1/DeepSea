@@ -65,12 +65,12 @@ class DeepSeaNavController(
 
     fun navigateToVerifyEmail(verifyEmailId: Long, origin: String, from: NavBackStackEntry){
         if(from.lifecycleIsResumed())
-            navController.navigate("${MainDestinations.LOGIN_ROUTE}")
+            navController.navigate("${MainDestinations.VERIFY_EMAIL_ROUTE}")
     }
 
     fun navigateToResetPassword(resetPasswordId: Long, origin: String, from: NavBackStackEntry){
         if(from.lifecycleIsResumed())
-            navController.navigate("${MainDestinations.FORGOT_PASSWORD_ROUTE}/$resetPasswordId?origin=$origin")
+            navController.navigate("${MainDestinations.RESET_PASSWORD_ROUTE}/$resetPasswordId?origin=$origin")
     }
     fun navigateToProfile(userId: String) {
         navController.navigate("${MainDestinations.PROFILE_ROUTE}/$userId")
