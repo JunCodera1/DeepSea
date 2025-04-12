@@ -17,6 +17,7 @@ object MainDestinations {
     const val FORGOT_PASSWORD_ROUTE = "forgotPassword"
     const val VERIFY_EMAIL_ROUTE = "verifyEmail"
     const val RESET_PASSWORD_ROUTE = "resetPassword"
+    const val PROFILE_ROUTE = "profile"
 }
 
 @Composable
@@ -70,6 +71,9 @@ class DeepSeaNavController(
     fun navigateToResetPassword(resetPasswordId: Long, origin: String, from: NavBackStackEntry){
         if(from.lifecycleIsResumed())
             navController.navigate("${MainDestinations.FORGOT_PASSWORD_ROUTE}/$resetPasswordId?origin=$origin")
+    }
+    fun navigateToProfile(userId: String) {
+        navController.navigate("${MainDestinations.PROFILE_ROUTE}/$userId")
     }
 }
 
