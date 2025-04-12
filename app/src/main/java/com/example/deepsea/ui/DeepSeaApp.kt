@@ -1,5 +1,6 @@
 package com.example.deepsea.ui
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -27,7 +28,7 @@ fun DeepSeaApp(){
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
                 NavHost(
                     navController = deepSeaNavController.navController,
-                    startDestination = if (isLoggedIn) "main" else "login"
+                    startDestination = "login"
                 ) {
                     composable("login") {
                         LoginPage(
@@ -54,3 +55,5 @@ fun MainContainer(
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
+val LocalNavAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
+

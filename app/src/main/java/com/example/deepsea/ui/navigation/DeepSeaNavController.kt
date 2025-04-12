@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.ui.theme.ProvideDeepSeaColors
 
 object MainDestinations {
-    const val   HOME_ROUTE = "home"
+    const val HOME_ROUTE = "home"
     const val LOGIN_ROUTE = "login"
     const val SIGNUP_ROUTE = "signup"
     const val FORGOT_PASSWORD_ROUTE = "forgotPassword"
