@@ -4,7 +4,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,11 +22,13 @@ import com.example.deepsea.ui.components.DeepSeaButton
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.R
 import com.example.deepsea.ui.components.DeepSeaDivider
+import com.example.deepsea.ui.components.ImageButton
 import com.example.deepsea.ui.components.LoginTextField
 
 @Composable
 fun LoginPage() {
     var email by remember { mutableStateOf("") }
+    val scrollState = rememberScrollState()
     var password by remember { mutableStateOf("") }
     val backgroundPainter = painterResource(id = R.drawable.background_login)
     DeepSeaTheme {
@@ -35,22 +41,20 @@ fun LoginPage() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp)
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             val imageModifier = Modifier
                 .size(200.dp)
-                .border(BorderStroke(1.dp, Color.Black))
-                .background(Color.Yellow)
             Image(
-                painter = painterResource(id = R.drawable.evangelion),
+                painter = painterResource(id = R.drawable.logo),
                 contentScale = ContentScale.Fit,
                 modifier = imageModifier,
                 contentDescription = ""
 
             )
-            Text(text = "Welcome back!", color = Color.Green, style = MaterialTheme.typography.headlineMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -76,6 +80,13 @@ fun LoginPage() {
                 isPassword = true
             )
 
+            TextButton(
+                modifier = Modifier.align(Alignment.End),
+                onClick = {}
+            ) {
+                Text("Forgot password ?")
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             DeepSeaButton(
@@ -89,6 +100,28 @@ fun LoginPage() {
             Spacer(modifier = Modifier.height(24.dp))
 
             DeepSeaDivider(Modifier.align(Alignment.CenterHorizontally))
+
+            Spacer(modifier = Modifier.height(18.dp))
+            val facebookIcon = painterResource(id = R.drawable.facebook_icon)
+            val googleIcon = painterResource(id = R.drawable.google_icon)
+            Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                ImageButton(
+                    image = facebookIcon,
+                    text = "",
+                    onClick = { /* your action */ }
+                )
+                ImageButton(
+                    image = googleIcon,
+                    text = "",
+                    onClick = { /* your action */ }
+                )
+            }
+            Spacer(modifier = Modifier.height(15.dp))
+            TextButton(
+                onClick = {}
+            ) {
+                Text("Don't have account? Sign Up.")
+            }
         }
     }
 }
