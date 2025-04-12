@@ -2,10 +2,16 @@ package com.example.deepsea.ui.home
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,6 +29,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,13 +44,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavDeepLink
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.deepsea.R
+import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
+import com.example.deepsea.ui.nonSpatialExpressiveSpring
+import com.example.deepsea.ui.screens.LearnPage
 import com.example.deepsea.ui.theme.DeepSeaTheme
 
 
@@ -60,37 +74,6 @@ private fun getRouteIndex(route: String): Int {
 }
 
 
-@Composable
-fun NavHostContainer(
-    navController: NavHostController,
-    padding: PaddingValues
-) {
-    NavHost(
-        navController = navController,
-        startDestination = "home/learn",
-        modifier = Modifier.padding(paddingValues = padding),
-        builder = {
-            composable("home/learn") {
-                // Content for learn screen
-            }
-
-            composable("home/daily") {
-                // Content for daily screen
-            }
-
-            composable("home/rank") {
-                // Content for rank screen
-            }
-
-            composable("home/profile") {
-                // Content for profile screen
-            }
-
-            composable("home/game") {
-                // Content for game screen
-            }
-        })
-}
 // Enum class with navigation info
 enum class HomeSections(
     @StringRes val title: Int,
@@ -147,10 +130,10 @@ fun DeepSeaBottomBar(navController: NavController) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp),
+            .height(100.dp),
         shadowElevation = 16.dp,
         color = BottomNavPrimaryColor,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -158,7 +141,6 @@ fun DeepSeaBottomBar(navController: NavController) {
         // Get current section
         val currentSection = HomeSections.entries.find { it.route == currentRoute }
 
-        // Gradient based on current section
         val gradientColors = currentSection?.let {
             listOf(it.primaryColor.copy(alpha = 0.7f), it.secondaryColor.copy(alpha = 0.4f))
         } ?: listOf(Color.Transparent, Color.Transparent)
@@ -247,7 +229,7 @@ fun DeepSeaBottomBar(navController: NavController) {
                         label = {
                             Text(
                                 text = stringResource(id = section.title),
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) section.primaryColor else BottomNavUnselectedItemColor,
                                 maxLines = 1
@@ -263,6 +245,68 @@ fun DeepSeaBottomBar(navController: NavController) {
                     )
                 }
             }
+        }
+    }
+}
+fun NavGraphBuilder.addHomeGraph(
+    onSnackSelected: (Long, String, NavBackStackEntry) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    composable(HomeSections.LEARN.route) { from ->
+
+    }
+    composable(HomeSections.GAME.route) { from ->
+
+    }
+    composable(HomeSections.RANK.route) { from ->
+
+    }
+    composable(HomeSections.PROFILE.route) {
+
+    }
+}
+
+fun NavGraphBuilder.composableWithCompositionLocal(
+    route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
+    deepLinks: List<NavDeepLink> = emptyList(),
+    enterTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition?
+    )? = {
+        fadeIn(nonSpatialExpressiveSpring())
+    },
+    exitTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition?
+    )? = {
+        fadeOut(nonSpatialExpressiveSpring())
+    },
+    popEnterTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition?
+    )? =
+        enterTransition,
+    popExitTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition?
+    )? =
+        exitTransition,
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit
+) {
+    composable(
+        route,
+        arguments,
+        deepLinks,
+        enterTransition,
+        exitTransition,
+        popEnterTransition,
+        popExitTransition
+    ) {
+        CompositionLocalProvider(
+            LocalNavAnimatedVisibilityScope provides this@composable
+        ) {
+            content(it)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,12 +22,23 @@ import androidx.compose.ui.unit.dp
 import com.example.deepsea.ui.components.DeepSeaButton
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.R
+import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
+import com.example.deepsea.ui.LocalSharedTransitionScope
 import com.example.deepsea.ui.components.DeepSeaDivider
 import com.example.deepsea.ui.components.ImageButton
 import com.example.deepsea.ui.components.LoginTextField
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun LoginPage() {
+fun LoginPage(
+//    loginId: Long,
+//    origin: String,
+//    upPress: () -> Unit
+) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+        ?: throw IllegalStateException("No Scope found")
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+        ?: throw IllegalStateException("No Scope found")
     var email by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
     var password by remember { mutableStateOf("") }
