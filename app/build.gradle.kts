@@ -59,4 +59,10 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+// Retrofit with Scalar Converter
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
+
+
 }
