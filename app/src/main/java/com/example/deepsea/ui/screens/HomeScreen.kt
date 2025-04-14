@@ -5,11 +5,13 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -27,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.DarkGray
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +43,11 @@ import com.example.deepsea.data.models.UnitData
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.Polar
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.runtime.derivedStateOf
+import com.example.deepsea.ui.components.TopBar
+import com.example.deepsea.text.TitleText
 
 //fun NavGraphBuilder.composableWithCompositionLocal(
 //  route: String,
@@ -52,7 +61,7 @@ import kotlinx.coroutines.launch
 //  }
 //){}
 @Composable
-fun HomeSceen(units: List<UnitData> = emptyList()) {
+fun HomeScreen(units: List<UnitData> = emptyList()) {
     val lazyListState = rememberLazyListState()
     val starCountPerUnit = 5
 
@@ -117,6 +126,7 @@ fun HomeSceen(units: List<UnitData> = emptyList()) {
     )
 
     }
+
 
 
 

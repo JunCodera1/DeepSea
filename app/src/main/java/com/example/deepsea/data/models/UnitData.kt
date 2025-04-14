@@ -6,11 +6,12 @@ import com.example.deepsea.R
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
 
+// Update your UnitData class to accept parameters:
 @Immutable
-class UnitData {
-    val color: Color = FeatherGreen
-    val darkerColor: Color = FeatherGreenDark
-    val title: String = "Unit 1"
-    val description: String = "Make introductions"
-    val image : Int = R.drawable.ic_duo_main
-}
+data class UnitData(
+    val title: String = "Unit 1",
+    val color: Color = FeatherGreen,
+    val darkerColor: Color = FeatherGreenDark,
+    val description: String = "Make introductions",
+    val image: Int = R.drawable.ic_duo_main
+)
