@@ -68,29 +68,42 @@ fun NavHostContainer(
     NavHost(
         navController = navController,
         startDestination = "home/learn",
-        modifier = Modifier.padding(paddingValues = padding),
-        builder = {
-            composable("home/learn") {
-                // Content for learn screen
+        modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()
+    ) {
+        composable("home/learn") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Learn Screen", fontSize = 24.sp)
             }
+        }
 
-            composable("home/daily") {
-                // Content for daily screen
+        composable("home/daily") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Daily Screen", fontSize = 24.sp)
             }
+        }
 
-            composable("home/rank") {
-                // Content for rank screen
+        composable("home/rank") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Rank Screen", fontSize = 24.sp)
             }
+        }
 
-            composable("home/profile") {
-                // Content for profile screen
+        composable("home/game") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Game Screen", fontSize = 24.sp)
             }
+        }
 
-            composable("home/game") {
-                // Content for game screen
+        composable("home/profile") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Profile Screen", fontSize = 24.sp)
             }
-        })
+        }
+    }
 }
+
 // Enum class with navigation info
 enum class HomeSections(
     @StringRes val title: Int,

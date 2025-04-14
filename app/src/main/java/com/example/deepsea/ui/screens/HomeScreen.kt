@@ -48,20 +48,29 @@ import androidx.compose.foundation.border
 import androidx.compose.runtime.derivedStateOf
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.text.TitleText
+import com.example.deepsea.ui.home.NavHostContainer
+import com.example.deepsea.ui.theme.Gray
+import com.example.deepsea.text.PrimaryText
+import com.example.deepsea.ui.components.UnitsLazyColumn
+import com.example.deepsea.ui.home.DeepSeaBottomBar
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
-//fun NavGraphBuilder.composableWithCompositionLocal(
-//  route: String,
-//  arguments: List<NamedNavArgument> = emptyList(),
-//  deepLinks: List<NavDeepLink> = emptyList(),
-//  enterTransition: (
-//    @JvmSuppressWildcards
-//  AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition
-//          )? ={
-//      fadeIn()
-//  }
-//){}
+
+
+fun NavGraphBuilder.composableWithCompositionLocal(
+  route: String,
+  arguments: List<NamedNavArgument> = emptyList(),
+  deepLinks: List<NavDeepLink> = emptyList(),
+  enterTransition: (
+    @JvmSuppressWildcards
+  AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition
+          )? ={
+      fadeIn()
+  }
+){}
 @Composable
-fun HomeScreen(units: List<UnitData> = emptyList()) {
+fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController) {
     val lazyListState = rememberLazyListState()
     val starCountPerUnit = 5
 
@@ -88,7 +97,7 @@ fun HomeScreen(units: List<UnitData> = emptyList()) {
 
             )
         }, bottomBar = {
-            BottomBar()
+            DeepSeaBottomBar(navController)
         }
     ) {
         UnitsLazyColumn( //hien thi cac Unit
@@ -109,9 +118,13 @@ fun HomeScreen(units: List<UnitData> = emptyList()) {
             val midCoordinates =  rootHeight/2
             coroutineScope.launch {
                 isDialogShown = false // an thanh dialog khi cuon
-                val scrollBy = (starCoordinate - midCoordinates).coerceAtLeast(0f)
+//                val scrollBy = (starCoordinate - midCoordinates).coerceAtLeast(0f)
+//                lazyListState.animateScrollBy(scrollBy)
+//                dialogTransition = starCoordinate - scrollBy
+                val scrollBy = (starCoordinate - midCoordinates)
                 lazyListState.animateScrollBy(scrollBy)
-                dialogTransition = starCoordinate - scrollBy
+                dialogTransition = midCoordinates
+
                 isDialogShown = true // sau khi cuon xong thi hien lai thanh dialog
             }
         }
@@ -134,7 +147,7 @@ fun HomeScreen(units: List<UnitData> = emptyList()) {
 fun StarDialog(
     isDialogShown : Boolean,
     isDialogInteractive : Boolean,
-    dialogTranslation : Float
+    dialogTransition : Float
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -144,7 +157,7 @@ fun StarDialog(
         Column(
             modifier = Modifier
                 .graphicsLayer {
-                    translationY = dialogTranslation + 100.dp.toPx()
+                    translationY = dialogTransition + 100.dp.toPx()
                     transformOrigin = TransformOrigin(0.5f, 0f)
                     scaleY = animatedScale
                     scaleX = animatedScale
@@ -207,9 +220,9 @@ private fun HomeScreenPrev() {
             UnitData(title = "Unit 6", color = Color.Blue)
         )
     }
-    HomeScreen(
-        units = units
-    )
+    val navController = rememberNavController()
+    HomeScreen(units = units, navController = navController)
+
 
 }
 
