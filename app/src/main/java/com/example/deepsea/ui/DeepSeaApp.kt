@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavBackStackEntry
@@ -33,11 +34,8 @@ import com.example.deepsea.ui.home.DeepSeaBottomBar
 import com.example.deepsea.ui.home.composableWithCompositionLocal
 import com.example.deepsea.ui.navigation.MainDestinations
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
-import com.example.deepsea.ui.navigation.rememberDeepSeaScaffoldState
-import com.example.deepsea.ui.screens.DailyPage
-import com.example.deepsea.ui.screens.GamePage
-import com.example.deepsea.ui.screens.LearnPage
 import com.example.deepsea.ui.screens.LoginPage
+
 import com.example.deepsea.ui.screens.ProfilePage
 import com.example.deepsea.ui.screens.RankPage
 import com.example.deepsea.ui.screens.SignupPage
@@ -62,7 +60,7 @@ fun DeepSeaApp() {
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
                 NavHost(
                     navController = deepSeaNavController.navController,
-                    startDestination = MainDestinations.HOME_ROUTE
+                    startDestination = "login"
                 ) {
                     composableWithCompositionLocal(
                         route = MainDestinations.HOME_ROUTE
@@ -137,7 +135,6 @@ fun DeepSeaApp() {
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MainContainer(
     modifier: Modifier = Modifier,
@@ -261,11 +258,6 @@ fun MainContainer(
                     )
                 }
 
-                composable("home/game") {
-                    GamePage()
-                }
-            })
-    }
 }
 
 fun <T> nonSpatialExpressiveSpring() = spring<T>(

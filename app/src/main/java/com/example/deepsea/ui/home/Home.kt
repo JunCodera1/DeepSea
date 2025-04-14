@@ -2,16 +2,10 @@ package com.example.deepsea.ui.home
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +31,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,15 +49,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NamedNavArgument
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.deepsea.R
-import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.nonSpatialExpressiveSpring
 import com.example.deepsea.ui.theme.DeepSeaTheme
@@ -82,6 +74,50 @@ private fun getRouteIndex(route: String): Int {
     }
 }
 
+
+@Composable
+fun NavHostContainer(
+    navController: NavHostController,
+    padding: PaddingValues
+) {
+    NavHost(
+        navController = navController,
+        startDestination = "home/learn",
+        modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()
+    ) {
+        composable("home/learn") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Learn Screen", fontSize = 24.sp)
+            }
+        }
+
+        composable("home/daily") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Daily Screen", fontSize = 24.sp)
+            }
+        }
+
+        composable("home/rank") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Rank Screen", fontSize = 24.sp)
+            }
+        }
+
+        composable("home/game") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Game Screen", fontSize = 24.sp)
+            }
+        }
+
+        composable("home/profile") {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Profile Screen", fontSize = 24.sp)
+            }
+        }
+    }
+}
 
 // Enum class with navigation info
 enum class HomeSections(
@@ -141,16 +177,17 @@ fun DeepSeaBottomBar(navController: NavController) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(72.dp),
         shadowElevation = 16.dp,
         color = BottomNavPrimaryColor,
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
         val currentSection = HomeSections.entries.find { it.route == currentRoute }
 
+        // Gradient based on current section
         val gradientColors = currentSection?.let {
             listOf(it.primaryColor.copy(alpha = 0.7f), it.secondaryColor.copy(alpha = 0.4f))
         } ?: listOf(Color.Transparent, Color.Transparent)
@@ -240,7 +277,7 @@ fun DeepSeaBottomBar(navController: NavController) {
                         label = {
                             Text(
                                 text = stringResource(id = section.title),
-                                fontSize = 14.sp,
+                                fontSize = 12.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) section.primaryColor else BottomNavUnselectedItemColor,
                                 maxLines = 1

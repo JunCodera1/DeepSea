@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -42,8 +43,8 @@ import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.LoginState
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
+
 fun LoginPage( navController: DeepSeaNavController,
                onLoginSuccess: () -> Unit,
                authViewModel: AuthViewModel) {
