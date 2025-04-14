@@ -8,14 +8,22 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -24,9 +32,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -40,10 +52,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.NavDeepLink
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.deepsea.R
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
+import com.example.deepsea.ui.nonSpatialExpressiveSpring
 import com.example.deepsea.ui.theme.DeepSeaTheme
 
 
@@ -157,6 +172,8 @@ private val BottomNavUnselectedItemColor = Color(0x99FFFFFF)
 
 @Composable
 fun DeepSeaBottomBar(navController: NavController) {
+    var showMoreOptions by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -168,7 +185,6 @@ fun DeepSeaBottomBar(navController: NavController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        // Get current section
         val currentSection = HomeSections.entries.find { it.route == currentRoute }
 
         // Gradient based on current section
@@ -203,6 +219,7 @@ fun DeepSeaBottomBar(navController: NavController) {
                         ),
                         label = "iconScale"
                     )
+
                     val iconAlpha by animateFloatAsState(
                         targetValue = if (isSelected) 1f else 0.6f,
                         animationSpec = tween(300),
@@ -253,7 +270,7 @@ fun DeepSeaBottomBar(navController: NavController) {
                                         .graphicsLayer {
                                             alpha = iconAlpha
                                         },
-                                    tint = Color.Unspecified // Quan trọng: điều này sẽ giữ nguyên màu vector
+                                    tint = Color.Unspecified
                                 )
                             }
                         },
@@ -276,6 +293,69 @@ fun DeepSeaBottomBar(navController: NavController) {
                     )
                 }
             }
+        }
+    }
+}
+
+fun NavGraphBuilder.addHomeGraph(
+    onSnackSelected: (Long, String, NavBackStackEntry) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    composable(HomeSections.LEARN.route) { from ->
+
+    }
+    composable(HomeSections.GAME.route) { from ->
+
+    }
+    composable(HomeSections.RANK.route) { from ->
+
+    }
+    composable(HomeSections.PROFILE.route) {
+
+    }
+}
+
+fun NavGraphBuilder.composableWithCompositionLocal(
+    route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
+    deepLinks: List<NavDeepLink> = emptyList(),
+    enterTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition?
+    )? = {
+        fadeIn(nonSpatialExpressiveSpring())
+    },
+    exitTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition?
+    )? = {
+        fadeOut(nonSpatialExpressiveSpring())
+    },
+    popEnterTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition?
+    )? =
+        enterTransition,
+    popExitTransition: (
+    @JvmSuppressWildcards
+    AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition?
+    )? =
+        exitTransition,
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit
+) {
+    composable(
+        route,
+        arguments,
+        deepLinks,
+        enterTransition,
+        exitTransition,
+        popEnterTransition,
+        popExitTransition
+    ) {
+        CompositionLocalProvider(
+            LocalNavAnimatedVisibilityScope provides this@composable
+        ) {
+            content(it)
         }
     }
 }
