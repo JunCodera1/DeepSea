@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,12 +30,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.deepsea.R
 import com.example.deepsea.ui.components.SignupTextField
+import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
 
 @Composable
 fun SignupPage(
     onSignUpClick: () -> Unit = {},
-    onSignInClick: () -> Unit = {}
+    onSignInClick: () -> Unit = {},
+    navController: DeepSeaNavController
 ) {
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
@@ -130,12 +133,14 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row {
-                    Text("Already have an account? ")
-                    Text(
-                        text = "Sign In",
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onSignInClick)
-                    )
+                    TextButton(onClick = {navController.navController.navigate("login")}) {
+                        Text("Already have an account? ")
+                        Text(
+                            text = "Sign In",
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable(onClick = onSignInClick)
+                        )
+                    }
                 }
             }
         }
@@ -146,5 +151,10 @@ fun SignupPage(
 @Preview(showBackground = true)
 @Composable
 fun SignupScreenPreview() {
-    SignupPage()
+
+    SignupPage(
+        onSignUpClick = TODO(),
+        onSignInClick = TODO(),
+        navController = TODO()
+    )
 }
