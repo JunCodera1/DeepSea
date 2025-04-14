@@ -1,4 +1,4 @@
-package com.example.deepsea.data.models
+package com.example.deepsea.data.model
 
 data class Profile(
     val id: Long,

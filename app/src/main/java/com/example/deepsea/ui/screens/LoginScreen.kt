@@ -16,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,20 +39,29 @@ import com.example.deepsea.ui.components.LoginTextField
 import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
+import com.example.deepsea.ui.viewmodel.AuthViewModel
+import com.example.deepsea.utils.LoginState
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun LoginPage( navController: DeepSeaNavController
-//    loginId: Long,
-//    origin: String,
-//    upPress: () -> Unit
-) {
+fun LoginPage( navController: DeepSeaNavController,
+               onLoginSuccess: () -> Unit,
+               authViewModel: AuthViewModel) {
     val sharedTransitionScope = LocalSharedTransitionScope.current
         ?: throw IllegalStateException("No Scope found")
     val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
         ?: throw IllegalStateException("No Scope found")
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
+
+    val loginState by authViewModel.loginState.collectAsState()
+
+    LaunchedEffect(loginState) {
+        if (loginState is LoginState.Success) {
+            onLoginSuccess()
+            authViewModel.resetLoginState()
+        }
+    }
     DeepSeaTheme {
         Image(
             painter = backgroundPainter,
@@ -152,5 +163,5 @@ fun LoginPage( navController: DeepSeaNavController
 @Composable
 fun LoginScreenPreview() {
     val deepSeaNavController = rememberDeepSeaNavController()
-    LoginPage(navController = deepSeaNavController)
+//    LoginPage(navController = deepSeaNavController)
 }

@@ -32,22 +32,35 @@ import com.example.deepsea.R
 import com.example.deepsea.ui.components.SignupTextField
 import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
+import com.example.deepsea.ui.viewmodel.AuthViewModel
 
 @Composable
 fun SignupPage(
-    onSignUpClick: () -> Unit = {},
+    onSignUpClick: (username: String, email: String, password: String) -> Unit,
     onSignInClick: () -> Unit = {},
-    navController: DeepSeaNavController
+    navController: DeepSeaNavController,
+    authViewModel: AuthViewModel,
+    onRegisterSuccess: () -> Unit
 ) {
+    val authViewModel: AuthViewModel
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
 
     // Các state cho form
     var name by remember { mutableStateOf("") }
-    var emailOrPhone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+//    val registerState by authViewModel.registerState.collectAsState()
+//
+//    LaunchedEffect(registerState) {
+//        if (registerState is RegisterState.Success) {
+//            onRegisterSuccess()
+//            authViewModel.resetRegisterState()
+//        }
+//    }
 
     DeepSeaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -84,8 +97,8 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 SignupTextField(
-                    value = emailOrPhone,
-                    onValueChange = { emailOrPhone = it },
+                    value = email,
+                    onValueChange = { email = it },
                     placeHolder = "Phone or Email",
                     label = "Phone or Email",
                 )
@@ -122,7 +135,9 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = onSignUpClick,
+                    onClick = {
+                        onSignUpClick(username, email, password)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -152,9 +167,9 @@ fun SignupPage(
 @Composable
 fun SignupScreenPreview() {
 
-    SignupPage(
-        onSignUpClick = TODO(),
-        onSignInClick = TODO(),
-        navController = TODO()
-    )
+//    SignupPage(
+//        onSignUpClick = TODO(),
+//        onSignInClick = TODO(),
+//        navController = TODO()
+//    )
 }

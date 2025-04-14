@@ -8,9 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.deepsea.utils.UserState
 
 @Composable
-fun ProfilePage() {
+fun ProfilePage(onLogout: () -> Unit, userState: UserState) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -24,5 +25,10 @@ fun ProfilePage() {
 @Preview
 @Composable
 fun ProfileScreenPreview(){
-    ProfilePage()
+//    ProfilePage({
+//        authViewModel.logout()
+//        nestedNavController.navController.navigate("welcome") {
+//            popUpTo(0) { inclusive = true }
+//        }
+//    }, userState)
 }
