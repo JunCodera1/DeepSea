@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -24,15 +23,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.compose.deepsea.R
 import com.example.deepsea.ui.components.DeepSeaButton
+
+import com.example.deepsea.R
+
 import com.example.deepsea.ui.components.ImageButton
+import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
 
 @Composable
 fun WelcomePage(
-    onSignInClick: () -> Unit = {},
-    onSignUpClick: () -> Unit = {}
+    navController: DeepSeaNavController
 ) {
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
@@ -65,7 +66,7 @@ fun WelcomePage(
 
                 // Nút Sign In
                 OutlinedButton(
-                    onClick = onSignInClick,
+                    onClick = { navController.navController.navigate("login") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -77,7 +78,7 @@ fun WelcomePage(
 
                 // Nút Sign Up
                 Button(
-                    onClick = onSignInClick,
+                    onClick = { navController.navController.navigate("signup")},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -111,5 +112,7 @@ fun WelcomePage(
 @Composable
 @Preview
 fun PreviewWelcomeScreen(){
-    WelcomePage()
+    WelcomePage(
+        navController = TODO()
+    )
 }

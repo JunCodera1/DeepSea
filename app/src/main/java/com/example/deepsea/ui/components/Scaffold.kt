@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import com.example.deepsea.model.SnackbarManager
+import com.example.deepsea.data.SnackbarManager
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

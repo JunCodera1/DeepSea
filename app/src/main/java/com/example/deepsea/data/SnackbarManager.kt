@@ -1,4 +1,4 @@
-package com.example.deepsea.model
+package com.example.deepsea.data
 
 import androidx.annotation.StringRes
 import kotlinx.coroutines.flow.MutableStateFlow

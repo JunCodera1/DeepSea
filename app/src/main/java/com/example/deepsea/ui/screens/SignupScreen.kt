@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,22 +30,37 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.deepsea.R
 import com.example.deepsea.ui.components.SignupTextField
+import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
+import com.example.deepsea.ui.viewmodel.AuthViewModel
 
 @Composable
 fun SignupPage(
-    onSignUpClick: () -> Unit = {},
-    onSignInClick: () -> Unit = {}
+    onSignUpClick: (username: String, email: String, password: String) -> Unit,
+    onSignInClick: () -> Unit = {},
+    navController: DeepSeaNavController,
+    authViewModel: AuthViewModel,
+    onRegisterSuccess: () -> Unit
 ) {
+    val authViewModel: AuthViewModel
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
 
     // Các state cho form
     var name by remember { mutableStateOf("") }
-    var emailOrPhone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+//    val registerState by authViewModel.registerState.collectAsState()
+//
+//    LaunchedEffect(registerState) {
+//        if (registerState is RegisterState.Success) {
+//            onRegisterSuccess()
+//            authViewModel.resetRegisterState()
+//        }
+//    }
 
     DeepSeaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -81,8 +97,8 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 SignupTextField(
-                    value = emailOrPhone,
-                    onValueChange = { emailOrPhone = it },
+                    value = email,
+                    onValueChange = { email = it },
                     placeHolder = "Phone or Email",
                     label = "Phone or Email",
                 )
@@ -119,7 +135,9 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = onSignUpClick,
+                    onClick = {
+                        onSignUpClick(username, email, password)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -130,12 +148,14 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row {
-                    Text("Already have an account? ")
-                    Text(
-                        text = "Sign In",
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onSignInClick)
-                    )
+                    TextButton(onClick = {navController.navController.navigate("login")}) {
+                        Text("Already have an account? ")
+                        Text(
+                            text = "Sign In",
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable(onClick = onSignInClick)
+                        )
+                    }
                 }
             }
         }
@@ -146,5 +166,10 @@ fun SignupPage(
 @Preview(showBackground = true)
 @Composable
 fun SignupScreenPreview() {
-    SignupPage()
+
+//    SignupPage(
+//        onSignUpClick = TODO(),
+//        onSignInClick = TODO(),
+//        navController = TODO()
+//    )
 }

@@ -18,6 +18,7 @@ object MainDestinations {
     const val VERIFY_EMAIL_ROUTE = "verifyEmail"
     const val RESET_PASSWORD_ROUTE = "resetPassword"
     const val PROFILE_ROUTE = "profile"
+    const val WELCOME_ROUTE = "welcome"
 }
 
 @Composable
@@ -75,6 +76,7 @@ class DeepSeaNavController(
     fun navigateToProfile(userId: String) {
         navController.navigate("${MainDestinations.PROFILE_ROUTE}/$userId")
     }
+
 }
 
 /**
