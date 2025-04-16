@@ -2,6 +2,7 @@
 
 package com.example.deepsea.ui
 
+import android.app.Application
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -39,7 +40,6 @@ import com.example.deepsea.ui.screens.DailyPage
 import com.example.deepsea.ui.screens.GamePage
 import com.example.deepsea.ui.screens.LearnPage
 import com.example.deepsea.ui.screens.LoginPage
-import com.example.deepsea.ui.screens.ProfilePage
 import com.example.deepsea.ui.screens.RankPage
 import com.example.deepsea.ui.screens.SignupPage
 import com.example.deepsea.ui.screens.WelcomePage
@@ -48,6 +48,9 @@ import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.UserState
 import android.util.Log
+import com.example.deepsea.ui.profile.ProfilePage
+import com.example.deepsea.ui.profile.UserProfileData
+import com.example.deepsea.ui.screens.HomeScreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -56,7 +59,7 @@ fun DeepSeaApp() {
     val deepSeaNavController = rememberDeepSeaNavController()
     val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel(
-        factory = ViewModelProvider.AndroidViewModelFactory(context.applicationContext as android.app.Application)
+        factory = ViewModelProvider.AndroidViewModelFactory(context.applicationContext as Application)
     )
 
     DeepSeaTheme {
@@ -204,7 +207,7 @@ fun MainContainer(
                     )
                 }
                 composable("home") {
-
+                    HomeScreen(navController = nestedNavController.navController)
                 }
                 composable("signup") {
                     SignupPage(
@@ -232,7 +235,7 @@ fun MainContainer(
                         authViewModel = authViewModel,
                         onLoginSuccess = {
                             Log.d("MainContainer", "Login success, navigating to home/learn")
-                            nestedNavController.navController.navigate("home/learn") {
+                            nestedNavController.navController.navigate("home") {
                                 popUpTo("login") { inclusive = true }
                             }
                         },
@@ -264,15 +267,19 @@ fun MainContainer(
                 composable("home/profile") {
                     val userState by authViewModel.userState.collectAsState()
 
-                    ProfilePage(
-                        userState = userState,
-                        onLogout = {
-                            authViewModel.logout()
-                            nestedNavController.navController.navigate("welcome") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
+                    val sampleUserData = UserProfileData(
+                        name = "Huy V6",
+                        username = "BlackNoir1172005",
+                        joinDate = "August 2024",
+                        following = 45,
+                        followers = 23,
+                        dayStreak = 235,
+                        totalXp = 9102,
+                        currentLeague = "WEEK 2 Ruby",
+                        topFinishes = 1,
+                        courses = listOf("Course 1", "Course 2") // Example courses
                     )
+                    ProfilePage(userData = sampleUserData)
                 }
 
                 composable("home/game") {

@@ -77,4 +77,6 @@ dependencies {
     implementation ("androidx.work:work-runtime:2.10.0") // hoặc cao hơn
     implementation ("io.coil-kt:coil-compose:2.7.0")
 
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+
 }
