@@ -83,7 +83,7 @@ fun WelcomePage(
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
-                    Text("SIGN IN")
+                    Text("SIGN UP")
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

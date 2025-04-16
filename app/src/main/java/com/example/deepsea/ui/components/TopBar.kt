@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.deepsea.ui.components
 
 import androidx.annotation.DrawableRes
@@ -33,8 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.compose.deepsea.R
-import com.example.deepsea.data.models.UnitData
+
+import com.example.deepsea.R
 import com.example.deepsea.text.TitleText
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
@@ -43,10 +45,13 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 @Preview
 fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0) {
     val systemUiController = rememberSystemUiController()
+    val currentUnit = units.getOrNull(visibleUnitIndex)
     val animatedColor by animateColorAsState(
-        targetValue = units[visibleUnitIndex].color,
+        targetValue = currentUnit?.color ?: Color.Gray,
         animationSpec = tween(durationMillis = 600)
     )
+    val darkerColor = currentUnit?.darkerColor ?: Color.DarkGray
+
     systemUiController.setStatusBarColor(animatedColor)
     systemUiController.setNavigationBarColor(Color.White)
 
@@ -54,30 +59,26 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
         modifier = Modifier
             .zIndex(10f)
             .drawBehind {
+                drawRect(color = animatedColor)
                 drawRect(
-                    color = animatedColor
-                )
-                drawRect(
-                    color = units[visibleUnitIndex].darkerColor,
+                    color = darkerColor,
                     topLeft = Offset(x = 0f, y = size.height),
                     size = Size(width = size.width, height = 2.dp.toPx())
                 )
             }
             .padding(horizontal = 12.dp)
-        //.padding(top = 64.dp, bottom = 6.dp)
     ) {
         Column {
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 16.dp)
-                ,
+                    .padding(top = 12.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BarIcon(R.drawable.japan)
-                BarIcon(R.drawable.img_fire, "1", 0f)
-                BarIcon(R.drawable.img_gem, "505")
-                BarIcon(R.drawable.img_heart, "5")
+                BarIcon(R.drawable.ic_japan)
+                BarIcon(R.drawable.ic_fire, "1", 0f)
+                BarIcon(R.drawable.ic_gem, "505")
+                BarIcon(R.drawable.ic_heart, "5")
             }
 
             Box {
@@ -99,9 +100,8 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
             }
         }
     }
-
-
 }
+
 
 @Composable
 fun BarIcon(@DrawableRes icon : Int, text : String? = null, saturation : Float = 1f) {

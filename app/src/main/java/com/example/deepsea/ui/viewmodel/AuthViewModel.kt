@@ -1,6 +1,8 @@
 package com.example.deepsea.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
@@ -18,6 +20,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
@@ -52,38 +57,73 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun login(username: String, password: String) {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
             try {
-                val response = RetrofitClient.authApi.login(LoginRequest(username, password))
+                val response = RetrofitClient.authApi.login(LoginRequest(email, password))
                 if (response.isSuccessful && response.body() != null) {
                     val jwtResponse = response.body()!!
-                    // Lưu thông tin đăng nhập
+                    Log.d("AuthViewModel", "Login response: $jwtResponse")
+
+                    // Extract username and email from JWT token if they're empty in the response
+                    val username = if (jwtResponse.username.isNullOrEmpty()) {
+                        // You can extract username from token or use a default/placeholder value
+                        "user" // or decode from token
+                    } else {
+                        jwtResponse.username
+                    }
+
+                    val userEmail = if (jwtResponse.email.isNullOrEmpty()) {
+                        // Use the email that was used for login
+                        email
+                    } else {
+                        jwtResponse.email
+                    }
+
+                    // Save token and user info
                     sessionManager.saveAuthToken(
                         jwtResponse.token,
-                        jwtResponse.username,
-                        jwtResponse.id,
-                        jwtResponse.email
+                        username,
+                        jwtResponse.id ?: 0, // Provide default if null
+                        userEmail
                     )
-                    _userState.value = UserState.LoggedIn(jwtResponse.username, jwtResponse.email)
+
+                    _userState.value = UserState.LoggedIn(username, userEmail)
                     _loginState.value = LoginState.Success
+                    Log.d("AuthViewModel", "Login successful, state updated to Success")
                 } else {
                     _loginState.value = LoginState.Error("Login failed: ${response.message()}")
+                    Log.e("AuthViewModel", "Login failed: ${response.message()}")
                 }
             } catch (e: Exception) {
                 _loginState.value = LoginState.Error("Error: ${e.message}")
+                Log.e("AuthViewModel", "Login exception: ${e.message}", e)
             }
         }
     }
 
-    fun signup(username: String, email: String, password: String) {
+    fun signup(username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
             try {
-                val response = RetrofitClient.authApi.register(
-                    RegisterRequest(username, password, email)
+                // Handle avatar upload if present
+                val avatarUrl = if (avatar != null) {
+                    uploadAvatarAndGetUrl(avatar)
+                } else {
+                    null
+                }
+
+                // Create registration request with avatar URL
+                val registerRequest = RegisterRequest(
+                    username = username,
+                    password = password,
+                    email = email,
+                    avatarUrl = avatarUrl
                 )
+
+                val response = RetrofitClient.authApi.register(registerRequest)
+
                 if (response.isSuccessful && response.body() != null) {
                     _registerState.value = RegisterState.Success(response.body()!!.message)
                 } else {
@@ -92,6 +132,39 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 _registerState.value = RegisterState.Error("Error: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun uploadAvatarAndGetUrl(uri: Uri): String? {
+        return try {
+            // Get the content resolver and file data
+            val contentResolver = getApplication<Application>().contentResolver
+            val inputStream = contentResolver.openInputStream(uri)
+
+            // Create a MultipartBody.Part for the image
+            val requestFile = inputStream?.readBytes()?.let {
+                RequestBody.create("image/*".toMediaTypeOrNull(), it)
+            }
+
+            val imagePart = requestFile?.let {
+                MultipartBody.Part.createFormData(
+                    "avatar",
+                    "avatar_image.jpg",
+                    it
+                )
+            }
+
+            // Upload the image
+            if (imagePart != null) {
+                val response = RetrofitClient.authApi.uploadAvatar(imagePart)
+                if (response.isSuccessful && response.body() != null) {
+                    return response.body()!!.url
+                }
+            }
+            null
+        } catch (e: Exception) {
+            Log.e("AuthViewModel", "Avatar upload failed: ${e.message}")
+            null
         }
     }
 

@@ -1,38 +1,23 @@
 package com.example.deepsea.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import android.util.Log
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
 import androidx.navigation.NavHostController
-import com.example.compose.deepsea.R
-
+import com.example.deepsea.R
 import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
 import com.example.deepsea.ui.LocalSharedTransitionScope
 import com.example.deepsea.ui.components.DeepSeaButton
@@ -48,24 +33,31 @@ import com.example.deepsea.utils.LoginState
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 
-fun LoginPage( navController: DeepSeaNavController,
-               onLoginSuccess: () -> Unit,
-               authViewModel: AuthViewModel) {
-    val sharedTransitionScope = LocalSharedTransitionScope.current
-        ?: throw IllegalStateException("No Scope found")
-    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
-        ?: throw IllegalStateException("No Scope found")
+fun LoginPage(
+    navController: DeepSeaNavController,
+    onSignInClick: (email: String, password: String) -> Unit,
+    onLoginSuccess: () -> Unit,
+    authViewModel: AuthViewModel
+) {
+    // Lấy scope của transition
+    LocalSharedTransitionScope.current ?: error("No SharedTransitionScope found")
+    LocalNavAnimatedVisibilityScope.current ?: error("No NavAnimatedVisibilityScope found")
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
-
     val loginState by authViewModel.loginState.collectAsState()
 
     LaunchedEffect(loginState) {
+        Log.d("LoginPage", "Login state changed: $loginState")
         if (loginState is LoginState.Success) {
+            Log.d("LoginPage", "Login successful, calling onLoginSuccess()")
             onLoginSuccess()
             authViewModel.resetLoginState()
         }
     }
+
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
     DeepSeaTheme {
         Image(
             painter = backgroundPainter,
@@ -73,6 +65,7 @@ fun LoginPage( navController: DeepSeaNavController,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,28 +74,20 @@ fun LoginPage( navController: DeepSeaNavController,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            val imageModifier = Modifier
-                .size(200.dp)
             Image(
                 painter = painterResource(id = R.drawable.logo),
-                contentScale = ContentScale.Fit,
-                modifier = imageModifier,
-                contentDescription = ""
-
+                contentDescription = "App logo",
+                modifier = Modifier.size(200.dp),
+                contentScale = ContentScale.Fit
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            var email by remember { mutableStateOf("") }
-            var password by remember { mutableStateOf("") }
 
             LoginTextField(
                 value = email,
                 onValueChange = { email = it },
                 placeHolder = "Enter your email",
-                label = "Email",
+                label = "Email"
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -117,41 +102,44 @@ fun LoginPage( navController: DeepSeaNavController,
 
             TextButton(
                 modifier = Modifier.align(Alignment.End),
-                onClick = {}
+                onClick = {
+                    // TODO: Handle forgot password
+                }
             ) {
-                Text("Forgot password ?")
+                Text("Forgot password?")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             DeepSeaButton(
-                onClick = {
-                    // Handle login logic here
-                },
+                onClick = { onSignInClick(email, password) },
                 modifier = Modifier.width(90.dp),
             ) {
-                Text(text = "Login")
+                Text("Login")
             }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             DeepSeaDivider(Modifier.align(Alignment.CenterHorizontally))
 
             Spacer(modifier = Modifier.height(18.dp))
-            val facebookIcon = painterResource(id = R.drawable.facebook_icon)
-            val googleIcon = painterResource(id = R.drawable.google_icon)
+
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 ImageButton(
-                    image = facebookIcon,
+                    image = painterResource(id = R.drawable.facebook_icon),
                     text = "",
-                    onClick = { /* your action */ }
+                    onClick = { /* TODO: Facebook login */ }
                 )
+                Spacer(modifier = Modifier.width(16.dp))
                 ImageButton(
-                    image = googleIcon,
+                    image = painterResource(id = R.drawable.google_icon),
                     text = "",
-                    onClick = { /* your action */ }
+                    onClick = { /* TODO: Google login */ }
                 )
             }
+
             Spacer(modifier = Modifier.height(15.dp))
+
             TextButton(
                 onClick = {
                     navController.navController.navigate("signup")
@@ -167,5 +155,5 @@ fun LoginPage( navController: DeepSeaNavController,
 @Composable
 fun LoginScreenPreview() {
     val deepSeaNavController = rememberDeepSeaNavController()
-//    LoginPage(navController = deepSeaNavController)
+    // You can mock authViewModel for preview if needed
 }

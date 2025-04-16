@@ -19,12 +19,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-
 import androidx.compose.foundation.layout.size
-
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -40,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -131,9 +127,9 @@ enum class HomeSections(
     val primaryColor: Color,
     val secondaryColor: Color
 ) {
-    LEARN(
-        R.string.home_learn,
-        "home/learn",
+    HOME(
+        R.string.home,
+        "home",
         R.drawable.home_learn,
         Color(0xFF10805E),
         Color(0xFF38A78F)
@@ -305,7 +301,7 @@ fun NavGraphBuilder.addHomeGraph(
     onSnackSelected: (Long, String, NavBackStackEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    composable(HomeSections.LEARN.route) { from ->
+    composable(HomeSections.HOME.route) { from ->
 
     }
     composable(HomeSections.GAME.route) { from ->

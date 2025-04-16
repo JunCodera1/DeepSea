@@ -2,6 +2,8 @@
 
 package com.example.deepsea.ui
 
+import android.app.Application
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -38,8 +40,6 @@ import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.screens.DailyPage
 import com.example.deepsea.ui.screens.LearnPage
 import com.example.deepsea.ui.screens.LoginPage
-
-import com.example.deepsea.ui.screens.ProfilePage
 import com.example.deepsea.ui.screens.RankPage
 import com.example.deepsea.ui.screens.SignupPage
 import com.example.deepsea.ui.screens.WelcomePage
@@ -47,6 +47,14 @@ import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.UserState
+import android.util.Log
+import androidx.compose.runtime.remember
+import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.ui.components.UnitData
+import com.example.deepsea.ui.profile.ProfilePage
+import com.example.deepsea.ui.profile.UserProfileData
+import com.example.deepsea.ui.screens.HomeScreen
+import com.example.deepsea.ui.theme.FeatherGreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -55,7 +63,7 @@ fun DeepSeaApp() {
     val deepSeaNavController = rememberDeepSeaNavController()
     val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel(
-        factory = ViewModelProvider.AndroidViewModelFactory(context.applicationContext as android.app.Application)
+        factory = ViewModelProvider.AndroidViewModelFactory(context.applicationContext as Application)
     )
 
     DeepSeaTheme {
@@ -88,12 +96,18 @@ fun DeepSeaApp() {
                             navController = deepSeaNavController,
                             onLoginSuccess = {
                                 // Navigate to home screen after successful login
+                                Log.d("DeepSeaApp", "Login success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
                                     // Clear back stack to prevent going back to login screen
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
                                 }
                             },
-                            authViewModel = authViewModel
+                            authViewModel = authViewModel,
+                            onSignInClick = { email, password ->
+                                // Fixed: Directly call login instead of returning another lambda
+                                Log.d("DeepSeaApp", "Attempting login with email: $email")
+                                authViewModel.login(email, password)
+                            }
                         )
                     }
 
@@ -109,14 +123,10 @@ fun DeepSeaApp() {
                     ) { backStackEntry ->
                         SignupPage(
                             navController = deepSeaNavController,
-                            onSignUpClick = { username, email, password ->
-                                {
-                                    authViewModel.signup(
-                                        username = username,
-                                        email = email,
-                                        password = password
-                                    )
-                                }
+                            onSignUpClick = { username, email, password, avatar ->
+                                // Updated to handle avatar
+                                Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
+                                authViewModel.signup(username, email, password, avatar)
                             },
                             onSignInClick = {
                                 // Navigate to login page
@@ -125,6 +135,7 @@ fun DeepSeaApp() {
                             authViewModel = authViewModel,
                             onRegisterSuccess = {
                                 // Navigate to home screen after successful registration
+                                Log.d("DeepSeaApp", "Registration success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
                                     // Clear back stack to prevent going back to signup screen
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
@@ -152,9 +163,10 @@ fun MainContainer(
 
     val userState by authViewModel.userState.collectAsState()
 
-
     LaunchedEffect(userState, currentRoute) {
+        Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
         if (userState is UserState.NotLoggedIn && isAuthRoute && currentRoute != "welcome") {
+            Log.d("MainContainer", "User not logged in, navigating to welcome")
             nestedNavController.navController.navigate("welcome") {
                 popUpTo(0) { inclusive = true }
             }
@@ -197,17 +209,34 @@ fun MainContainer(
                         navController = nestedNavController
                     )
                 }
+                composable("home") {
+                    val units = remember {
+                        listOf(
+                            UnitData(title = "Unit 1", color = FeatherGreen),
+                            UnitData(title = "Unit 2", color = Color.Red, darkerColor = Color.Red),
+                            UnitData(title = "Unit 3", color = Color.Yellow),
+                            UnitData(title = "Unit 4", color = Color.Gray),
+                            UnitData(title = "Unit 5", color = Color.Magenta),
+                            UnitData(title = "Unit 6", color = Color.Blue)
+                        )
+                    }
+                    val navController = rememberNavController()
+                    HomeScreen(units = units, navController = navController)
+                }
                 composable("signup") {
                     SignupPage(
                         navController = nestedNavController,
-                        onSignUpClick = { username, email, password ->
-                            authViewModel.signup(username, email, password)
+                        onSignUpClick = { username, email, password, avatar ->
+                            // Updated to handle avatar
+                            Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
+                            authViewModel.signup(username, email, password, avatar)
                         },
                         onSignInClick = {
                             nestedNavController.navController.navigate("login")
                         },
                         authViewModel = authViewModel,
                         onRegisterSuccess = {
+                            Log.d("MainContainer", "Registration success, navigating to home/learn")
                             nestedNavController.navController.navigate("home/learn") {
                                 popUpTo("welcome") { inclusive = true }
                             }
@@ -215,27 +244,29 @@ fun MainContainer(
                     )
                 }
                 composable("login") {
-                    val loginState by authViewModel.loginState.collectAsState()
-
-                    if (loginState is LoginState.Success) {
-                        authViewModel.resetLoginState()
-
-                        nestedNavController.navController.navigate("home/learn") {
-                            popUpTo("welcome") { inclusive = true }
-                        }
-                    }
-
                     LoginPage(
                         navController = nestedNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
-                            TODO()
+                            Log.d("MainContainer", "Login success, navigating to home")
+                            nestedNavController.navController.navigate("home") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        },
+                        onSignInClick = { email, password ->
+                            // Fixed: Directly call login
+                            Log.d("MainContainer", "Attempting login with email: $email")
+                            authViewModel.login(email, password)
                         }
                     )
                 }
+
                 composable("home/learn") {
                     // Load dashboard data when entering the main area
-                    authViewModel.loadDashboard()
+                    LaunchedEffect(Unit) {
+                        Log.d("MainContainer", "Loading dashboard data")
+                        authViewModel.loadDashboard()
+                    }
                     LearnPage()
                 }
 
@@ -250,15 +281,19 @@ fun MainContainer(
                 composable("home/profile") {
                     val userState by authViewModel.userState.collectAsState()
 
-                    ProfilePage(
-                        userState = userState,
-                        onLogout = {
-                            authViewModel.logout()
-                            nestedNavController.navController.navigate("welcome") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
+                    val sampleUserData = UserProfileData(
+                        name = "Huy V6",
+                        username = "BlackNoir1172005",
+                        joinDate = "August 2024",
+                        following = 45,
+                        followers = 23,
+                        dayStreak = 235,
+                        totalXp = 9102,
+                        currentLeague = "WEEK 2 Ruby",
+                        topFinishes = 1,
+                        courses = listOf("Course 1", "Course 2") // Example courses
                     )
+                    ProfilePage(userData = sampleUserData)
                 }
 
             })
