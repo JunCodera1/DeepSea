@@ -20,7 +20,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

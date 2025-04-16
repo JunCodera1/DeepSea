@@ -2,7 +2,8 @@ package com.example.deepsea.data.models
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
+
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
 

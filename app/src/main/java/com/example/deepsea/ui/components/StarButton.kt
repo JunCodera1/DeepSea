@@ -40,7 +40,8 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
+
 import com.example.deepsea.ui.theme.Gray
 import com.example.deepsea.ui.theme.GrayDark
 

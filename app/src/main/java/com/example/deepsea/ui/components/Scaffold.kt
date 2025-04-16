@@ -49,7 +49,7 @@ fun DeepSeaScaffold(
 }
 
 @Composable
-fun rememberJetsnackScaffoldState(
+fun rememberDeepSeaScaffoldState(
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     snackbarManager: SnackbarManager = SnackbarManager,
     resources: Resources = resources(),

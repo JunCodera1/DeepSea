@@ -54,7 +54,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
+
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
 import com.example.deepsea.ui.theme.Swan

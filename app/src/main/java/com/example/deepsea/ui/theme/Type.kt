@@ -6,7 +6,8 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
+
 
 // Set of Material typography styles to start with
 val Typography = Typography(

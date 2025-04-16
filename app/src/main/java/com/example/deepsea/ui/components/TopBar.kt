@@ -33,7 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.deepsea.R
+import com.example.compose.deepsea.R
 import com.example.deepsea.data.models.UnitData
 import com.example.deepsea.text.TitleText
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
