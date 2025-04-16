@@ -234,7 +234,7 @@ fun MainContainer(
                         navController = nestedNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
-                            Log.d("MainContainer", "Login success, navigating to home/learn")
+                            Log.d("MainContainer", "Login success, navigating to home")
                             nestedNavController.navController.navigate("home") {
                                 popUpTo("login") { inclusive = true }
                             }
