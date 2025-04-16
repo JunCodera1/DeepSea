@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.DarkGray
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -34,124 +36,165 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.text.util.LocalePreferences.TemperatureUnit.TemperatureUnits
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
-import com.example.deepsea.ui.theme.FeatherGreen
-import com.example.deepsea.ui.theme.Polar
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.runtime.derivedStateOf
-import com.example.deepsea.ui.components.TopBar
-import com.example.deepsea.text.TitleText
-import com.example.deepsea.ui.theme.Gray
+import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.text.PrimaryText
+import com.example.deepsea.text.TitleText
+import com.example.deepsea.ui.components.TopBar
+import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.components.UnitsLazyColumn
 import com.example.deepsea.ui.home.DeepSeaBottomBar
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.deepsea.ui.components.UnitData
+import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.ui.theme.Gray
+import com.example.deepsea.ui.theme.Polar
+import kotlinx.coroutines.launch
 
-
+/**
+ * Extension function to add composable with composition local to NavGraphBuilder
+ * Provides default transition animation
+ */
 fun NavGraphBuilder.composableWithCompositionLocal(
     route: String,
     arguments: List<NamedNavArgument> = emptyList(),
     deepLinks: List<NavDeepLink> = emptyList(),
-    enterTransition: (
-    @JvmSuppressWildcards
-    AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition
-    )? ={
+    enterTransition: (@JvmSuppressWildcards AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition)? = {
         fadeIn()
     }
-){}
+) {
+    // Implementation to be added later
+}
+
+/**
+ * HomeScreen is the main screen of the DeepSea app
+ * Displays a list of learning units with interactive stars
+ *
+ * @param units List of learning units to display
+ * @param navController Navigation controller for app navigation
+ */
 @Composable
 fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController) {
+    // State management
     val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
     val starCountPerUnit = 5
 
+    // Track visible unit for the top bar
     val visibleHeadingIndex by remember {
-        derivedStateOf {
-            lazyListState.firstVisibleItemIndex
-        }
+        derivedStateOf { lazyListState.firstVisibleItemIndex }
     }
 
-    // dialog state theo doi cac trang thai co dc su dung hay khong
+    // Dialog state
     var isDialogShown by remember { mutableStateOf(false) }
     var isDialogInteractive by remember { mutableStateOf(false) }
     var dialogTransition by remember { mutableStateOf(0f) }
     var rootHeight by remember { mutableStateOf(0f) }
-    val coroutineScope = rememberCoroutineScope() // tao 1 coroutineScope de thuc thi cac ham khong dong bo
 
-    // Scaffold la 1 thanh bar o tren cung
-
-    Scaffold (
+    // Main layout with top and bottom bars
+    Scaffold(
         topBar = {
             TopBar(
                 units = units,
                 visibleUnitIndex = visibleHeadingIndex,
-
-                )
-        }, bottomBar = {
+            )
+        },
+        bottomBar = {
             DeepSeaBottomBar(navController)
         }
-    ) {
-        UnitsLazyColumn( //hien thi cac Unit
-            modifier = Modifier.padding(it).onGloballyPositioned {
-                rootHeight = it.parentCoordinates!!.size.height.toFloat()
-            }
-                .pointerInput(Unit) { // nhan cac cu chi tu nguoi dung
+    ) { paddingValues ->
+        // Content area with scrolling units
+        UnitsLazyColumn(
+            modifier = Modifier
+                .padding(paddingValues)
+                .onGloballyPositioned {
+                    rootHeight = it.parentCoordinates!!.size.height.toFloat()
+                }
+                .pointerInput(Unit) {
                     detectTapGestures(onPress = {
                         isDialogShown = false
                     })
                 },
-            state = lazyListState, // quan ly trang thai cuon
+            state = lazyListState,
             units = units,
             starCountPerUnit = starCountPerUnit
-        ) {starCoordinate, isInteractive ->
-
-            isDialogInteractive = isInteractive // cap nhat trang thai
-            val midCoordinates =  rootHeight/2
-            coroutineScope.launch {
-                isDialogShown = false // an thanh dialog khi cuon
-//                val scrollBy = (starCoordinate - midCoordinates).coerceAtLeast(0f)
-//                lazyListState.animateScrollBy(scrollBy)
-//                dialogTransition = starCoordinate - scrollBy
-                val scrollBy = (starCoordinate - midCoordinates)
-                lazyListState.animateScrollBy(scrollBy)
-                dialogTransition = midCoordinates
-
-                isDialogShown = true // sau khi cuon xong thi hien lai thanh dialog
-            }
+        ) { starCoordinate, isInteractive ->
+            // Handle star tap with smooth scrolling
+            handleStarTap(
+                coroutineScope = coroutineScope,
+                starCoordinate = starCoordinate,
+                isInteractive = isInteractive,
+                rootHeight = rootHeight,
+                lazyListState = lazyListState,
+                onDialogStateChange = { shown, interactive, transition ->
+                    isDialogShown = shown
+                    isDialogInteractive = interactive
+                    dialogTransition = transition
+                }
+            )
         }
-
-
     }
 
+    // Dialog overlay for star interaction
     StarDialog(
-        isDialogShown = isDialogShown, // trang thai hien thi dialog
-        isDialogInteractive = isDialogInteractive, // trang thai co the tuong tac
-        dialogTransition = dialogTransition // vi tri cua dialog
+        isDialogShown = isDialogShown,
+        isDialogInteractive = isDialogInteractive,
+        dialogTransition = dialogTransition
     )
-
 }
 
+/**
+ * Handles the star tap event with smooth scrolling animation
+ */
+private fun handleStarTap(
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    starCoordinate: Float,
+    isInteractive: Boolean,
+    rootHeight: Float,
+    lazyListState: androidx.compose.foundation.lazy.LazyListState,
+    onDialogStateChange: (shown: Boolean, interactive: Boolean, transition: Float) -> Unit
+) {
+    val midCoordinates = rootHeight / 2
 
+    coroutineScope.launch {
+        // Hide dialog during scrolling
+        onDialogStateChange(false, isInteractive, 0f)
 
+        // Calculate and animate scroll
+        val scrollBy = (starCoordinate - midCoordinates)
+        lazyListState.animateScrollBy(scrollBy)
 
+        // Show dialog after scrolling complete
+        onDialogStateChange(true, isInteractive, midCoordinates)
+    }
+}
+
+/**
+ * Dialog that appears when a star is tapped
+ * Provides feedback on level status and interactivity
+ *
+ * @param isDialogShown Controls dialog visibility
+ * @param isDialogInteractive Controls whether dialog shows interactive or locked state
+ * @param dialogTransition Vertical position of the dialog
+ */
 @Composable
 fun StarDialog(
-    isDialogShown : Boolean,
-    isDialogInteractive : Boolean,
-    dialogTransition : Float
+    isDialogShown: Boolean,
+    isDialogInteractive: Boolean,
+    dialogTransition: Float
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter
     ) {
-        val animatedScale by animateFloatAsState(targetValue = if (isDialogShown) 1f else 0f)
+        // Animate dialog scaling
+        val animatedScale by animateFloatAsState(
+            targetValue = if (isDialogShown) 1f else 0f
+        )
+
+        // Dialog content
         Column(
             modifier = Modifier
                 .graphicsLayer {
@@ -161,37 +204,57 @@ fun StarDialog(
                     scaleX = animatedScale
                 }
                 .fillMaxWidth(0.8f)
-                .background(if (isDialogInteractive.not()) Polar else FeatherGreen, shape = RoundedCornerShape(8.dp))
-                .border(width = 1.dp, color = Gray, shape = RoundedCornerShape(8.dp))
+                .background(
+                    color = if (isDialogInteractive) FeatherGreen else Polar,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = Gray,
+                    shape = RoundedCornerShape(8.dp)
+                )
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            TitleText(text = "Make introductions", color = if (isDialogInteractive.not()) DarkGray.copy(0.5f) else Color.White, fontSize = 19.sp)
+            // Dialog title
+            TitleText(
+                text = "Make introductions",
+                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.5f),
+                fontSize = 19.sp
+            )
+
+            // Dialog description
             PrimaryText(
                 text = "Complete all levels above to unlock this",
-                color = if (isDialogInteractive.not()) DarkGray.copy(0.3f) else Color.White
+                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
             )
+
+            // Action button
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { },
+                onClick = { /* Handle button click */ },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDialogInteractive.not()) DarkGray.copy(0.15f) else Color.White
+                    containerColor = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.15f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 TitleText(
-                    text =  if (isDialogInteractive.not()) "LOCKED" else "LETS GO!",
-                    color = if (isDialogInteractive.not()) DarkGray.copy(0.5f) else FeatherGreen,
+                    text = if (isDialogInteractive) "LET'S GO!" else "LOCKED",
+                    color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
                     fontSize = 18.sp
                 )
             }
         }
-
     }
 }
 
-
-//fun to calculate start ordering, nothing fancy
+/**
+ * Calculates star positioning based on order and direction
+ *
+ * @param order Index of the star
+ * @param isRTL Whether layout is right-to-left
+ * @return Position percentage for horizontal alignment
+ */
 fun orderToPercentage(order: Int, isRTL: Boolean = true): Float {
     val difference = 0.09f
     return when (order) {
@@ -204,10 +267,12 @@ fun orderToPercentage(order: Int, isRTL: Boolean = true): Float {
     }
 }
 
-
+/**
+ * Preview composable for the HomeScreen
+ */
 @Preview
 @Composable
-private fun HomeScreenPrev() {
+private fun HomeScreenPreview() {
     val units = remember {
         listOf(
             UnitData(title = "Unit 1", color = FeatherGreen),
@@ -220,7 +285,4 @@ private fun HomeScreenPrev() {
     }
     val navController = rememberNavController()
     HomeScreen(units = units, navController = navController)
-
-
 }
-

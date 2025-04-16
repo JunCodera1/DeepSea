@@ -31,82 +31,138 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.deepsea.ui.theme.FeatherGreen
-import com.example.deepsea.ui.theme.FeatherGreenDark
 import com.example.deepsea.R
 import com.example.deepsea.text.PrimaryText
 import com.example.deepsea.text.TitleText
+import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.ui.theme.FeatherGreenDark
 
+/**
+ * Data class representing a learning unit with its visual properties
+ *
+ * @property title The title of the unit shown in the header
+ * @property color The main color for the unit's theme
+ * @property darkerColor A darker shade of the main color, used for 3D effects
+ * @property description A brief description of the unit's content
+ * @property image Resource ID for the unit's illustration
+ */
+@Immutable
+data class UnitData(
+    val title: String = "Unit 1",
+    val color: Color = FeatherGreen,
+    val darkerColor: Color = FeatherGreenDark,
+    val description: String = "Make introductions",
+    @DrawableRes val image: Int = R.drawable.ic_booking
+)
 
+/**
+ * Displays the main content of a unit including star buttons and background image
+ *
+ * @param unitIndex Index of the unit in the list (used for alignment calculation)
+ * @param colorMain Primary color for the stars
+ * @param colorDark Secondary color for the stars (for 3D effect)
+ * @param unitImage Resource ID for the unit's background image
+ * @param starCount Number of stars/lessons to display for this unit
+ * @param onStarClicked Callback when a star is clicked, provides coordinates and interactivity state
+ */
 @Composable
 fun UnitContent(
     unitIndex: Int,
-    colorMain : Color,
-    colorDark : Color,
-    @DrawableRes unitImage : Int,
+    colorMain: Color,
+    colorDark: Color,
+    @DrawableRes unitImage: Int,
     starCount: Int,
-    onStarClicked : (coordinateInRoot : Float, isInteractive : Boolean) -> Unit
+    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit
 ) {
+    // Use Box to allow overlapping components (stars and background image)
     Box {
-        Column (
+        // Stars column
+        Column(
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             repeat(starCount) { starIndex ->
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Calculate alignment percentage based on star index and unit position
+                    val isRightAligned = unitIndex % 2 == 0
                     val alignPercentage = remember {
-                        orderToPercentage(starIndex, unitIndex % 2 == 0)
+                        calculateStarPosition(starIndex, isRightAligned)
                     }
+
+                    // Space before the star
                     Spacer(modifier = Modifier.fillMaxWidth(alignPercentage))
-                    if (starIndex == 0) SelectableStarButton(
-                        isInitial = unitIndex == 0,
-                        colorMain = colorMain,
-                        colorDark = colorDark,
-                        onStarClicked = onStarClicked
-                    )
-                    else StarButton(onStarClicked)
+
+                    // Show different star style for the first star in the first unit
+                    if (starIndex == 0) {
+                        SelectableStarButton(
+                            isInitial = unitIndex == 0,
+                            colorMain = colorMain,
+                            colorDark = colorDark,
+                            onStarClicked = onStarClicked
+                        )
+                    } else {
+                        StarButton(onStarClicked)
+                    }
                 }
             }
         }
 
+        // Background unit image (desaturated)
         Image(
             modifier = Modifier
                 .size(200.dp)
-                .align(alignment = if (unitIndex % 2 == 0) Alignment.CenterEnd else Alignment.CenterStart),
-            painter = painterResource(id = unitImage), // dùng tài nguyên local (@DrawableRes)
+                .align(
+                    // Alternate image alignment based on unit index
+                    alignment = if (unitIndex % 2 == 0) Alignment.CenterEnd else Alignment.CenterStart
+                ),
+            painter = painterResource(id = unitImage),
             colorFilter = ColorFilter.colorMatrix(
                 colorMatrix = ColorMatrix().apply {
-                    setToSaturation(0f)
+                    setToSaturation(0f) // Make image grayscale
                 }
             ),
-            contentDescription = "duo"
+            contentDescription = "Unit image"
         )
     }
 }
 
+/**
+ * A LazyColumn that displays all units with their headers and content
+ *
+ * @param modifier Modifier for the column
+ * @param state LazyListState to control scrolling
+ * @param units List of UnitData to display
+ * @param starCountPerUnit Number of stars/lessons to display per unit
+ * @param onStarClicked Callback when a star is clicked
+ */
 @Composable
 fun UnitsLazyColumn(
-    modifier : Modifier,
+    modifier: Modifier,
     state: LazyListState,
     units: List<UnitData>,
     starCountPerUnit: Int,
-    onStarClicked : (coordinateInRoot : Float, isInteractive : Boolean) -> Unit
+    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit
 ) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = state,
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Generate items for each unit
         units.forEachIndexed { unitIndex, unit ->
             item {
+                // Unit header with title and description
                 UnitHeader(
                     modifier = Modifier.fillMaxWidth(),
                     data = unit
                 )
+
+                // Space between header and content
                 Spacer(modifier = Modifier.height(48.dp))
+
+                // Unit content with stars and background image
                 UnitContent(
                     unitIndex = unitIndex,
                     starCount = starCountPerUnit,
@@ -117,12 +173,20 @@ fun UnitsLazyColumn(
                 )
             }
         }
+
+        // Add space at the bottom for better scrolling experience
         item {
             Spacer(modifier = Modifier.height(400.dp))
         }
     }
 }
 
+/**
+ * Header component for each unit, displaying title, description, and an icon
+ *
+ * @param modifier Modifier for the header
+ * @param data UnitData containing title, colors, and description
+ */
 @Composable
 @Preview
 fun UnitHeader(
@@ -137,6 +201,7 @@ fun UnitHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // Title and description
         Column {
             TitleText(
                 text = data.title,
@@ -149,13 +214,15 @@ fun UnitHeader(
                 fontSize = 18.sp
             )
         }
-        Box (
+
+        // Notebook icon with 3D effect using nested boxes
+        Box(
             modifier = Modifier
                 .background(color = data.darkerColor, shape = RoundedCornerShape(10.dp))
                 .padding(horizontal = 1.5.dp)
                 .padding(top = 1.5.dp, bottom = 3.dp)
         ) {
-            Box (
+            Box(
                 modifier = Modifier
                     .background(color = data.color, shape = RoundedCornerShape(10.dp))
                     .padding(8.dp)
@@ -164,34 +231,22 @@ fun UnitHeader(
                     modifier = Modifier.size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_notebook),
                     tint = Color.White,
-                    contentDescription = "more"
+                    contentDescription = "Notebook icon"
                 )
             }
         }
     }
 }
 
-@Immutable
-data class UnitData(
-    val title: String = "Unit 1",
-    val color: Color = FeatherGreen,
-    val darkerColor: Color = FeatherGreenDark,
-    val description: String = "Make introductions",
-    val image: Int = R.drawable.ic_booking
-)
-
-
-
 /**
- * Tính toán phần trăm căn lề ngang cho mỗi star trong một unit.
+ * Calculates the horizontal alignment percentage for each star in a unit.
  *
- * @param order Thứ tự của ngôi sao (bắt đầu từ 0)
- * @param alignRight Nếu true thì star được căn từ bên phải (dành cho unit chẵn), ngược lại căn từ bên trái
- * @return Giá trị Float từ 0f đến 1f để dùng với fillMaxWidth()
+ * @param starIndex Index of the star (starting from 0)
+ * @param isRightAligned If true, stars are aligned from right (for even units), otherwise from left
+ * @return Float value from 0f to 1f to use with fillMaxWidth()
  */
-fun orderToPercentage(order: Int, alignRight: Boolean): Float {
-    val step = 0.15f // khoảng cách giữa các star theo chiều ngang
-    val percentage = order * step
-    return if (alignRight) 1f - percentage else percentage
+fun calculateStarPosition(starIndex: Int, isRightAligned: Boolean): Float {
+    val step = 0.15f // Horizontal distance between stars
+    val percentage = starIndex * step
+    return if (isRightAligned) 1f - percentage else percentage
 }
-

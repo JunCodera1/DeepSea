@@ -81,9 +81,9 @@ enum class HomeSections(
     val primaryColor: Color,
     val secondaryColor: Color
 ) {
-    LEARN(
-        R.string.home_learn,
-        "home/learn",
+    HOME(
+        R.string.home,
+        "home",
         R.drawable.home_learn,
         Color(0xFF10805E),
         Color(0xFF38A78F)
@@ -254,7 +254,7 @@ fun NavGraphBuilder.addHomeGraph(
     onSnackSelected: (Long, String, NavBackStackEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    composable(HomeSections.LEARN.route) { from ->
+    composable(HomeSections.HOME.route) { from ->
 
     }
     composable(HomeSections.GAME.route) { from ->

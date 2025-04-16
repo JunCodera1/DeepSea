@@ -48,9 +48,13 @@ import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.UserState
 import android.util.Log
+import androidx.compose.runtime.remember
+import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.profile.UserProfileData
 import com.example.deepsea.ui.screens.HomeScreen
+import com.example.deepsea.ui.theme.FeatherGreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -207,7 +211,18 @@ fun MainContainer(
                     )
                 }
                 composable("home") {
-                    HomeScreen(navController = nestedNavController.navController)
+                    val units = remember {
+                        listOf(
+                            UnitData(title = "Unit 1", color = FeatherGreen),
+                            UnitData(title = "Unit 2", color = Color.Red, darkerColor = Color.Red),
+                            UnitData(title = "Unit 3", color = Color.Yellow),
+                            UnitData(title = "Unit 4", color = Color.Gray),
+                            UnitData(title = "Unit 5", color = Color.Magenta),
+                            UnitData(title = "Unit 6", color = Color.Blue)
+                        )
+                    }
+                    val navController = rememberNavController()
+                    HomeScreen(units = units, navController = navController)
                 }
                 composable("signup") {
                     SignupPage(
