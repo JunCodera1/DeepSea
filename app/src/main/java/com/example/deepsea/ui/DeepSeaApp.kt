@@ -2,6 +2,7 @@
 
 package com.example.deepsea.ui
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -46,6 +47,7 @@ import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.UserState
+import android.util.Log
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -87,12 +89,18 @@ fun DeepSeaApp() {
                             navController = deepSeaNavController,
                             onLoginSuccess = {
                                 // Navigate to home screen after successful login
+                                Log.d("DeepSeaApp", "Login success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
                                     // Clear back stack to prevent going back to login screen
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
                                 }
                             },
-                            authViewModel = authViewModel
+                            authViewModel = authViewModel,
+                            onSignInClick = { email, password ->
+                                // Fixed: Directly call login instead of returning another lambda
+                                Log.d("DeepSeaApp", "Attempting login with email: $email")
+                                authViewModel.login(email, password)
+                            }
                         )
                     }
 
@@ -108,14 +116,10 @@ fun DeepSeaApp() {
                     ) { backStackEntry ->
                         SignupPage(
                             navController = deepSeaNavController,
-                            onSignUpClick = { username, email, password ->
-                                {
-                                    authViewModel.signup(
-                                        username = username,
-                                        email = email,
-                                        password = password
-                                    )
-                                }
+                            onSignUpClick = { username, email, password, avatar ->
+                                // Updated to handle avatar
+                                Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
+                                authViewModel.signup(username, email, password, avatar)
                             },
                             onSignInClick = {
                                 // Navigate to login page
@@ -124,6 +128,7 @@ fun DeepSeaApp() {
                             authViewModel = authViewModel,
                             onRegisterSuccess = {
                                 // Navigate to home screen after successful registration
+                                Log.d("DeepSeaApp", "Registration success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
                                     // Clear back stack to prevent going back to signup screen
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
@@ -152,9 +157,10 @@ fun MainContainer(
 
     val userState by authViewModel.userState.collectAsState()
 
-
     LaunchedEffect(userState, currentRoute) {
+        Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
         if (userState is UserState.NotLoggedIn && isAuthRoute && currentRoute != "welcome") {
+            Log.d("MainContainer", "User not logged in, navigating to welcome")
             nestedNavController.navController.navigate("welcome") {
                 popUpTo(0) { inclusive = true }
             }
@@ -197,17 +203,23 @@ fun MainContainer(
                         navController = nestedNavController
                     )
                 }
+                composable("home") {
+
+                }
                 composable("signup") {
                     SignupPage(
                         navController = nestedNavController,
-                        onSignUpClick = { username, email, password ->
-                            authViewModel.signup(username, email, password)
+                        onSignUpClick = { username, email, password, avatar ->
+                            // Updated to handle avatar
+                            Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
+                            authViewModel.signup(username, email, password, avatar)
                         },
                         onSignInClick = {
                             nestedNavController.navController.navigate("login")
                         },
                         authViewModel = authViewModel,
                         onRegisterSuccess = {
+                            Log.d("MainContainer", "Registration success, navigating to home/learn")
                             nestedNavController.navController.navigate("home/learn") {
                                 popUpTo("welcome") { inclusive = true }
                             }
@@ -215,27 +227,29 @@ fun MainContainer(
                     )
                 }
                 composable("login") {
-                    val loginState by authViewModel.loginState.collectAsState()
-
-                    if (loginState is LoginState.Success) {
-                        authViewModel.resetLoginState()
-
-                        nestedNavController.navController.navigate("home/learn") {
-                            popUpTo("welcome") { inclusive = true }
-                        }
-                    }
-
                     LoginPage(
                         navController = nestedNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
-                            TODO()
+                            Log.d("MainContainer", "Login success, navigating to home/learn")
+                            nestedNavController.navController.navigate("home/learn") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        },
+                        onSignInClick = { email, password ->
+                            // Fixed: Directly call login
+                            Log.d("MainContainer", "Attempting login with email: $email")
+                            authViewModel.login(email, password)
                         }
                     )
                 }
+
                 composable("home/learn") {
                     // Load dashboard data when entering the main area
-                    authViewModel.loadDashboard()
+                    LaunchedEffect(Unit) {
+                        Log.d("MainContainer", "Loading dashboard data")
+                        authViewModel.loadDashboard()
+                    }
                     LearnPage()
                 }
 

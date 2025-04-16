@@ -75,5 +75,6 @@ dependencies {
     ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     implementation ("androidx.work:work-runtime:2.10.0") // hoặc cao hơn
+    implementation ("io.coil-kt:coil-compose:2.7.0")
 
 }
