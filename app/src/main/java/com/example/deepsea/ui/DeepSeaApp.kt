@@ -51,6 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.profile.UserProfileData
+import com.example.deepsea.ui.screens.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.HomeScreen
 import com.example.deepsea.ui.screens.LanguageSelectionPage
 import com.example.deepsea.ui.screens.SurveyPage
@@ -213,6 +214,9 @@ fun MainContainer(
                     WelcomePage(
                         navController = nestedNavController
                     )
+                }
+                composable("daily-goal-selection") {
+                    DailyGoalSelectionPage(nestedNavController.navController)
                 }
                 composable("survey-selection") {
                     SurveyPage(nestedNavController.navController)

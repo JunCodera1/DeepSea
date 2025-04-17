@@ -143,7 +143,7 @@ fun LanguageSelectionPage(navController: NavController) {
         Button(
             onClick = {
                 if (isLanguageSelected) {
-                    navController.navigate("home") // Replace with your next screen route
+                    navController.navigate("daily-goal-selection") // Replace with your next screen route
                 }
             },
             modifier = Modifier
