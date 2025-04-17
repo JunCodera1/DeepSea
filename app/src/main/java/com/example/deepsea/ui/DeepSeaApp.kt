@@ -3,7 +3,6 @@
 package com.example.deepsea.ui
 
 import android.app.Application
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -45,7 +44,6 @@ import com.example.deepsea.ui.screens.SignupPage
 import com.example.deepsea.ui.screens.WelcomePage
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.AuthViewModel
-import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.UserState
 import android.util.Log
 import androidx.compose.runtime.remember
@@ -54,6 +52,8 @@ import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.profile.UserProfileData
 import com.example.deepsea.ui.screens.HomeScreen
+import com.example.deepsea.ui.screens.LanguageSelectionPage
+import com.example.deepsea.ui.screens.SurveyPage
 import com.example.deepsea.ui.theme.FeatherGreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -160,7 +160,11 @@ fun MainContainer(
     val nestedNavController = rememberDeepSeaNavController()
     val navBackStackEntry by nestedNavController.navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val isAuthRoute: Boolean = currentRoute != "login" && currentRoute != "signup" && currentRoute != "welcome"
+    val isAuthRoute: Boolean = currentRoute != "login" &&
+                                currentRoute != "signup" &&
+                                currentRoute != "welcome" &&
+                                currentRoute != "learn-selection" &&
+                                currentRoute != "survey-selection"
 
     val userState by authViewModel.userState.collectAsState()
 
@@ -210,6 +214,12 @@ fun MainContainer(
                         navController = nestedNavController
                     )
                 }
+                composable("survey-selection") {
+                    SurveyPage(nestedNavController.navController)
+                }
+                composable("learn-selection") {
+                    LanguageSelectionPage(nestedNavController.navController)
+                }
                 composable("home") {
                     val units = remember {
                         listOf(
@@ -249,8 +259,8 @@ fun MainContainer(
                         navController = nestedNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
-                            Log.d("MainContainer", "Login success, navigating to home")
-                            nestedNavController.navController.navigate("home") {
+                            Log.d("MainContainer", "Login success, navigating to learn-selection")
+                            nestedNavController.navController.navigate("survey-selection") {
                                 popUpTo("login") { inclusive = true }
                             }
                         },

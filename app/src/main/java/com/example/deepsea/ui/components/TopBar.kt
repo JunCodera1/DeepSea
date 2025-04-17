@@ -72,10 +72,10 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 16.dp),
+                    .padding(top = 60.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BarIcon(R.drawable.ic_japan)
+                BarIcon(R.drawable.flag_japan)
                 BarIcon(R.drawable.ic_fire, "1", 0f)
                 BarIcon(R.drawable.ic_gem, "505")
                 BarIcon(R.drawable.ic_heart, "5")
