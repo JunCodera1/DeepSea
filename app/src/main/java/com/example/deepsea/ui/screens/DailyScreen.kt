@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -231,48 +232,73 @@ fun TaskItem(task: Task, onTaskUpdated: (Task) -> Unit) {
             }
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(colorScheme.surface)
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = when (task.category) {
-                            TaskCategory.LANGUAGE -> painterResource(R.drawable.ic_language_planet)
-                            TaskCategory.FITNESS -> painterResource(R.drawable.ic_fitness)
-                            TaskCategory.WORK -> painterResource(R.drawable.ic_work_suitcase)
-                            TaskCategory.PERSONAL -> painterResource(R.drawable.ic_personal)
-                        },
-                        contentDescription = null,
-                        tint = colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(colorScheme.primaryContainer)
+                            .padding(6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Thay đổi cách nạp icon, sử dụng trực tiếp từ R.drawable
+                        Icon(
+                            painter = painterResource(
+                                id = when (task.category) {
+                                    TaskCategory.LANGUAGE -> R.drawable.home_learn // Thay bằng icon ngôn ngữ của bạn
+                                    TaskCategory.FITNESS -> R.drawable.home_daily // Thay bằng icon fitness của bạn
+                                    TaskCategory.WORK -> R.drawable.home_rank // Thay bằng icon công việc của bạn
+                                    TaskCategory.PERSONAL -> R.drawable.home_profile // Thay bằng icon cá nhân của bạn
+                                }
+                            ),
+                            contentDescription = null,
+                            tint = Color.Unspecified, // Để hiển thị màu gốc của icon
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = task.name,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = colorScheme.onSurface
                     )
                 }
 
                 Text(
                     text = "${task.progress}/${task.target}",
                     fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
                     color = if (task.progress >= task.target)
                         colorScheme.primary
-                    else colorScheme.onSurface
+                    else colorScheme.onSurfaceVariant
                 )
             }
 
+            // Các phần code khác giữ nguyên
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
                 progress = (task.progress.toFloat() / task.target).coerceIn(0f, 1f),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .padding(horizontal = 12.dp)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(6.dp)),
                 color = when {
                     task.progress >= task.target -> colorScheme.primary
                     task.progress > 0 -> colorScheme.secondary
@@ -282,33 +308,62 @@ fun TaskItem(task: Task, onTaskUpdated: (Task) -> Unit) {
             )
 
             if (expanded) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = {
                             onTaskUpdated(task.copy(progress = (task.progress - 1).coerceAtLeast(0)))
-                        }
+                        },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, colorScheme.outline.copy(alpha = 0.5f))
                     ) {
-                        Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = "Decrease", modifier = Modifier.size(60.dp))
+                        // Sử dụng Icons.Default thay vì painterResource nếu không có icon tương ứng
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Decrease",
+                            modifier = Modifier.size(18.dp),
+                            tint = colorScheme.primary
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Decrease")
+                        Text(
+                            "Decrease",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
 
                     Button(
                         onClick = {
                             onTaskUpdated(task.copy(progress = task.progress + 1))
-                        }
+                        },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Increase")
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Increase",
+                            modifier = Modifier.size(18.dp)
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Increase")
+                        Text(
+                            "Increase",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }

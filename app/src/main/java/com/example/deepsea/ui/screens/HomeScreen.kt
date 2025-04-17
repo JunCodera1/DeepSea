@@ -101,9 +101,6 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
                 units = units,
                 visibleUnitIndex = visibleHeadingIndex,
             )
-        },
-        bottomBar = {
-            DeepSeaBottomBar(navController)
         }
     ) { paddingValues ->
         // Content area with scrolling units

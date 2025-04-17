@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +27,7 @@ import com.example.deepsea.R
 fun LanguageSelectionPage(navController: NavController) {
     // State to track selected language
     var selectedLanguage by remember { mutableStateOf<String?>(null) }
+    val scrollState = rememberScrollState()
 
     // Purple color for selected state
     val purpleColor = Color(0xFF6750A4)
@@ -33,12 +36,15 @@ fun LanguageSelectionPage(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .verticalScroll(scrollState) // 👈 thêm dòng này
+
     ) {
         // Top bar with back button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+            ,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

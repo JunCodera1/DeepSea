@@ -22,10 +22,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
-import com.example.deepsea.ui.navigation.DeepSeaNavController
 
 @Composable
-fun SurveyPage(navController: NavController) {
+fun SurveySelectionPage(navController: NavController) {
     // State to track selected survey option
     var selectedSurvey by remember { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
@@ -224,5 +223,5 @@ fun SurveyOption(
 @Preview(showBackground = true)
 @Composable
 fun SurveySelectionPreview() {
-    SurveyPage(navController = rememberNavController())
+    SurveySelectionPage(navController = rememberNavController())
 }

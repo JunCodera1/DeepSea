@@ -46,6 +46,7 @@ import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.UserState
 import android.util.Log
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.ui.components.UnitData
@@ -54,7 +55,8 @@ import com.example.deepsea.ui.profile.UserProfileData
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.HomeScreen
 import com.example.deepsea.ui.screens.LanguageSelectionPage
-import com.example.deepsea.ui.screens.SurveyPage
+import com.example.deepsea.ui.screens.PathSelectionPage
+import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -165,7 +167,9 @@ fun MainContainer(
                                 currentRoute != "signup" &&
                                 currentRoute != "welcome" &&
                                 currentRoute != "learn-selection" &&
-                                currentRoute != "survey-selection"
+                                currentRoute != "survey-selection" &&
+                                currentRoute != "daily-goal-selection" &&
+                                currentRoute != "path_selection"
 
     val userState by authViewModel.userState.collectAsState()
 
@@ -209,21 +213,35 @@ fun MainContainer(
         NavHost(
             navController = nestedNavController.navController,
             startDestination = "welcome",
+            modifier = modifier.padding(padding),
             builder = {
                 composable("welcome") {
                     WelcomePage(
                         navController = nestedNavController
                     )
                 }
+
+
+
+
+                // Selection for learn Routes
+                composable("path_selection") {
+                    PathSelectionPage(nestedNavController.navController)
+                }
                 composable("daily-goal-selection") {
                     DailyGoalSelectionPage(nestedNavController.navController)
                 }
                 composable("survey-selection") {
-                    SurveyPage(nestedNavController.navController)
+                    SurveySelectionPage(nestedNavController.navController)
                 }
                 composable("learn-selection") {
                     LanguageSelectionPage(nestedNavController.navController)
                 }
+
+
+
+
+                // Main Routes
                 composable("home") {
                     val units = remember {
                         listOf(
@@ -238,6 +256,49 @@ fun MainContainer(
                     val navController = rememberNavController()
                     HomeScreen(units = units, navController = navController)
                 }
+                composable("home/learn") {
+                    // Load dashboard data when entering the main area
+                    LaunchedEffect(Unit) {
+                        Log.d("MainContainer", "Loading dashboard data")
+                        authViewModel.loadDashboard()
+                    }
+                    LearnPage()
+                }
+
+                composable("home/daily") {
+                    DailyPage()
+                }
+
+                composable("home/rank") {
+                    RankPage()
+                }
+
+                composable("home/profile") {
+                    val userState by authViewModel.userState.collectAsState()
+
+                    val sampleUserData = UserProfileData(
+                        name = "Huy V6",
+                        username = "BlackNoir1172005",
+                        joinDate = "August 2024",
+                        following = 45,
+                        followers = 23,
+                        dayStreak = 235,
+                        totalXp = 9102,
+                        currentLeague = "WEEK 2 Ruby",
+                        topFinishes = 1,
+                        courses = listOf("Course 1", "Course 2") // Example courses
+                    )
+                    ProfilePage(userData = sampleUserData, paddingValues = padding)
+                }
+
+                composable("home/game") {
+                    GamePage()
+                }
+
+
+
+
+                // Auth Routes
                 composable("signup") {
                     SignupPage(
                         navController = nestedNavController,
@@ -274,45 +335,6 @@ fun MainContainer(
                             authViewModel.login(email, password)
                         }
                     )
-                }
-
-                composable("home/learn") {
-                    // Load dashboard data when entering the main area
-                    LaunchedEffect(Unit) {
-                        Log.d("MainContainer", "Loading dashboard data")
-                        authViewModel.loadDashboard()
-                    }
-                    LearnPage()
-                }
-
-                composable("home/daily") {
-                    DailyPage()
-                }
-
-                composable("home/rank") {
-                    RankPage()
-                }
-
-                composable("home/profile") {
-                    val userState by authViewModel.userState.collectAsState()
-
-                    val sampleUserData = UserProfileData(
-                        name = "Huy V6",
-                        username = "BlackNoir1172005",
-                        joinDate = "August 2024",
-                        following = 45,
-                        followers = 23,
-                        dayStreak = 235,
-                        totalXp = 9102,
-                        currentLeague = "WEEK 2 Ruby",
-                        topFinishes = 1,
-                        courses = listOf("Course 1", "Course 2") // Example courses
-                    )
-                    ProfilePage(userData = sampleUserData)
-                }
-
-                composable("home/game") {
-                    GamePage()
                 }
             })
     }

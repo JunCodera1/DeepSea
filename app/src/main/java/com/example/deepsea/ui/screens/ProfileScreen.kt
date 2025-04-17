@@ -2,34 +2,15 @@ package com.example.deepsea.ui.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.deepsea.R
 
 @Composable
-fun ProfilePage(userData: UserProfileData) {
+fun ProfilePage(userData: UserProfileData, paddingValues: PaddingValues) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFF5F7F9)
@@ -53,150 +35,22 @@ fun ProfilePage(userData: UserProfileData) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(paddingValues)
         ) {
-            // Profile Header with Avatar and Settings
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFFFF3CC))
-                    .padding(vertical = 24.dp)
-            ) {
-                // Settings button
-                IconButton(
-                    onClick = { /* Open settings */ },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = Color.DarkGray
-                    )
-                }
-
-                // Avatar placeholder - replace R.drawable.avatar with your actual resource
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF5B3A29))
-                ) {
-                    // This would be your actual avatar image
-                    // For now using a colored box to represent the avatar
-                }
-            }
-
-            // Username and basic info
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = userData.name,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
-                )
-
-                Text(
-                    text = "Joined ${userData.joinDate}",
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Following and Followers row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "${userData.following} Following",
-                        fontSize = 16.sp,
-                        color = Color(0xFF4DB6FF)
-                    )
-
-                    Text(
-                        text = "  •  ",
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
-
-                    Text(
-                        text = "${userData.followers} Followers",
-                        fontSize = 16.sp,
-                        color = Color(0xFF4DB6FF)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Add Friends button
-                Button(
-                    onClick = { /* Add friend action */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF4DB6FF)
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color(0xFF4DB6FF)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "ADD FRIENDS",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Share button (represented by the export icon in your reference)
-                IconButton(
-                    onClick = { /* Share profile */ },
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share profile",
-                        tint = Color(0xFF4DB6FF)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Statistics header
+            // Profile Header
             Text(
-                text = "Statistics",
-                fontSize = 24.sp,
+                text = "Profile",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = Color.DarkGray
+                modifier = Modifier.padding(vertical = 16.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Year in Review Card
+            // User basic info card
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFE3F2FD)
-                )
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Row(
                     modifier = Modifier
@@ -204,175 +58,492 @@ fun ProfilePage(userData: UserProfileData) {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
+                    // User avatar with initial
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF673AB7)),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "2023 Year in Review",
-                            fontSize = 22.sp,
+                            text = "R",
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
+                            color = Color.White
                         )
+                    }
 
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // User info
+                    Column {
                         Text(
-                            text = "Look back at 2023 and discover your unique learner style!",
-                            fontSize = 16.sp,
+                            text = userData.name,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "@${userData.username}",
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "Joined ${userData.joinDate}",
+                            fontSize = 14.sp,
                             color = Color.Gray
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                        Button(
-                            onClick = { /* Open year in review */ },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4DB6FF)
+                        // Friends count
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Divider(
+                                modifier = Modifier
+                                    .width(30.dp)
+                                    .height(4.dp),
+                                color = Color(0xFF4DB6FF)
                             )
-                        ) {
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "SEE YEAR IN REVIEW",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                text = "${userData.followers} Friends",
+                                fontSize = 14.sp,
+                                color = Color.Gray
                             )
                         }
                     }
-
-                    // Placeholder for mascot image
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF8BC34A))
-                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Statistics section
+            Text(
+                text = "Statistics",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
             // Stats cards
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                // Day streak card
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Day streak stat
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Fire icon placeholder
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .background(Color(0xFFFFA726), CircleShape)
-                        )
-
+                                .size(40.dp)
+                                .background(Color(0xFFFFF3E0), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "1",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF9800)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "${userData.dayStreak}",
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
+                            text = "Current",
+                            fontSize = 12.sp,
+                            color = Color.Gray
                         )
-
                         Text(
-                            text = "Day streak",
-                            fontSize = 14.sp,
+                            text = "Streak",
+                            fontSize = 12.sp,
                             color = Color.Gray
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // XP card
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
+                    // XP stat
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // XP icon placeholder
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .background(Color(0xFFFFEB3B), CircleShape)
-                        )
-
-                        Text(
-                            text = "${userData.totalXp}",
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
-                        )
-
+                                .size(40.dp)
+                                .background(Color(0xFFFFF9C4), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${userData.totalXp}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFD600)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Total XP",
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    // Top 3 finishes stat
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color(0xFFE3F2FD), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${userData.topFinishes}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2196F3)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Top 3 Finishes",
+                            fontSize = 12.sp,
                             color = Color.Gray
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Achievement icons row
+            // Friend suggestions
+            Text(
+                text = "Friend suggestions",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // Friend suggestion card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Friend avatar
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Lorem",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Lorem knows some others",
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    // Add button
+                    Button(
+                        onClick = { /* Add friend */ },
+                        modifier = Modifier.height(36.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4DB6FF))
+                    ) {
+                        Text(text = "+ ADD")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Dismiss button
+                    IconButton(
+                        onClick = { /* Dismiss suggestion */ },
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray.copy(alpha = 0.3f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Dismiss",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Friends section with tabs
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Friends",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                TextButton(onClick = { /* Add friends */ }) {
+                    Text(
+                        text = "ADD FRIENDS",
+                        color = Color(0xFF4DB6FF),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Friend tabs
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(vertical = 4.dp)
             ) {
-                // Achievement icon placeholders
-                achievementIcon(Color(0xFFFFB74D))
-                achievementIcon(Color(0xFF4FC3F7))
-                achievementIcon(Color(0xFFBCAAA4))
-                achievementIcon(Color(0xFF9575CD), isSelected = true)
-                achievementIcon(Color(0xFFFFD54F))
-                achievementIcon(Color(0xFFFFB74D))
+                Text(
+                    text = "FOLLOWING",
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4DB6FF)
+                )
+                Text(
+                    text = "FOLLOWERS",
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Divider(color = Color.LightGray)
+
+            // Friends illustration card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Placeholder for friends illustration
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .background(Color(0xFFE8EAF6), RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Friends Illustration")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Learning is more fun and effective when you connect with others.",
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            // Invite friends card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Mascot icon placeholder
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF8BC34A))
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Invite friends",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "For each friend it's free and fun to learn languages in Duolingo",
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { /* Invite friends */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4DB6FF))
+                ) {
+                    Text(
+                        text = "INVITE FRIENDS",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Achievements section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Achievements",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                TextButton(onClick = { /* View all achievements */ }) {
+                    Text(
+                        text = "View all",
+                        color = Color(0xFF4DB6FF),
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            // Achievement cards
+            achievementCard(
+                title = "Wildfire",
+                description = "Reach a 3 day streak",
+                progress = "1/3",
+                backgroundColor = Color(0xFFFFCDD2),
+                iconColor = Color(0xFFF44336)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            achievementCard(
+                title = "Sage",
+                description = "Earn 1000 XP",
+                progress = "${userData.totalXp}/1000",
+                backgroundColor = Color(0xFFDCEDC8),
+                iconColor = Color(0xFF8BC34A)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            achievementCard(
+                title = "Scholar",
+                description = "Learn 100 new words in a single course",
+                progress = "100/175",
+                backgroundColor = Color(0xFFFFECB3),
+                iconColor = Color(0xFFFFA000)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-fun achievementIcon(color: Color, isSelected: Boolean = false) {
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(
-                if (isSelected) Color(0xFFE3F2FD) else Color.Transparent
-            )
-            .padding(8.dp)
+fun achievementCard(
+    title: String,
+    description: String,
+    progress: String,
+    backgroundColor: Color,
+    iconColor: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(color)
-                .align(Alignment.Center)
-        )
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Achievement icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(backgroundColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(iconColor)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = description,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Text(
+                text = progress,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray
+            )
+        }
     }
 }
 
@@ -380,19 +551,19 @@ fun achievementIcon(color: Color, isSelected: Boolean = false) {
 @Composable
 fun UserProfilePreview() {
     val sampleUserData = UserProfileData(
-        name = "DaveP",
-        username = "davep",
-        joinDate = "September 2015",
+        name = "Rajarshi Bashyas",
+        username = "rajarshi",
+        joinDate = "March 2021",
         following = 5,
         followers = 7,
-        dayStreak = 786,
-        totalXp = 89024,
-        currentLeague = "Diamond League",
+        dayStreak = 1,
+        totalXp = 531,
+        currentLeague = "Silver League",
         topFinishes = 3,
-        courses = listOf("Italian", "Spanish"),
+        courses = listOf("English", "Spanish"),
         isFriend = false
     )
-    ProfilePage(userData = sampleUserData)
+//    ProfilePage(userData = sampleUserData, paddingValues = 20.dp)
 }
 
 data class UserProfileData(

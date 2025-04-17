@@ -121,7 +121,7 @@ fun DailyGoalSelectionPage(navController: NavController) {
         // Continue button
         Button(
             onClick = {
-                navController.navigate("next-screen") // Replace with your next screen route
+                navController.navigate("path_selection") // Replace with your next screen route
             },
             modifier = Modifier
                 .fillMaxWidth()
