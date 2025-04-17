@@ -293,7 +293,7 @@ fun TaskItem(task: Task, onTaskUpdated: (Task) -> Unit) {
                             onTaskUpdated(task.copy(progress = (task.progress - 1).coerceAtLeast(0)))
                         }
                     ) {
-                        Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = "Decrease")
+                        Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = "Decrease", modifier = Modifier.size(60.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Decrease")
                     }

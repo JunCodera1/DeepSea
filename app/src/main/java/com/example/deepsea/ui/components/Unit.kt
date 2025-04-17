@@ -111,7 +111,7 @@ fun UnitContent(
         // Background unit image (desaturated)
         Image(
             modifier = Modifier
-                .size(200.dp)
+                .size(80.dp)
                 .align(
                     // Alternate image alignment based on unit index
                     alignment = if (unitIndex % 2 == 0) Alignment.CenterEnd else Alignment.CenterStart
@@ -137,7 +137,7 @@ fun UnitContent(
  * @param onStarClicked Callback when a star is clicked
  */
 @Composable
-fun UnitsLazyColumn(
+fun  UnitsLazyColumn(
     modifier: Modifier,
     state: LazyListState,
     units: List<UnitData>,
