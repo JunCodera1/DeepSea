@@ -127,10 +127,10 @@ fun DeepSeaApp() {
                     ) { backStackEntry ->
                         SignupPage(
                             navController = deepSeaNavController,
-                            onSignUpClick = { username, email, password, avatar ->
+                            onSignUpClick = { username, email, password, avatar, name ->
                                 // Updated to handle avatar
                                 Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
-                                authViewModel.signup(username, email, password, avatar)
+                                authViewModel.signup(username, email, password, avatar, name)
                             },
                             onSignInClick = {
                                 // Navigate to login page
@@ -303,7 +303,7 @@ fun MainContainer(
                 composable("signup") {
                     SignupPage(
                         navController = nestedNavController,
-                        onSignUpClick = { username, email, password, avatar ->
+                        onSignUpClick = { username, email, password, avatar, name ->
                             // Updated to handle avatar
                             Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
                             authViewModel.signup(username, email, password, avatar)
