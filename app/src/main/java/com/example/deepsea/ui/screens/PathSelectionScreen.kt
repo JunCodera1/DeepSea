@@ -47,7 +47,7 @@ fun PathSelectionPage(navController: NavController) {
             )
 
             LinearProgressIndicator(
-                progress = 0.6f,
+                progress = 0.8f,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp),

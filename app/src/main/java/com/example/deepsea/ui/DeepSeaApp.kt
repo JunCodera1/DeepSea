@@ -49,9 +49,10 @@ import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.data.model.Language
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
-import com.example.deepsea.ui.profile.UserProfileData
+import com.example.deepsea.data.model.UserProfileData
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.HomeScreen
 import com.example.deepsea.ui.screens.LanguageSelectionPage
@@ -286,7 +287,7 @@ fun MainContainer(
                         totalXp = 9102,
                         currentLeague = "WEEK 2 Ruby",
                         topFinishes = 1,
-                        courses = listOf("Course 1", "Course 2") // Example courses
+                        courses = listOf(Language.ENGLISH, Language.JAPANESE) // Example courses
                     )
                     ProfilePage(userData = sampleUserData, paddingValues = padding)
                 }

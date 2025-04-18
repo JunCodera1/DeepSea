@@ -7,6 +7,7 @@ import com.example.deepsea.data.model.MessageResponse
 import com.example.deepsea.data.model.RegisterRequest
 import com.example.deepsea.data.model.UploadResponse
 import com.example.deepsea.data.model.User
+import com.example.deepsea.data.model.UserProfileData
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.Call
@@ -16,6 +17,7 @@ import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 
 interface ApiService {
     @POST("api/auth/login")
@@ -31,7 +33,8 @@ interface ApiService {
     @GET("api/auth/home")
     suspend fun getDashboard(@Header("Authorization") token: String): Response<MessageResponse>
     @Multipart
-    @POST("upload/avatar")
+    @POST("api/upload/avatar")
     suspend fun uploadAvatar(@Part avatar: MultipartBody.Part): Response<UploadResponse>
+
 
 }
