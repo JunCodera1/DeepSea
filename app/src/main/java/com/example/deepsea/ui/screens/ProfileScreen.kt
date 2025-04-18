@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,17 +15,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.deepsea.R
+import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.data.model.Language
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun ProfilePage(userData: UserProfileData, paddingValues: PaddingValues) {
+fun ProfilePage(userData: UserProfileData,
+                paddingValues: PaddingValues) {
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFF5F7F9)
@@ -67,7 +70,7 @@ fun ProfilePage(userData: UserProfileData, paddingValues: PaddingValues) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "R",
+                            text = userData.name.firstOrNull()?.uppercase() ?: "",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -119,6 +122,15 @@ fun ProfilePage(userData: UserProfileData, paddingValues: PaddingValues) {
 
             // Statistics section
             Text(
+                text = "Languages",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            LanguageFlags(userData)
+
+            Spacer(modifier= Modifier.height(16.dp))
+            Text(
                 text = "Statistics",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -137,6 +149,7 @@ fun ProfilePage(userData: UserProfileData, paddingValues: PaddingValues) {
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+
                     // Day streak stat
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -148,7 +161,7 @@ fun ProfilePage(userData: UserProfileData, paddingValues: PaddingValues) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "1",
+                                text = userData.dayStreak.toString()?: "R",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF9800)
@@ -547,35 +560,61 @@ fun achievementCard(
     }
 }
 
+@Composable
+fun LanguageFlags(userData: UserProfileData) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            userData.courses.forEach { language ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = painterResource(id = language.flagResId),
+                        contentDescription = language.displayName,
+                        modifier = Modifier
+                            .size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = language.displayName,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
+    }
+}
+
+
 @Preview(showBackground = true)
 @Composable
 fun UserProfilePreview() {
     val sampleUserData = UserProfileData(
-        name = "Rajarshi Bashyas",
-        username = "rajarshi",
-        joinDate = "March 2021",
+        name = "Minh Tiến",
+        username = "mintien",
+        joinDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
+        courses = listOf(Language.ENGLISH, Language.JAPANESE),
+        followers = 10,
         following = 5,
-        followers = 7,
-        dayStreak = 1,
-        totalXp = 531,
+        dayStreak = 3,
+        totalXp = 200,
         currentLeague = "Silver League",
-        topFinishes = 3,
-        courses = listOf("English", "Spanish"),
-        isFriend = false
+        topFinishes = 1
     )
-//    ProfilePage(userData = sampleUserData, paddingValues = 20.dp)
+
+    ProfilePage(
+        userData = sampleUserData,
+        paddingValues = PaddingValues(16.dp)
+    )
 }
 
-data class UserProfileData(
-    val name: String,
-    val username: String,
-    val joinDate: String,
-    val courses: List<String>,
-    val followers: Int,
-    val following: Int,
-    val dayStreak: Int,
-    val totalXp: Int,
-    val currentLeague: String,
-    val topFinishes: Int,
-    val isFriend: Boolean = false
-)

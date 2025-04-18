@@ -25,8 +25,8 @@ import com.example.deepsea.R
 
 @Composable
 fun SurveySelectionPage(navController: NavController) {
-    // State to track selected survey option
-    var selectedSurvey by remember { mutableStateOf<String?>(null) }
+    // State to track selected survey options
+    var selectedSurveys by remember { mutableStateOf(setOf<String>()) }
     val scrollState = rememberScrollState()
 
     // Purple color for selected state
@@ -36,7 +36,7 @@ fun SurveySelectionPage(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .verticalScroll(scrollState) // 👈 thêm dòng này
+            .verticalScroll(scrollState)
     ) {
         // Top bar with back button
         Row(
@@ -50,11 +50,11 @@ fun SurveySelectionPage(navController: NavController) {
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(45.dp)
-                    .clickable { /* Handle back navigation */ }
+                    .clickable { navController.popBackStack() }
             )
 
             LinearProgressIndicator(
-                progress = 0f,
+                progress = 0.2f,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 16.dp),
@@ -86,7 +86,7 @@ fun SurveySelectionPage(navController: NavController) {
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(
-                        text = "How did you hear about DeepSea?",
+                        text = "How did you hear about DeepSea? (Select all that apply)",
                         modifier = Modifier.padding(16.dp),
                         fontSize = 18.sp
                     )
@@ -94,65 +94,75 @@ fun SurveySelectionPage(navController: NavController) {
             }
         }
 
-        // Header "For English speakers"
+        // Header
         Text(
-            text = "For English speakers",
-            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
+            text = "Select your answers",
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
 
-        // Language options
+        // Selected options counter
+        if (selectedSurveys.isNotEmpty()) {
+            Text(
+                text = "${selectedSurveys.size} option${if (selectedSurveys.size > 1) "s" else ""} selected",
+                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
+                fontSize = 16.sp,
+                color = purpleColor
+            )
+        }
+
+        // Survey options
         SurveyOption(
             survey = "Friends",
             flagResId = R.drawable.ic_friends,
-            isSelected = selectedSurvey == "Friends",
-            onSelect = { selectedSurvey = "Friends" }
+            isSelected = selectedSurveys.contains("Friends"),
+            onSelect = { toggleSurveySelection("Friends", selectedSurveys) { selectedSurveys = it } }
         )
         SurveyOption(
             survey = "TV",
             flagResId = R.drawable.ic_tv,
-            isSelected = selectedSurvey == "TV",
-            onSelect = { selectedSurvey = "TV" }
+            isSelected = selectedSurveys.contains("TV"),
+            onSelect = { toggleSurveySelection("TV", selectedSurveys) { selectedSurveys = it } }
         )
         SurveyOption(
             survey = "TikTok",
             flagResId = R.drawable.ic_tiktok,
-            isSelected = selectedSurvey == "TikTok",
-            onSelect = { selectedSurvey = "TikTok" }
+            isSelected = selectedSurveys.contains("TikTok"),
+            onSelect = { toggleSurveySelection("TikTok", selectedSurveys) { selectedSurveys = it } }
         )
         SurveyOption(
             survey = "News",
             flagResId = R.drawable.ic_news,
-            isSelected = selectedSurvey == "News",
-            onSelect = { selectedSurvey = "News" }
+            isSelected = selectedSurveys.contains("News"),
+            onSelect = { toggleSurveySelection("News", selectedSurveys) { selectedSurveys = it } }
         )
         SurveyOption(
             survey = "Youtube",
             flagResId = R.drawable.ic_youtube,
-            isSelected = selectedSurvey == "Youtube",
-            onSelect = { selectedSurvey = "Youtube" }
+            isSelected = selectedSurveys.contains("Youtube"),
+            onSelect = { toggleSurveySelection("Youtube", selectedSurveys) { selectedSurveys = it } }
         )
         SurveyOption(
             survey = "Social",
             flagResId = R.drawable.ic_social,
-            isSelected = selectedSurvey == "Social",
-            onSelect = { selectedSurvey = "Social" }
+            isSelected = selectedSurveys.contains("Social"),
+            onSelect = { toggleSurveySelection("Social", selectedSurveys) { selectedSurveys = it } }
         )
         SurveyOption(
             survey = "Other",
             flagResId = R.drawable.ic_other,
-            isSelected = selectedSurvey == "Other",
-            onSelect = { selectedSurvey = "Other" }
+            isSelected = selectedSurveys.contains("Other"),
+            onSelect = { toggleSurveySelection("Other", selectedSurveys) { selectedSurveys = it } }
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Continue button - changes color when an option is selected
-        val isOptionSelected = selectedSurvey != null
+        // Continue button - changes color when at least one option is selected
+        val isAnyOptionSelected = selectedSurveys.isNotEmpty()
         Button(
             onClick = {
-                if (isOptionSelected) {
+                if (isAnyOptionSelected) {
                     navController.navigate("learn-selection")
                 }
             },
@@ -160,14 +170,29 @@ fun SurveySelectionPage(navController: NavController) {
                 .fillMaxWidth()
                 .padding(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isOptionSelected) purpleColor else Color.LightGray
+                containerColor = if (isAnyOptionSelected) purpleColor else Color.LightGray
             ),
             shape = RoundedCornerShape(8.dp),
-            enabled = isOptionSelected
+            enabled = isAnyOptionSelected
         ) {
             Text("CONTINUE", fontSize = 16.sp)
         }
     }
+}
+
+// Helper function to toggle survey selection
+private fun toggleSurveySelection(
+    option: String,
+    currentSelections: Set<String>,
+    updateSelection: (Set<String>) -> Unit
+) {
+    val updatedSelections = currentSelections.toMutableSet()
+    if (updatedSelections.contains(option)) {
+        updatedSelections.remove(option)
+    } else {
+        updatedSelections.add(option)
+    }
+    updateSelection(updatedSelections)
 }
 
 @Composable
@@ -200,7 +225,7 @@ fun SurveyOption(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Flag/Icon
+            // Icon
             Image(
                 painter = painterResource(id = flagResId),
                 contentDescription = survey,
@@ -216,6 +241,17 @@ fun SurveyOption(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
             )
+
+            // Add a checkmark icon when selected
+            if (isSelected) {
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_check),
+                    contentDescription = "Selected",
+                    tint = purpleColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

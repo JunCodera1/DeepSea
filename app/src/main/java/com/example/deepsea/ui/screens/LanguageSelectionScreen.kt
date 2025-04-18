@@ -25,8 +25,8 @@ import com.example.deepsea.R
 
 @Composable
 fun LanguageSelectionPage(navController: NavController) {
-    // State to track selected language
-    var selectedLanguage by remember { mutableStateOf<String?>(null) }
+    // State to track selected languages using a set
+    var selectedLanguages by remember { mutableStateOf(setOf<String>()) }
     val scrollState = rememberScrollState()
 
     // Purple color for selected state
@@ -36,15 +36,13 @@ fun LanguageSelectionPage(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .verticalScroll(scrollState) // 👈 thêm dòng này
-
+            .verticalScroll(scrollState)
     ) {
         // Top bar with back button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
-            ,
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -58,7 +56,7 @@ fun LanguageSelectionPage(navController: NavController) {
             LinearProgressIndicator(
                 progress = 0.1f,
                 modifier = Modifier
-                    .weight(0.3f)
+                    .weight(0.2f)
                     .padding(start = 16.dp),
                 color = Color(0xFF8CC83C),
                 trackColor = Color(0xFFEEEEEE)
@@ -88,7 +86,7 @@ fun LanguageSelectionPage(navController: NavController) {
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(
-                        text = "What would you like to learn?",
+                        text = "Select the languages you want to learn",
                         modifier = Modifier.padding(16.dp),
                         fontSize = 18.sp
                     )
@@ -104,51 +102,61 @@ fun LanguageSelectionPage(navController: NavController) {
             fontWeight = FontWeight.Bold
         )
 
+        // Selected languages counter
+        if (selectedLanguages.isNotEmpty()) {
+            Text(
+                text = "${selectedLanguages.size} language${if (selectedLanguages.size > 1) "s" else ""} selected",
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+                fontSize = 16.sp,
+                color = purpleColor
+            )
+        }
+
         // Language options
         LanguageOption(
             language = "English",
             flagResId = R.drawable.flag_england,
-            isSelected = selectedLanguage == "English",
-            onSelect = { selectedLanguage = "English" }
+            isSelected = selectedLanguages.contains("English"),
+            onSelect = { toggleLanguageSelection("English", selectedLanguages) { selectedLanguages = it } }
         )
         LanguageOption(
             language = "Spanish",
             flagResId = R.drawable.flag_spain,
-            isSelected = selectedLanguage == "Spanish",
-            onSelect = { selectedLanguage = "Spanish" }
+            isSelected = selectedLanguages.contains("Spanish"),
+            onSelect = { toggleLanguageSelection("Spanish", selectedLanguages) { selectedLanguages = it } }
         )
         LanguageOption(
             language = "French",
             flagResId = R.drawable.flag_france,
-            isSelected = selectedLanguage == "French",
-            onSelect = { selectedLanguage = "French" }
+            isSelected = selectedLanguages.contains("French"),
+            onSelect = { toggleLanguageSelection("French", selectedLanguages) { selectedLanguages = it } }
         )
         LanguageOption(
             language = "German",
             flagResId = R.drawable.flag_germany,
-            isSelected = selectedLanguage == "German",
-            onSelect = { selectedLanguage = "German" }
+            isSelected = selectedLanguages.contains("German"),
+            onSelect = { toggleLanguageSelection("German", selectedLanguages) { selectedLanguages = it } }
         )
         LanguageOption(
             language = "Italian",
             flagResId = R.drawable.flag_italy,
-            isSelected = selectedLanguage == "Italian",
-            onSelect = { selectedLanguage = "Italian" }
+            isSelected = selectedLanguages.contains("Italian"),
+            onSelect = { toggleLanguageSelection("Italian", selectedLanguages) { selectedLanguages = it } }
         )
         LanguageOption(
             language = "Japanese",
             flagResId = R.drawable.flag_japan,
-            isSelected = selectedLanguage == "Japanese",
-            onSelect = { selectedLanguage = "Japanese" }
+            isSelected = selectedLanguages.contains("Japanese"),
+            onSelect = { toggleLanguageSelection("Japanese", selectedLanguages) { selectedLanguages = it } }
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Continue button - changes color when an option is selected
-        val isLanguageSelected = selectedLanguage != null
+        // Continue button - enabled when at least one language is selected
+        val isAnyLanguageSelected = selectedLanguages.isNotEmpty()
         Button(
             onClick = {
-                if (isLanguageSelected) {
+                if (isAnyLanguageSelected) {
                     navController.navigate("daily-goal-selection") // Replace with your next screen route
                 }
             },
@@ -156,14 +164,29 @@ fun LanguageSelectionPage(navController: NavController) {
                 .fillMaxWidth()
                 .padding(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isLanguageSelected) purpleColor else Color.LightGray
+                containerColor = if (isAnyLanguageSelected) purpleColor else Color.LightGray
             ),
             shape = RoundedCornerShape(8.dp),
-            enabled = isLanguageSelected
+            enabled = isAnyLanguageSelected
         ) {
             Text("CONTINUE", fontSize = 16.sp)
         }
     }
+}
+
+// Helper function to toggle language selection
+private fun toggleLanguageSelection(
+    language: String,
+    currentSelections: Set<String>,
+    updateSelection: (Set<String>) -> Unit
+) {
+    val updatedSelections = currentSelections.toMutableSet()
+    if (updatedSelections.contains(language)) {
+        updatedSelections.remove(language)
+    } else {
+        updatedSelections.add(language)
+    }
+    updateSelection(updatedSelections)
 }
 
 @Composable
@@ -212,6 +235,17 @@ fun LanguageOption(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
             )
+
+            // Add a checkmark icon when selected
+            if (isSelected) {
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_check),
+                    contentDescription = "Selected",
+                    tint = purpleColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

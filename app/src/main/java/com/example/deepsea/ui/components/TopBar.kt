@@ -83,7 +83,7 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 60.dp, bottom = 16.dp),
+                    .padding(top = 20.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BarIcon(R.drawable.flag_japan)
