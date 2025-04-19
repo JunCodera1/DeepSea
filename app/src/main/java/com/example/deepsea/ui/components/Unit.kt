@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
 import com.example.deepsea.text.PrimaryText
 import com.example.deepsea.text.TitleText
+import com.example.deepsea.ui.screens.orderToPercentage
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
 
@@ -52,7 +53,8 @@ data class UnitData(
     val color: Color = FeatherGreen,
     val darkerColor: Color = FeatherGreenDark,
     val description: String = "Make introductions",
-    @DrawableRes val image: Int = R.drawable.ic_booking
+
+    @DrawableRes val image: Int = R.drawable.cut
 )
 
 /**
@@ -85,9 +87,9 @@ fun UnitContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     // Calculate alignment percentage based on star index and unit position
-                    val isRightAligned = unitIndex % 2 == 0
+
                     val alignPercentage = remember {
-                        calculateStarPosition(starIndex, isRightAligned)
+                        orderToPercentage(starIndex, unitIndex % 2 == 0)
                     }
 
                     // Space before the star
@@ -111,17 +113,17 @@ fun UnitContent(
         // Background unit image (desaturated)
         Image(
             modifier = Modifier
-                .size(80.dp)
+                .size(210.dp).padding(40.dp)
                 .align(
                     // Alternate image alignment based on unit index
                     alignment = if (unitIndex % 2 == 0) Alignment.CenterEnd else Alignment.CenterStart
                 ),
             painter = painterResource(id = unitImage),
-            colorFilter = ColorFilter.colorMatrix(
-                colorMatrix = ColorMatrix().apply {
-                    setToSaturation(0f) // Make image grayscale
-                }
-            ),
+//            colorFilter = ColorFilter.colorMatrix(
+//                colorMatrix = ColorMatrix().apply {
+//                    setToSaturation(0f) // Make image grayscale
+//                }
+//            ),
             contentDescription = "Unit image"
         )
     }
