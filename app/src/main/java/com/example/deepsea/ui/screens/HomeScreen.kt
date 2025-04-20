@@ -85,7 +85,9 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
 
     // Track visible unit for the top bar
     val visibleHeadingIndex by remember {
-        derivedStateOf { lazyListState.firstVisibleItemIndex }
+        derivedStateOf {
+            lazyListState.firstVisibleItemIndex
+        }
     }
 
     // Dialog state
@@ -93,6 +95,7 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
     var isDialogInteractive by remember { mutableStateOf(false) }
     var dialogTransition by remember { mutableStateOf(0f) }
     var rootHeight by remember { mutableStateOf(0f) }
+
 
     // Main layout with top and bottom bars
     Scaffold(
@@ -102,11 +105,11 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
                 visibleUnitIndex = visibleHeadingIndex,
             )
         }
-    ) { paddingValues ->
+    ) {
         // Content area with scrolling units
         UnitsLazyColumn(
             modifier = Modifier
-                .padding(paddingValues)
+                .padding(it)
                 .onGloballyPositioned {
                     rootHeight = it.parentCoordinates!!.size.height.toFloat()
                 }
@@ -114,8 +117,8 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
                     detectTapGestures(onPress = {
                         isDialogShown = false
                     })
-                }
-                .width(500.dp),
+                },
+
             state = lazyListState,
             units = units,
             starCountPerUnit = starCountPerUnit
@@ -155,18 +158,19 @@ private fun handleStarTap(
     lazyListState: androidx.compose.foundation.lazy.LazyListState,
     onDialogStateChange: (shown: Boolean, interactive: Boolean, transition: Float) -> Unit
 ) {
-    val midCoordinates = rootHeight / 2
+    val midCoordinate = rootHeight / 2
 
     coroutineScope.launch {
-        // Hide dialog during scrolling
+        // Ẩn dialog trong khi scroll
         onDialogStateChange(false, isInteractive, 0f)
 
-        // Calculate and animate scroll
-        val scrollBy = (starCoordinate - midCoordinates)
+        // Tính toán và thực hiện scroll animation
+        val scrollBy = (starCoordinate - midCoordinate).coerceAtLeast(0f)
         lazyListState.animateScrollBy(scrollBy)
 
-        // Show dialog after scrolling complete
-        onDialogStateChange(true, isInteractive, midCoordinates)
+        // Cập nhật vị trí dialog sau khi scroll hoàn tất
+        val finalDialogPosition = starCoordinate - scrollBy
+        onDialogStateChange(true, isInteractive, finalDialogPosition)
     }
 }
 
@@ -197,7 +201,7 @@ fun StarDialog(
         Column(
             modifier = Modifier
                 .graphicsLayer {
-                    translationY = dialogTransition + 100.dp.toPx()
+                    translationY = dialogTransition +  100.dp.toPx()
                     transformOrigin = TransformOrigin(0.5f, 0f)
                     scaleY = animatedScale
                     scaleX = animatedScale
