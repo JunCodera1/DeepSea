@@ -16,5 +16,4 @@ data class UserProfileData(
     val currentLeague: String,
     val topFinishes: Int,
     val friends: Set<Int?> = setOf(null)
-
 )

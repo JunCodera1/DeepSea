@@ -54,6 +54,7 @@ import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.data.model.UserProfileData
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
+import com.example.deepsea.ui.screens.ForgotPasswordPage
 import com.example.deepsea.ui.screens.HomeScreen
 import com.example.deepsea.ui.screens.LanguageSelectionPage
 import com.example.deepsea.ui.screens.PathSelectionPage
@@ -127,10 +128,10 @@ fun DeepSeaApp() {
                     ) { backStackEntry ->
                         SignupPage(
                             navController = deepSeaNavController,
-                            onSignUpClick = { username, email, password, avatar ->
+                            onSignUpClick = { username, email, password, avatar, name ->
                                 // Updated to handle avatar
                                 Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
-                                authViewModel.signup(username, email, password, avatar)
+                                authViewModel.signup(username, email, password, avatar, name)
                             },
                             onSignInClick = {
                                 // Navigate to login page
@@ -166,6 +167,7 @@ fun MainContainer(
     val currentRoute = navBackStackEntry?.destination?.route
     val isAuthRoute: Boolean = currentRoute != "login" &&
                                 currentRoute != "signup" &&
+                                currentRoute != "forgot-password" &&
                                 currentRoute != "welcome" &&
                                 currentRoute != "learn-selection" &&
                                 currentRoute != "survey-selection" &&
@@ -303,7 +305,7 @@ fun MainContainer(
                 composable("signup") {
                     SignupPage(
                         navController = nestedNavController,
-                        onSignUpClick = { username, email, password, avatar ->
+                        onSignUpClick = { username, email, password, avatar, name ->
                             // Updated to handle avatar
                             Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
                             authViewModel.signup(username, email, password, avatar)
@@ -336,6 +338,9 @@ fun MainContainer(
                             authViewModel.login(email, password)
                         }
                     )
+                }
+                composable("forgot-password") {
+                    ForgotPasswordPage(nestedNavController.navController)
                 }
             })
     }

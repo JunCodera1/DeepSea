@@ -103,7 +103,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signup(username: String, email: String, password: String, avatar: Uri? = null) {
+    fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
             try {
@@ -116,6 +116,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
                 // Create registration request with avatar URL
                 val registerRequest = RegisterRequest(
+                    name= name,
                     username = username,
                     password = password,
                     email = email,
