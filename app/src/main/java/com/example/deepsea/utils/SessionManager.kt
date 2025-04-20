@@ -21,7 +21,6 @@ class SessionManager(private val context: Context) {
         private val KEY_EMAIL = stringPreferencesKey("email")
     }
 
-    // Lưu thông tin người dùng sau khi đăng nhập
     suspend fun saveAuthToken(token: String, username: String, userId: Long, email: String) {
         context.dataStore.edit { preferences ->
             preferences[KEY_TOKEN] = token
@@ -31,22 +30,18 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    // Lấy token
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_TOKEN]
     }
 
-    // Lấy username
     val username: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_USERNAME]
     }
 
-    // Lấy user ID
     val userId: Flow<Long?> = context.dataStore.data.map { preferences ->
         preferences[KEY_USER_ID]
     }
 
-    // Lấy email
     val email: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_EMAIL]
     }

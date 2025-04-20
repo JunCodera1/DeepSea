@@ -13,6 +13,6 @@ interface UserProfileService {
     @GET("user/suggestions")
     suspend fun getFriendSuggestions(): List<FriendSuggestion>
 
-    @GET("api/users/{userId}/profile")
+    @GET("api/users/data/{userId}/profile")
     suspend fun getUserProfile(@Path("userId") userId: Long): Response<UserProfileData>
 }

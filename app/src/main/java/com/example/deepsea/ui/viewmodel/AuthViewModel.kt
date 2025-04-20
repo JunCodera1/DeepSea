@@ -1,15 +1,15 @@
 package com.example.deepsea.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.JwtResponse
 import com.example.deepsea.data.model.LoginRequest
-import com.example.deepsea.data.model.MessageResponse
 import com.example.deepsea.data.model.RegisterRequest
 import com.example.deepsea.utils.DashboardState
 import com.example.deepsea.utils.LoginState
@@ -22,7 +22,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
@@ -66,26 +67,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     val jwtResponse = response.body()!!
                     Log.d("AuthViewModel", "Login response: $jwtResponse")
 
-                    // Extract username and email from JWT token if they're empty in the response
                     val username = if (jwtResponse.username.isNullOrEmpty()) {
-                        // You can extract username from token or use a default/placeholder value
-                        "user" // or decode from token
+                        "user"
                     } else {
                         jwtResponse.username
                     }
 
                     val userEmail = if (jwtResponse.email.isNullOrEmpty()) {
-                        // Use the email that was used for login
                         email
                     } else {
                         jwtResponse.email
                     }
 
-                    // Save token and user info
                     sessionManager.saveAuthToken(
                         jwtResponse.token,
                         username,
-                        jwtResponse.id ?: 0, // Provide default if null
+                        jwtResponse.id ?: 0,
                         userEmail
                     )
 
@@ -120,7 +117,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     username = username,
                     password = password,
                     email = email,
-                    avatarUrl = avatarUrl
+                    avatarUrl = avatarUrl,
                 )
 
                 val response = RetrofitClient.authApi.register(registerRequest)
@@ -138,29 +135,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun uploadAvatarAndGetUrl(uri: Uri): String? {
         return try {
-            // Get the content resolver and file data
+            // Lấy đường dẫn file từ URI
             val contentResolver = getApplication<Application>().contentResolver
-            val inputStream = contentResolver.openInputStream(uri)
+            val file = File(getRealPathFromURI(getApplication(), uri) ?: return null)
 
-            // Create a MultipartBody.Part for the image
-            val requestFile = inputStream?.readBytes()?.let {
-                RequestBody.create("image/*".toMediaTypeOrNull(), it)
-            }
+            // Tạo RequestBody từ file
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
 
-            val imagePart = requestFile?.let {
-                MultipartBody.Part.createFormData(
-                    "avatar",
-                    "avatar_image.jpg",
-                    it
-                )
-            }
+            // Tạo MultipartBody.Part
+            val imagePart = MultipartBody.Part.createFormData("avatar", file.name, requestFile)
 
-            // Upload the image
-            if (imagePart != null) {
-                val response = RetrofitClient.authApi.uploadAvatar(imagePart)
-                if (response.isSuccessful && response.body() != null) {
-                    return response.body()!!.url
-                }
+            // Upload ảnh
+            val response = RetrofitClient.authApi.uploadAvatar(imagePart)
+            if (response.isSuccessful && response.body() != null) {
+                return response.body()!!.url
             }
             null
         } catch (e: Exception) {
@@ -168,6 +156,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             null
         }
     }
+
+    fun getRealPathFromURI(context: Context, uri: Uri): String? {
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        val cursor = context.contentResolver.query(uri, projection, null, null, null)
+        cursor?.moveToFirst()
+        val columnIndex = cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+        val path = columnIndex?.let { cursor.getString(it) }
+        cursor?.close()
+        return path
+    }
+
 
     fun loadDashboard() {
         viewModelScope.launch {
