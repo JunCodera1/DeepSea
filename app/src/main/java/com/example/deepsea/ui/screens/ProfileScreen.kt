@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.profile
 
+import UserProfileViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,25 +12,46 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deepsea.data.model.UserProfileData
 import com.example.deepsea.data.model.Language
+import com.example.deepsea.data.model.LoginResponse
+import com.example.deepsea.utils.SessionManager
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import androidx.compose.runtime.getValue
+
 
 @Composable
-fun ProfilePage(userData: UserProfileData,
-                paddingValues: PaddingValues) {
+fun ProfilePage(sessionManager: SessionManager,
+    viewModel: UserProfileViewModel = viewModel(),
+    paddingValues: PaddingValues
+) {
+    val context = LocalContext.current
 
+    val userId by sessionManager.userId.collectAsState(initial = null)
+
+    val userProfile = viewModel.userProfileData.value
+
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            viewModel.fetchUserProfile(userId!!)
+        }
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFF5F7F9)
@@ -61,7 +83,6 @@ fun ProfilePage(userData: UserProfileData,
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // User avatar with initial
                     Box(
                         modifier = Modifier
                             .size(60.dp)
@@ -70,7 +91,7 @@ fun ProfilePage(userData: UserProfileData,
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = userData.name.firstOrNull()?.uppercase() ?: "",
+                            text = userProfile?.name?.firstOrNull()?.uppercase() ?: "",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -82,17 +103,17 @@ fun ProfilePage(userData: UserProfileData,
                     // User info
                     Column {
                         Text(
-                            text = userData.name,
+                            text = userProfile?.name ?: "",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "@${userData.username}",
+                            text = "@${userProfile?.username}",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
                         Text(
-                            text = "Joined ${userData.joinDate}",
+                            text = "Joined ${userProfile?.joinDate}",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
@@ -109,7 +130,7 @@ fun ProfilePage(userData: UserProfileData,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "${userData.followers} Friends",
+                                text = "${userProfile?.followers} Friends",
                                 fontSize = 14.sp,
                                 color = Color.Gray
                             )
@@ -127,7 +148,7 @@ fun ProfilePage(userData: UserProfileData,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            LanguageFlags(userData)
+            LanguageFlags(userData = userProfile)
 
             Spacer(modifier= Modifier.height(16.dp))
             Text(
@@ -161,7 +182,7 @@ fun ProfilePage(userData: UserProfileData,
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = userData.dayStreak.toString()?: "R",
+                                text = userProfile?.dayStreak.toString()?: "R",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF9800)
@@ -191,7 +212,7 @@ fun ProfilePage(userData: UserProfileData,
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "${userData.totalXp}",
+                                text = "${userProfile?.totalXp}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFFD600)
@@ -216,7 +237,7 @@ fun ProfilePage(userData: UserProfileData,
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "${userData.topFinishes}",
+                                text = "${userProfile?.topFinishes}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF2196F3)
@@ -480,7 +501,7 @@ fun ProfilePage(userData: UserProfileData,
             achievementCard(
                 title = "Sage",
                 description = "Earn 1000 XP",
-                progress = "${userData.totalXp}/1000",
+                progress = "${userProfile?.totalXp}/1000",
                 backgroundColor = Color(0xFFDCEDC8),
                 iconColor = Color(0xFF8BC34A)
             )
@@ -561,7 +582,7 @@ fun achievementCard(
 }
 
 @Composable
-fun LanguageFlags(userData: UserProfileData) {
+fun LanguageFlags(userData: UserProfileData?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -573,7 +594,7 @@ fun LanguageFlags(userData: UserProfileData) {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            userData.courses.forEach { language ->
+            userData?.courses?.forEach { language ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -612,9 +633,9 @@ fun UserProfilePreview() {
         topFinishes = 1
     )
 
-    ProfilePage(
-        userData = sampleUserData,
-        paddingValues = PaddingValues(16.dp)
-    )
+//    ProfilePage(
+//        userId = 2,
+//        paddingValues = PaddingValues(16.dp)
+//    )
 }
 

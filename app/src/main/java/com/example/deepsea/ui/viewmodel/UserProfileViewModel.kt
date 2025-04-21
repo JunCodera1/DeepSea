@@ -10,7 +10,7 @@ class UserProfileViewModel : ViewModel() {
     private val _userProfileData = mutableStateOf<UserProfileData?>(null)
     val userProfileData: State<UserProfileData?> = _userProfileData
 
-    fun fetchUserProfile(userId: Int) {
+    fun fetchUserProfile(userId: Long?) {
         viewModelScope.launch {
             try {
                 val data = RetrofitClient.userProfileService.getUserProfileById(userId)

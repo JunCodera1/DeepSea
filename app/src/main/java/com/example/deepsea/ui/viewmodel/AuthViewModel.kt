@@ -28,19 +28,15 @@ import java.io.File
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
 
-    // Login states
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
 
-    // Register states
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
     val registerState: StateFlow<RegisterState> = _registerState.asStateFlow()
 
-    // Dashboard states
     private val _dashboardState = MutableStateFlow<DashboardState>(DashboardState.Loading)
     val dashboardState: StateFlow<DashboardState> = _dashboardState.asStateFlow()
 
-    // User info states
     private val _userState = MutableStateFlow<UserState>(UserState.NotLoggedIn)
     val userState: StateFlow<UserState> = _userState.asStateFlow()
 
@@ -104,14 +100,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
             try {
-                // Handle avatar upload if present
                 val avatarUrl = if (avatar != null) {
                     uploadAvatarAndGetUrl(avatar)
                 } else {
                     null
                 }
 
-                // Create registration request with avatar URL
                 val registerRequest = RegisterRequest(
                     name= name,
                     username = username,
@@ -123,7 +117,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = RetrofitClient.authApi.register(registerRequest)
 
                 if (response.isSuccessful && response.body() != null) {
-                    _registerState.value = RegisterState.Success(response.body()!!.message)
+                    _registerState.value = RegisterState.Success(response.body()!!.message + "fwiejfwejfwfhudhaiojasidsaidcvn")
                 } else {
                     _registerState.value = RegisterState.Error("Registration failed: ${response.message()}")
                 }
@@ -135,17 +129,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun uploadAvatarAndGetUrl(uri: Uri): String? {
         return try {
-            // Lấy đường dẫn file từ URI
             val contentResolver = getApplication<Application>().contentResolver
             val file = File(getRealPathFromURI(getApplication(), uri) ?: return null)
 
-            // Tạo RequestBody từ file
             val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
 
-            // Tạo MultipartBody.Part
             val imagePart = MultipartBody.Part.createFormData("avatar", file.name, requestFile)
 
-            // Upload ảnh
             val response = RetrofitClient.authApi.uploadAvatar(imagePart)
             if (response.isSuccessful && response.body() != null) {
                 return response.body()!!.url
@@ -178,7 +168,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     if (response.isSuccessful && response.body() != null) {
                         _dashboardState.value = DashboardState.Success(response.body()!!.message)
                     } else {
-                        // Token hết hạn hoặc không hợp lệ
                         if (response.code() == 401) {
                             logout()
                         }

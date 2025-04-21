@@ -47,12 +47,11 @@ import com.example.deepsea.ui.viewmodel.AuthViewModel
 import com.example.deepsea.utils.UserState
 import android.util.Log
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
-import com.example.deepsea.data.model.Language
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
-import com.example.deepsea.data.model.UserProfileData
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.ForgotPasswordPage
 import com.example.deepsea.ui.screens.HomeScreen
@@ -60,6 +59,7 @@ import com.example.deepsea.ui.screens.LanguageSelectionPage
 import com.example.deepsea.ui.screens.PathSelectionPage
 import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.utils.SessionManager
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -276,30 +276,15 @@ fun MainContainer(
                     RankPage()
                 }
 
-                composable("home/profile") {
-                    val userState by authViewModel.userState.collectAsState()
-
-                    val sampleUserData = UserProfileData(
-                        name = "Huy V6",
-                        username = "BlackNoir1172005",
-                        joinDate = "August 2024",
-                        following = 45,
-                        followers = 23,
-                        dayStreak = 235,
-                        totalXp = 9102,
-                        currentLeague = "WEEK 2 Ruby",
-                        topFinishes = 1,
-                        courses = listOf(Language.ENGLISH, Language.JAPANESE) // Example courses
-                    )
-                    ProfilePage(userData = sampleUserData, paddingValues = padding)
+                composable("home/profile/{userId}") { backStackEntry ->
+                    val context = LocalContext.current
+                    val sessionManager = SessionManager(context) // Khởi tạo sessionManager
+                    ProfilePage(sessionManager = sessionManager, paddingValues = padding)
                 }
 
                 composable("home/game") {
                     GamePage()
                 }
-
-
-
 
                 // Auth Routes
                 composable("signup") {
@@ -333,7 +318,6 @@ fun MainContainer(
                             }
                         },
                         onSignInClick = { email, password ->
-                            // Fixed: Directly call login
                             Log.d("MainContainer", "Attempting login with email: $email")
                             authViewModel.login(email, password)
                         }

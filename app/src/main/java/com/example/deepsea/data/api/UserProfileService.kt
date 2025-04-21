@@ -7,8 +7,8 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface UserProfileService {
-    @GET("user/profile/id/{id}")
-    suspend fun getUserProfileById(@Path("id") id: Int): UserProfileData
+    @GET("api/users/data/{id}/profile")
+    suspend fun getUserProfileById(@Path("id") id: Long?): UserProfileData
 
     @GET("user/suggestions")
     suspend fun getFriendSuggestions(): List<FriendSuggestion>
