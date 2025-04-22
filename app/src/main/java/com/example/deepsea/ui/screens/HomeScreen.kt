@@ -11,15 +11,19 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -53,6 +57,10 @@ import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.Gray
 import com.example.deepsea.ui.theme.Polar
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Mic
+
+
+
 
 /**
  * Extension function to add composable with composition local to NavGraphBuilder
@@ -143,7 +151,8 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
     StarDialog(
         isDialogShown = isDialogShown,
         isDialogInteractive = isDialogInteractive,
-        dialogTransition = dialogTransition
+        dialogTransition = dialogTransition,
+        navController = navController
     )
 }
 
@@ -186,7 +195,8 @@ private fun handleStarTap(
 fun StarDialog(
     isDialogShown: Boolean,
     isDialogInteractive: Boolean,
-    dialogTransition: Float
+    dialogTransition: Float,
+    navController: NavController
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -231,6 +241,21 @@ fun StarDialog(
                 text = "Complete all levels above to unlock this",
                 color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
             )
+
+            Button(
+                onClick = { navController.navigate("home/voice_assistant") },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Filled.Mic, contentDescription = "Voice")
+                    Text("Voice Assistant")
+                }
+            }
 
             // Action button
             Button(

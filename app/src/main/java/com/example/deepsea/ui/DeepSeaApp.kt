@@ -49,6 +49,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.data.model.Language
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
@@ -59,6 +60,8 @@ import com.example.deepsea.ui.screens.LanguageSelectionPage
 import com.example.deepsea.ui.screens.PathSelectionPage
 import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
+
+
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -197,6 +200,7 @@ fun MainContainer(
                                 "Favorites" -> nestedNavController.navController.navigate("favorites_route")
                                 "Settings" -> nestedNavController.navController.navigate("settings_route")
                                 "Help" -> nestedNavController.navController.navigate("help_route")
+                                "Voice Assistant" -> nestedNavController.navController.navigate("home/voice_assistant")
                             }
                         }
                     )
@@ -237,6 +241,9 @@ fun MainContainer(
                 }
                 composable("learn-selection") {
                     LanguageSelectionPage(nestedNavController.navController)
+                }
+                composable("home/voice_assistant") {
+                    VoiceAssistantScreen()
                 }
 
 

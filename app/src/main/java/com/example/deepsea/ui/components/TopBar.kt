@@ -65,6 +65,7 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
     systemUiController.setStatusBarColor(animatedColor)
     systemUiController.setNavigationBarColor(Color.White)
 
+
     Box(
         modifier = Modifier
             .zIndex(10f)
@@ -83,33 +84,28 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BarIcon(R.drawable.flag_japan)
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BarIcon(
-                        icon = R.drawable.ic_fire,
-                        text = "1",
-                        onClick = { showStreakDialog.value = true }
+                if (showStreakDialog.value) {
+                    AlertDialog(
+                        onDismissRequest = { showStreakDialog.value = false },
+                        confirmButton = {},
+                        title = { Text("Streak Calendar") },
+                        text = {
+                            StreakCalendar()
+                        }
                     )
-                    BarIcon(R.drawable.ic_gem, "505")
-                    BarIcon(R.drawable.ic_heart, "5")
                 }
-            }
 
-            if (showStreakDialog.value) {
-                AlertDialog(
-                    onDismissRequest = { showStreakDialog.value = false },
-                    confirmButton = {},
-                    title = { Text("Streak Calendar") },
-                    text = {
-                        StreakCalendar()
-                    }
+                BarIcon(
+                    icon = R.drawable.ic_fire,
+                    text = "1",
+                    onClick = { showStreakDialog.value = true }
                 )
+
+                BarIcon(R.drawable.ic_gem, "505")
+                BarIcon(R.drawable.ic_heart, "5")
             }
 
             Box {
@@ -126,16 +122,12 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowUp,
                     tint = Color.White,
-                    contentDescription = "up",
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 8.dp)
+                    contentDescription = "up"
                 )
             }
         }
     }
 }
-
 
 
 @Composable
@@ -203,4 +195,3 @@ fun StreakCalendar() {
         }
     }
 }
-
