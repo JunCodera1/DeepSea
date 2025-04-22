@@ -111,7 +111,7 @@ fun DeepSeaApp() {
                             onSignInClick = { email, password ->
                                 // Fixed: Directly call login instead of returning another lambda
                                 Log.d("DeepSeaApp", "Attempting login with email: $email")
-                                authViewModel.login(email, password)
+                                authViewModel.login(email, password, deepSeaNavController.navController)
                             }
                         )
                     }
@@ -313,13 +313,10 @@ fun MainContainer(
                         authViewModel = authViewModel,
                         onLoginSuccess = {
                             Log.d("MainContainer", "Login success, navigating to learn-selection")
-                            nestedNavController.navController.navigate("survey-selection") {
-                                popUpTo("login") { inclusive = true }
-                            }
                         },
                         onSignInClick = { email, password ->
                             Log.d("MainContainer", "Attempting login with email: $email")
-                            authViewModel.login(email, password)
+                            authViewModel.login(email, password, nestedNavController.navController)
                         }
                     )
                 }

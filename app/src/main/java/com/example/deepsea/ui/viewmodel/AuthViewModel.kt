@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.LoginRequest
 import com.example.deepsea.data.model.RegisterRequest
@@ -54,7 +55,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, navController: NavController) {
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
             try {
@@ -63,17 +64,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     val jwtResponse = response.body()!!
                     Log.d("AuthViewModel", "Login response: $jwtResponse")
 
-                    val username = if (jwtResponse.username.isNullOrEmpty()) {
-                        "user"
-                    } else {
-                        jwtResponse.username
-                    }
-
-                    val userEmail = if (jwtResponse.email.isNullOrEmpty()) {
-                        email
-                    } else {
-                        jwtResponse.email
-                    }
+                    val username = jwtResponse.username ?: "user"
+                    val userEmail = jwtResponse.email ?: email
 
                     sessionManager.saveAuthToken(
                         jwtResponse.token,
@@ -84,6 +76,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
                     _userState.value = UserState.LoggedIn(username, userEmail)
                     _loginState.value = LoginState.Success
+
+                    if (jwtResponse.firstLogin == true) {
+                        navController.navigate("survey-selection") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+
                     Log.d("AuthViewModel", "Login successful, state updated to Success")
                 } else {
                     _loginState.value = LoginState.Error("Login failed: ${response.message()}")
@@ -95,6 +98,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
 
     fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
