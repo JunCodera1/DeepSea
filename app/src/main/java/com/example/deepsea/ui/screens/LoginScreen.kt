@@ -101,7 +101,7 @@ fun LoginPage(
             TextButton(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
-                    navController.navController.navigate("forgot-password")
+                    // TODO: Handle forgot password
                 }
             ) {
                 Text("Forgot password?")

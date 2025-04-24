@@ -212,6 +212,7 @@ fun DeepSeaFAButton(
                     "Favorites" to Icons.Default.Favorite,
                     "Settings" to Icons.Default.Settings,
                     "Help" to Icons.Default.Info
+
                 )
             } else {
                 iconOptions
