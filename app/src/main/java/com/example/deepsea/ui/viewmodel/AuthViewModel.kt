@@ -1,15 +1,16 @@
 package com.example.deepsea.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.JwtResponse
 import com.example.deepsea.data.model.LoginRequest
-import com.example.deepsea.data.model.MessageResponse
 import com.example.deepsea.data.model.RegisterRequest
 import com.example.deepsea.utils.DashboardState
 import com.example.deepsea.utils.LoginState
@@ -22,24 +23,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
 
-    // Login states
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
 
-    // Register states
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
     val registerState: StateFlow<RegisterState> = _registerState.asStateFlow()
 
-    // Dashboard states
     private val _dashboardState = MutableStateFlow<DashboardState>(DashboardState.Loading)
     val dashboardState: StateFlow<DashboardState> = _dashboardState.asStateFlow()
 
-    // User info states
     private val _userState = MutableStateFlow<UserState>(UserState.NotLoggedIn)
     val userState: StateFlow<UserState> = _userState.asStateFlow()
 
@@ -57,7 +55,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, navController: NavController) {
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
             try {
@@ -66,31 +64,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     val jwtResponse = response.body()!!
                     Log.d("AuthViewModel", "Login response: $jwtResponse")
 
-                    // Extract username and email from JWT token if they're empty in the response
-                    val username = if (jwtResponse.username.isNullOrEmpty()) {
-                        // You can extract username from token or use a default/placeholder value
-                        "user" // or decode from token
-                    } else {
-                        jwtResponse.username
-                    }
+                    val username = jwtResponse.username ?: "user"
+                    val userEmail = jwtResponse.email ?: email
 
-                    val userEmail = if (jwtResponse.email.isNullOrEmpty()) {
-                        // Use the email that was used for login
-                        email
-                    } else {
-                        jwtResponse.email
-                    }
-
-                    // Save token and user info
                     sessionManager.saveAuthToken(
                         jwtResponse.token,
                         username,
-                        jwtResponse.id ?: 0, // Provide default if null
+                        jwtResponse.id ?: 0,
                         userEmail
                     )
 
                     _userState.value = UserState.LoggedIn(username, userEmail)
                     _loginState.value = LoginState.Success
+
+                    if (jwtResponse.firstLogin == true) {
+                        navController.navigate("survey-selection") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+
                     Log.d("AuthViewModel", "Login successful, state updated to Success")
                 } else {
                     _loginState.value = LoginState.Error("Login failed: ${response.message()}")
@@ -103,29 +99,27 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signup(username: String, email: String, password: String, avatar: Uri? = null) {
+    fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
             try {
-                // Handle avatar upload if present
                 val avatarUrl = if (avatar != null) {
                     uploadAvatarAndGetUrl(avatar)
                 } else {
                     null
                 }
 
-                // Create registration request with avatar URL
                 val registerRequest = RegisterRequest(
                     username = username,
                     password = password,
                     email = email,
-                    avatarUrl = avatarUrl
+                    avatarUrl = avatarUrl,
                 )
 
                 val response = RetrofitClient.authApi.register(registerRequest)
 
                 if (response.isSuccessful && response.body() != null) {
-                    _registerState.value = RegisterState.Success(response.body()!!.message)
+                    _registerState.value = RegisterState.Success(response.body()!!.message + "fwiejfwejfwfhudhaiojasidsaidcvn")
                 } else {
                     _registerState.value = RegisterState.Error("Registration failed: ${response.message()}")
                 }
@@ -137,29 +131,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun uploadAvatarAndGetUrl(uri: Uri): String? {
         return try {
-            // Get the content resolver and file data
             val contentResolver = getApplication<Application>().contentResolver
-            val inputStream = contentResolver.openInputStream(uri)
+            val file = File(getRealPathFromURI(getApplication(), uri) ?: return null)
 
-            // Create a MultipartBody.Part for the image
-            val requestFile = inputStream?.readBytes()?.let {
-                RequestBody.create("image/*".toMediaTypeOrNull(), it)
-            }
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
 
-            val imagePart = requestFile?.let {
-                MultipartBody.Part.createFormData(
-                    "avatar",
-                    "avatar_image.jpg",
-                    it
-                )
-            }
+            val imagePart = MultipartBody.Part.createFormData("avatar", file.name, requestFile)
 
-            // Upload the image
-            if (imagePart != null) {
-                val response = RetrofitClient.authApi.uploadAvatar(imagePart)
-                if (response.isSuccessful && response.body() != null) {
-                    return response.body()!!.url
-                }
+            val response = RetrofitClient.authApi.uploadAvatar(imagePart)
+            if (response.isSuccessful && response.body() != null) {
+                return response.body()!!.url
             }
             null
         } catch (e: Exception) {
@@ -167,6 +148,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             null
         }
     }
+
+    fun getRealPathFromURI(context: Context, uri: Uri): String? {
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        val cursor = context.contentResolver.query(uri, projection, null, null, null)
+        cursor?.moveToFirst()
+        val columnIndex = cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+        val path = columnIndex?.let { cursor.getString(it) }
+        cursor?.close()
+        return path
+    }
+
 
     fun loadDashboard() {
         viewModelScope.launch {
@@ -178,7 +170,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     if (response.isSuccessful && response.body() != null) {
                         _dashboardState.value = DashboardState.Success(response.body()!!.message)
                     } else {
-                        // Token hết hạn hoặc không hợp lệ
                         if (response.code() == 401) {
                             logout()
                         }

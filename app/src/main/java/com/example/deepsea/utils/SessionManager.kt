@@ -3,6 +3,7 @@
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -19,9 +20,16 @@ class SessionManager(private val context: Context) {
         private val KEY_USERNAME = stringPreferencesKey("username")
         private val KEY_USER_ID = longPreferencesKey("user_id")
         private val KEY_EMAIL = stringPreferencesKey("email")
+        private val KEY_IS_FIRST_LOGIN = booleanPreferencesKey("is_first_login")
     }
 
-    // Lưu thông tin người dùng sau khi đăng nhập
+    suspend fun saveFirstLoginStatus(isFirstLogin: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_IS_FIRST_LOGIN] = isFirstLogin
+        }
+    }
+
+
     suspend fun saveAuthToken(token: String, username: String, userId: Long, email: String) {
         context.dataStore.edit { preferences ->
             preferences[KEY_TOKEN] = token
@@ -31,25 +39,24 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    // Lấy token
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_TOKEN]
     }
 
-    // Lấy username
     val username: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_USERNAME]
     }
 
-    // Lấy user ID
     val userId: Flow<Long?> = context.dataStore.data.map { preferences ->
         preferences[KEY_USER_ID]
     }
 
-    // Lấy email
     val email: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_EMAIL]
     }
+
+    val isFirstLogin: Flow<Boolean?> = context.dataStore.data
+        .map { preferences -> preferences[KEY_IS_FIRST_LOGIN] ?: true }
 
     // Xóa dữ liệu khi đăng xuất
     suspend fun clearAuthData() {

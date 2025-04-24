@@ -1,9 +1,10 @@
 package com.example.deepsea.data.model
 
-data class JwtResponse(
-    val token: String,
+data class RegisterResponse (
     val id: Long,
+    val name:String,
     val username: String,
+    val password: String,
     val email: String,
-    val firstLogin: Boolean
+    val avatarUrl: String
 )

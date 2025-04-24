@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,6 +57,7 @@ import com.example.deepsea.R
 import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.nonSpatialExpressiveSpring
+import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.theme.DeepSeaTheme
 
 
@@ -111,7 +113,7 @@ enum class HomeSections(
     ),
     PROFILE(
         R.string.home_profile,
-        "home/profile",
+        "home/profile/{userId}",
         R.drawable.home_profile,
         Color(0xFFBB2D72),
         Color(0xFFD1598D)
@@ -139,7 +141,7 @@ fun DeepSeaBottomBar(navController: NavController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        val currentSection = HomeSections.entries.find { it.route == currentRoute }
+        val currentSection = HomeSections.entries.find { currentRoute?.contains(it.route) == true }
 
         val gradientColors = currentSection?.let {
             listOf(it.primaryColor.copy(alpha = 0.7f), it.secondaryColor.copy(alpha = 0.4f))
@@ -163,7 +165,7 @@ fun DeepSeaBottomBar(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 HomeSections.entries.forEach { section ->
-                    val isSelected = currentRoute == section.route
+                    val isSelected = currentRoute?.contains(section.route) == true
                     val iconScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.2f else 1f,
                         animationSpec = spring(
@@ -183,7 +185,12 @@ fun DeepSeaBottomBar(navController: NavController) {
                         selected = isSelected,
                         onClick = {
                             if (currentRoute != section.route) {
-                                navController.navigate(section.route) {
+                                val route = if (section.route.contains("{userId}")) {
+                                    "home/profile/${302}"
+                                } else {
+                                    section.route
+                                }
+                                navController.navigate(route) {
                                     launchSingleTop = true
                                     restoreState = true
                                     popUpTo(navController.graph.startDestinationId) {
@@ -196,7 +203,6 @@ fun DeepSeaBottomBar(navController: NavController) {
                             Box(
                                 contentAlignment = Alignment.Center
                             ) {
-                                // Background indicator for selected item
                                 if (isSelected) {
                                     Box(
                                         modifier = Modifier
@@ -213,7 +219,6 @@ fun DeepSeaBottomBar(navController: NavController) {
                                     )
                                 }
 
-                                // Icon with animations
                                 Icon(
                                     painter = painterResource(id = section.iconRes),
                                     contentDescription = stringResource(id = section.title),
@@ -250,23 +255,6 @@ fun DeepSeaBottomBar(navController: NavController) {
     }
 }
 
-fun NavGraphBuilder.addHomeGraph(
-    onSnackSelected: (Long, String, NavBackStackEntry) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    composable(HomeSections.HOME.route) { from ->
-
-    }
-    composable(HomeSections.GAME.route) { from ->
-
-    }
-    composable(HomeSections.RANK.route) { from ->
-
-    }
-    composable(HomeSections.PROFILE.route) {
-
-    }
-}
 
 fun NavGraphBuilder.composableWithCompositionLocal(
     route: String,
