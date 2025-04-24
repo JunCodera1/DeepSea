@@ -57,7 +57,6 @@ import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.Gray
 import com.example.deepsea.ui.theme.Polar
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.Mic
 
 
 
@@ -112,6 +111,9 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
                 units = units,
                 visibleUnitIndex = visibleHeadingIndex,
             )
+        },
+        bottomBar = {
+            DeepSeaBottomBar(navController=navController)
         }
     ) {
         // Content area with scrolling units
