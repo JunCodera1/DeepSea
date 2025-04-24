@@ -2,6 +2,7 @@ package com.example.deepsea.data.api
 
 import com.example.deepsea.data.model.FriendSuggestion
 import com.example.deepsea.data.model.UserProfileData
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 

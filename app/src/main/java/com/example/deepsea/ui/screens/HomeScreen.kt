@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -211,7 +211,7 @@ fun StarDialog(
         Column(
             modifier = Modifier
                 .graphicsLayer {
-                    translationY = dialogTransition +  100.dp.toPx()
+                    translationY = dialogTransition + 100.dp.toPx()
                     transformOrigin = TransformOrigin(0.5f, 0f)
                     scaleY = animatedScale
                     scaleX = animatedScale
@@ -227,7 +227,7 @@ fun StarDialog(
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Dialog title
             TitleText(
@@ -242,6 +242,7 @@ fun StarDialog(
                 color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
             )
 
+            // Voice Assistant Button
             Button(
                 onClick = { navController.navigate("home/voice_assistant") },
                 modifier = Modifier
@@ -252,17 +253,20 @@ fun StarDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Filled.Mic, contentDescription = "Voice")
+                    Icon(Icons.Filled.Call, contentDescription = "Voice")
                     Text("Voice Assistant")
                 }
             }
 
             // Action button
             Button(
-                modifier = Modifier.fillMaxWidth(),
                 onClick = { /* Handle button click */ },
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.15f)
+                    containerColor = if (isDialogInteractive)
+                        Color.White
+                    else
+                        Color.DarkGray.copy(0.15f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -275,6 +279,7 @@ fun StarDialog(
         }
     }
 }
+
 
 /**
  * Calculates star positioning based on order and direction
