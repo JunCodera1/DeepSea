@@ -50,7 +50,7 @@ import com.example.deepsea.ui.viewmodel.AuthViewModel
 
 @Composable
 fun SignupPage(
-    onSignUpClick: (name: String, username: String, email: String, password: String, avatar: Uri?) -> Unit,
+    onSignUpClick: (username: String, email: String, password: String, avatar: Uri?) -> Unit,
     onSignInClick: () -> Unit = {},
     navController: DeepSeaNavController,
     authViewModel: AuthViewModel,
@@ -202,7 +202,7 @@ fun SignupPage(
 
                 Button(
                     onClick = {
-                        onSignUpClick(name,username, email, password, avatarUri)
+                        onSignUpClick(username, email, password, avatarUri)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
