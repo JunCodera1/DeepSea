@@ -3,7 +3,18 @@ package com.example.deepsea.ui.profile
 import UserProfileViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,15 +22,25 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,14 +49,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.deepsea.R
 import com.example.deepsea.data.model.UserProfileData
-import com.example.deepsea.data.model.Language
-import com.example.deepsea.data.model.LoginResponse
 import com.example.deepsea.utils.SessionManager
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import androidx.compose.runtime.getValue
-
 
 @Composable
 fun ProfilePage(sessionManager: SessionManager,
@@ -224,19 +240,14 @@ fun ProfilePage(sessionManager: SessionManager,
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(Color(0xFFFFF9C4), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "${userProfile?.totalXp}",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFD600)
-                            )
-                        }
+                        val painter = getRankIconFromXp(userProfile?.totalXp)
+                        Icon(
+                            painter = painter,
+                            contentDescription = "Rank Icon",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(48.dp)
+                        )
+
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Total XP",
@@ -634,26 +645,25 @@ fun LanguageFlags(userData: UserProfileData?) {
         }
     }
 }
+@Composable
+fun getRankIconFromXp(xp: Int?): Painter {
+    return when (xp ?: 0) {
+        in 0..699 -> painterResource(id = R.drawable.bronze)
+        in 700..1499 -> painterResource(id = R.drawable.silver)
+        in 1500..2499 -> painterResource(id = R.drawable.gold)
+        in 2500..3999 -> painterResource(id = R.drawable.platinum)
+        in 4000..5999 -> painterResource(id = R.drawable.diamond)
+        in 6000..7999 -> painterResource(id = R.drawable.master)
+        in 8000..14999 -> painterResource(id = R.drawable.master)
+        in 15000..35999 -> painterResource(id = R.drawable.grandmaster)
+        else -> painterResource(id = R.drawable.challenger)
+    }
+}
+
 
 
 @Preview(showBackground = true)
 @Composable
 fun UserProfilePreview() {
-    val sampleUserData = UserProfileData(
-        name = "Minh Tiến",
-        username = "mintien",
-        joinDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
-        courses = listOf(Language.ENGLISH, Language.JAPANESE),
-        followers = 10,
-        following = 5,
-        dayStreak = 3,
-        totalXp = 200,
-        currentLeague = "Silver League",
-        topFinishes = 1
-    )
 
-//    ProfilePage(
-//        userId = 2,
-//        paddingValues = PaddingValues(16.dp)
-//    )
 }
