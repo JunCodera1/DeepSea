@@ -50,6 +50,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
@@ -57,6 +58,7 @@ import com.example.deepsea.ui.screens.ForgotPasswordPage
 import com.example.deepsea.ui.screens.HomeScreen
 import com.example.deepsea.ui.screens.LanguageSelectionPage
 import com.example.deepsea.ui.screens.PathSelectionPage
+import com.example.deepsea.ui.screens.SettingsPage
 import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.utils.SessionManager
@@ -199,6 +201,7 @@ fun MainContainer(
                                 "Favorites" -> nestedNavController.navController.navigate("favorites_route")
                                 "Settings" -> nestedNavController.navController.navigate("settings_route")
                                 "Help" -> nestedNavController.navController.navigate("help_route")
+                                "Voice Assistant" -> nestedNavController.navController.navigate("home/voice_assistant")
                             }
                         }
                     )
@@ -257,7 +260,7 @@ fun MainContainer(
                         )
                     }
                     val navController = rememberNavController()
-                    HomeScreen(units = units, navController = navController)
+                    HomeScreen(units = units, navController = nestedNavController.navController)
                 }
                 composable("home/learn") {
                     // Load dashboard data when entering the main area
@@ -279,13 +282,34 @@ fun MainContainer(
                 composable("home/profile/{userId}") { backStackEntry ->
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context) // Khởi tạo sessionManager
-                    ProfilePage(sessionManager = sessionManager, paddingValues = padding)
+                    ProfilePage(sessionManager = sessionManager,
+                        paddingValues = padding,
+                        onNavigateToSettings = {
+                            nestedNavController.navController.navigate("settings")
+                        }
+                    )
                 }
 
                 composable("home/game") {
                     GamePage()
                 }
-
+                composable("settings") {
+                    SettingsPage(
+                        onBackPressed = { nestedNavController.navController.popBackStack() },
+                        onPreferencesClick = { nestedNavController.navController.navigate("preferences") },
+                        onProfileClick = { nestedNavController.navController.navigate("profile") },
+                        onNotificationsClick = { nestedNavController.navController.navigate("notifications") },
+                        onCoursesClick = { nestedNavController.navController.navigate("courses") },
+                        onPrivacySettingsClick = { nestedNavController.navController.navigate("privacy_settings") },
+                        onHelpCenterClick = { nestedNavController.navController.navigate("help_center") },
+                        onFeedbackClick = { nestedNavController.navController.navigate("feedback") },
+                        onSignOut = { authViewModel.logout() },
+                        paddingValues = padding
+                    )
+                }
+                composable("home/voice_assistant") {
+                    VoiceAssistantScreen()
+                }
                 // Auth Routes
                 composable("signup") {
                     SignupPage(

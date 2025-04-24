@@ -11,15 +11,19 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -48,7 +52,6 @@ import com.example.deepsea.text.TitleText
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.components.UnitsLazyColumn
-import com.example.deepsea.ui.home.DeepSeaBottomBar
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.Gray
 import com.example.deepsea.ui.theme.Polar
@@ -143,7 +146,8 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
     StarDialog(
         isDialogShown = isDialogShown,
         isDialogInteractive = isDialogInteractive,
-        dialogTransition = dialogTransition
+        dialogTransition = dialogTransition,
+        navController = navController
     )
 }
 
@@ -186,7 +190,8 @@ private fun handleStarTap(
 fun StarDialog(
     isDialogShown: Boolean,
     isDialogInteractive: Boolean,
-    dialogTransition: Float
+    dialogTransition: Float,
+    navController: NavController
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -201,7 +206,7 @@ fun StarDialog(
         Column(
             modifier = Modifier
                 .graphicsLayer {
-                    translationY = dialogTransition +  100.dp.toPx()
+                    translationY = dialogTransition + 100.dp.toPx()
                     transformOrigin = TransformOrigin(0.5f, 0f)
                     scaleY = animatedScale
                     scaleX = animatedScale
@@ -217,7 +222,7 @@ fun StarDialog(
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Dialog title
             TitleText(
@@ -232,12 +237,31 @@ fun StarDialog(
                 color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
             )
 
+            // Voice Assistant Button
+            Button(
+                onClick = { navController.navigate("home/voice_assistant") },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Filled.Call, contentDescription = "Voice")
+                    Text("Voice Assistant")
+                }
+            }
+
             // Action button
             Button(
-                modifier = Modifier.fillMaxWidth(),
                 onClick = { /* Handle button click */ },
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.15f)
+                    containerColor = if (isDialogInteractive)
+                        Color.White
+                    else
+                        Color.DarkGray.copy(0.15f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -250,6 +274,7 @@ fun StarDialog(
         }
     }
 }
+
 
 /**
  * Calculates star positioning based on order and direction
