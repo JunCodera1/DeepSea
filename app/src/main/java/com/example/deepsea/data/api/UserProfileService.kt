@@ -1,9 +1,12 @@
 package com.example.deepsea.data.api
 
 import com.example.deepsea.data.model.FriendSuggestion
+import com.example.deepsea.data.model.SurveyUpdateRequest
 import com.example.deepsea.data.model.UserProfileData
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface UserProfileService {
@@ -15,4 +18,7 @@ interface UserProfileService {
 
     @GET("api/users/data/{userId}/profile")
     suspend fun getUserProfile(@Path("userId") userId: Long): Response<UserProfileData>
+
+    @POST("api/users/update-survey")
+    suspend fun updateSurveySelections(@Body request: SurveyUpdateRequest): Response<String>
 }

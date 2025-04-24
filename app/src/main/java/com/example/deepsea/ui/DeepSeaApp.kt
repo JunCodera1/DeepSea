@@ -2,6 +2,7 @@
 
 package com.example.deepsea.ui
 
+import UserProfileViewModel
 import android.app.Application
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -173,8 +174,10 @@ fun MainContainer(
                                 currentRoute != "survey-selection" &&
                                 currentRoute != "daily-goal-selection" &&
                                 currentRoute != "path_selection"
-
+    val context = LocalContext.current
     val userState by authViewModel.userState.collectAsState()
+    val sessionManager = remember { SessionManager(context) }
+    val userViewModel: UserProfileViewModel = viewModel()
 
     LaunchedEffect(userState, currentRoute) {
         Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
@@ -225,8 +228,6 @@ fun MainContainer(
                 }
 
 
-
-
                 // Selection for learn Routes
                 composable("path_selection") {
                     PathSelectionPage(nestedNavController.navController)
@@ -235,7 +236,11 @@ fun MainContainer(
                     DailyGoalSelectionPage(nestedNavController.navController)
                 }
                 composable("survey-selection") {
-                    SurveySelectionPage(nestedNavController.navController)
+                    SurveySelectionPage(
+                        nestedNavController.navController,
+                        sessionManager = sessionManager,
+                        userViewModel = userViewModel
+                    )
                 }
                 composable("learn-selection") {
                     LanguageSelectionPage(nestedNavController.navController)

@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens
 
+import UserProfileViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,12 +21,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
+import com.example.deepsea.data.model.SurveyOptionType
+import com.example.deepsea.utils.SessionManager
 
 @Composable
-fun SurveySelectionPage(navController: NavController) {
-    // State to track selected survey options
+fun SurveySelectionPage(
+    navController: NavController,
+    userViewModel: UserProfileViewModel,
+    sessionManager: SessionManager
+) {
     var selectedSurveys by remember { mutableStateOf(setOf<String>()) }
     val scrollState = rememberScrollState()
 
@@ -112,49 +117,17 @@ fun SurveySelectionPage(navController: NavController) {
             )
         }
 
-        // Survey options
-        SurveyOption(
-            survey = "Friends",
-            flagResId = R.drawable.ic_friends,
-            isSelected = selectedSurveys.contains("Friends"),
-            onSelect = { toggleSurveySelection("Friends", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "TV",
-            flagResId = R.drawable.ic_tv,
-            isSelected = selectedSurveys.contains("TV"),
-            onSelect = { toggleSurveySelection("TV", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "TikTok",
-            flagResId = R.drawable.ic_tiktok,
-            isSelected = selectedSurveys.contains("TikTok"),
-            onSelect = { toggleSurveySelection("TikTok", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "News",
-            flagResId = R.drawable.ic_news,
-            isSelected = selectedSurveys.contains("News"),
-            onSelect = { toggleSurveySelection("News", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "Youtube",
-            flagResId = R.drawable.ic_youtube,
-            isSelected = selectedSurveys.contains("Youtube"),
-            onSelect = { toggleSurveySelection("Youtube", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "Social",
-            flagResId = R.drawable.ic_social,
-            isSelected = selectedSurveys.contains("Social"),
-            onSelect = { toggleSurveySelection("Social", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "Other",
-            flagResId = R.drawable.ic_other,
-            isSelected = selectedSurveys.contains("Other"),
-            onSelect = { toggleSurveySelection("Other", selectedSurveys) { selectedSurveys = it } }
-        )
+        SurveyOptionType.values().forEach { type ->
+            SurveyOption(
+                survey = type.displayName,
+                flagResId = type.flagResId,
+                isSelected = selectedSurveys.contains(type.displayName),
+                onSelect = {
+                    toggleSurveySelection(type.displayName, selectedSurveys) { selectedSurveys = it }
+                }
+            )
+        }
+
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -163,7 +136,12 @@ fun SurveySelectionPage(navController: NavController) {
         Button(
             onClick = {
                 if (isAnyOptionSelected) {
-                    navController.navigate("learn-selection")
+                    userViewModel.updateSurveySelections(
+                        selected = selectedSurveys,
+                        onSuccess = { navController.navigate("learn-selection") },
+                        onError = { it.printStackTrace() },
+                        sessionManager = sessionManager // <-- truyền SessionManager ở đây
+                    )
                 }
             },
             modifier = Modifier
@@ -259,5 +237,5 @@ fun SurveyOption(
 @Preview(showBackground = true)
 @Composable
 fun SurveySelectionPreview() {
-    SurveySelectionPage(navController = rememberNavController())
+
 }
