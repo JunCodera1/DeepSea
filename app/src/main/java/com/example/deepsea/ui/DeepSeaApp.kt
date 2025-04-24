@@ -58,6 +58,7 @@ import com.example.deepsea.ui.screens.ForgotPasswordPage
 import com.example.deepsea.ui.screens.HomeScreen
 import com.example.deepsea.ui.screens.LanguageSelectionPage
 import com.example.deepsea.ui.screens.PathSelectionPage
+import com.example.deepsea.ui.screens.SettingsPage
 import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.utils.SessionManager
@@ -173,6 +174,7 @@ fun MainContainer(
                                 currentRoute != "learn-selection" &&
                                 currentRoute != "survey-selection" &&
                                 currentRoute != "daily-goal-selection" &&
+                                currentRoute != "settings" &&
                                 currentRoute != "path_selection"
     val context = LocalContext.current
     val userState by authViewModel.userState.collectAsState()
@@ -284,7 +286,27 @@ fun MainContainer(
                 composable("home/profile/{userId}") { backStackEntry ->
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context) // Khởi tạo sessionManager
-                    ProfilePage(sessionManager = sessionManager, paddingValues = padding)
+                    ProfilePage(sessionManager = sessionManager,
+                        paddingValues = padding,
+                        onNavigateToSettings = {
+                            nestedNavController.navController.navigate("settings")
+                        }
+                    )
+                }
+
+                composable("settings") {
+                    SettingsPage(
+                        onBackPressed = { nestedNavController.navController.popBackStack() },
+                        onPreferencesClick = { nestedNavController.navController.navigate("preferences") },
+                        onProfileClick = { nestedNavController.navController.navigate("profile") },
+                        onNotificationsClick = { nestedNavController.navController.navigate("notifications") },
+                        onCoursesClick = { nestedNavController.navController.navigate("courses") },
+                        onPrivacySettingsClick = { nestedNavController.navController.navigate("privacy_settings") },
+                        onHelpCenterClick = { nestedNavController.navController.navigate("help_center") },
+                        onFeedbackClick = { nestedNavController.navController.navigate("feedback") },
+                        onSignOut = { authViewModel.logout() },
+                        paddingValues = padding
+                    )
                 }
 
                 composable("home/game") {

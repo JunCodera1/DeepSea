@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +40,7 @@ import androidx.compose.runtime.getValue
 @Composable
 fun ProfilePage(sessionManager: SessionManager,
     viewModel: UserProfileViewModel = viewModel(),
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues, onNavigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -47,11 +48,15 @@ fun ProfilePage(sessionManager: SessionManager,
 
     val userProfile = viewModel.userProfileData.value
 
+
+
     LaunchedEffect(userId) {
         if (userId != null) {
             viewModel.fetchUserProfile(userId!!)
         }
     }
+
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFF5F7F9)
@@ -64,12 +69,26 @@ fun ProfilePage(sessionManager: SessionManager,
                 .padding(paddingValues)
         ) {
             // Profile Header
-            Text(
-                text = "Profile",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Profile",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+
+                IconButton(onClick = onNavigateToSettings) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = Color(0xFF4DB6FF)
+                    )
+                }
+            }
 
             // User basic info card
             Card(
