@@ -52,10 +52,14 @@ import com.example.deepsea.text.TitleText
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.components.UnitsLazyColumn
+import com.example.deepsea.ui.home.DeepSeaBottomBar
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.Gray
 import com.example.deepsea.ui.theme.Polar
 import kotlinx.coroutines.launch
+
+
+
 
 /**
  * Extension function to add composable with composition local to NavGraphBuilder
@@ -107,6 +111,9 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
                 units = units,
                 visibleUnitIndex = visibleHeadingIndex,
             )
+        },
+        bottomBar = {
+            DeepSeaBottomBar(navController=navController)
         }
     ) {
         // Content area with scrolling units

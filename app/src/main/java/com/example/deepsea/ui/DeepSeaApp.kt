@@ -51,6 +51,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.AI_assistant.VoiceAssistantScreen
+import com.example.deepsea.data.model.Language
+import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
@@ -62,6 +64,9 @@ import com.example.deepsea.ui.screens.SettingsPage
 import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.utils.SessionManager
+import androidx.compose.material.icons.filled.Mic
+
+
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -130,10 +135,10 @@ fun DeepSeaApp() {
                     ) { backStackEntry ->
                         SignupPage(
                             navController = deepSeaNavController,
-                            onSignUpClick = { username, email, password, avatar, name ->
+                            onSignUpClick = { username, email, password, avatar ->
                                 // Updated to handle avatar
                                 Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
-                                authViewModel.signup(username, email, password, avatar, name)
+                                authViewModel.signup(username, email, password, avatar.toString())
                             },
                             onSignInClick = {
                                 // Navigate to login page
@@ -201,7 +206,6 @@ fun MainContainer(
                                 "Favorites" -> nestedNavController.navController.navigate("favorites_route")
                                 "Settings" -> nestedNavController.navController.navigate("settings_route")
                                 "Help" -> nestedNavController.navController.navigate("help_route")
-                                "Voice Assistant" -> nestedNavController.navController.navigate("home/voice_assistant")
                             }
                         }
                     )
@@ -314,10 +318,10 @@ fun MainContainer(
                 composable("signup") {
                     SignupPage(
                         navController = nestedNavController,
-                        onSignUpClick = { username, email, password, avatar, name ->
+                        onSignUpClick = { username, email, password, avatar ->
                             // Updated to handle avatar
                             Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
-                            authViewModel.signup(username, email, password, avatar)
+                            authViewModel.signup(username, email, password, avatar.toString())
                         },
                         onSignInClick = {
                             nestedNavController.navController.navigate("login")
@@ -350,6 +354,8 @@ fun MainContainer(
             })
     }
 }
+
+
 
 fun <T> nonSpatialExpressiveSpring() = spring<T>(
     dampingRatio = 1f,
