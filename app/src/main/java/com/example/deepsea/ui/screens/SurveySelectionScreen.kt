@@ -25,25 +25,26 @@ import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
 import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.FriendSuggestion
+import com.example.deepsea.data.model.LanguageOptionRequest
 import com.example.deepsea.data.model.SurveyOption
 import com.example.deepsea.data.model.SurveyOptionRequest
 import com.example.deepsea.data.model.SurveyOptionResponse
 import com.example.deepsea.data.model.UserProfileData
 import com.example.deepsea.data.repository.UserProfileRepository
-import com.example.deepsea.ui.viewmodel.SurveyViewModel
+import com.example.deepsea.ui.viewmodel.SurveySelectionViewModel
 import com.example.deepsea.utils.SessionManager
 import retrofit2.Response
 
 @Composable
 fun SurveySelectionPage(
     navController: NavController,
-    surveyViewModel: SurveyViewModel,
+    surveySelectionViewModel: SurveySelectionViewModel,
     sessionManager: SessionManager
 ) {
     val userId by sessionManager.userId.collectAsState(initial = null)
 
     // State to track selected survey options
-    val selectedSurveys by surveyViewModel.selectedSurveys.collectAsState()
+    val selectedSurveys by surveySelectionViewModel.selectedSurveys.collectAsState()
     val scrollState = rememberScrollState()
 
     // Purple color for selected state
@@ -146,7 +147,7 @@ fun SurveySelectionPage(
                 option = option,
                 iconResId = surveyIconMap[option] ?: R.drawable.ic_other, // Fallback icon
                 isSelected = selectedSurveys.contains(option),
-                onSelect = { surveyViewModel.toggleSurveySelection(option) }
+                onSelect = { surveySelectionViewModel.toggleSurveySelection(option) }
             )
         }
 
@@ -157,7 +158,7 @@ fun SurveySelectionPage(
         Button(
             onClick = {
                 if (isAnyOptionSelected) {
-                    surveyViewModel.saveSurveySelections(userId = userId)
+                    surveySelectionViewModel.saveSurveySelections(userId = userId)
                     navController.navigate("learn-selection")
                 }
             },
@@ -243,13 +244,13 @@ fun SurveySelectionPreview() {
     val mockNavController = rememberNavController()
     val mockService = MockUserProfileService()
     val mockRepository = UserProfileRepository(mockService)
-    val viewModel = SurveyViewModel(mockRepository)
+    val viewModel = SurveySelectionViewModel(mockRepository)
     val context = LocalContext.current
     val sessionManager = SessionManager(context)
 
     SurveySelectionPage(
         navController = mockNavController,
-        surveyViewModel = viewModel,
+        surveySelectionViewModel = viewModel,
         sessionManager = sessionManager)
 }
 
@@ -282,5 +283,9 @@ class MockUserProfileService : UserProfileService {
             currentLeague = "Bronze",
             topFinishes = 0
         )
+    }
+
+    override suspend fun saveLanguageSelections(request: LanguageOptionRequest): UserProfileData {
+        TODO("Not yet implemented")
     }
 }

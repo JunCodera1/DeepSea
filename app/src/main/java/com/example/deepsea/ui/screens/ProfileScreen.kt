@@ -62,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deepsea.R
-import com.example.deepsea.data.api.LanguageApiService
 import com.example.deepsea.data.model.UserProfileData
 import com.example.deepsea.ui.viewmodel.LanguageSelectionViewModel
 import com.example.deepsea.utils.SessionManager
@@ -201,29 +200,6 @@ fun ProfilePage(sessionManager: SessionManager,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            LanguageFlags(
-                userData = userProfile,
-                onAddLanguage = { languageCode ->
-                    // Handle adding language
-                    scope.launch {
-                        try {
-                            if (userId != null) {
-                                val success = LanguageApiService.addLanguageToUser(userId!!, languageCode)
-                                if (success) {
-                                    // Refresh user profile to show the new language
-                                    viewModel.fetchUserProfile(userId!!)
-                                    snackbarHostState.showSnackbar("Language added successfully!")
-                                } else {
-                                    snackbarHostState.showSnackbar("Failed to add language")
-                                }
-                            }
-                        } catch (e: Exception) {
-                            snackbarHostState.showSnackbar("Error: ${e.message}")
-                        }
-                    }
-                }
-            )
-
             Spacer(modifier= Modifier.height(16.dp))
             Text(
                 text = "Statistics",
@@ -713,66 +689,6 @@ fun LanguageFlags(
             }
         }
     }
-
-    if (showLanguageDialog) {
-        LanguageSelectionDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            onLanguageSelected = { languageCode ->
-                onAddLanguage(languageCode)
-                showLanguageDialog = false
-            }
-        )
-    }
-}
-@Composable
-fun LanguageSelectionDialog(
-    onDismissRequest: () -> Unit,
-    onLanguageSelected: (String) -> Unit
-) {
-    val viewModel: LanguageSelectionViewModel = viewModel()
-    val languages by viewModel.availableLanguages.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchAvailableLanguages()
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text("Select Language") },
-        text = {
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn {
-                    items(languages) { language ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onLanguageSelected(language.code) }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Image(
-                                painter = painterResource(id = language.flagResId),
-                                contentDescription = language.displayName,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(text = language.displayName)
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
-            }
-        }
-    )
 }
 @Composable
 fun getRankIconFromXp(xp: Int?): Painter {

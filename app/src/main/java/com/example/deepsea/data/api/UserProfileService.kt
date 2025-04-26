@@ -1,6 +1,7 @@
 package com.example.deepsea.data.api
 
 import com.example.deepsea.data.model.FriendSuggestion
+import com.example.deepsea.data.model.LanguageOptionRequest
 import com.example.deepsea.data.model.SurveyOptionRequest
 import com.example.deepsea.data.model.SurveyOptionResponse
 import com.example.deepsea.data.model.UserProfileData
@@ -25,4 +26,7 @@ interface UserProfileService {
 
     @POST("api/survey/save")
     suspend fun saveSurveySelections(@Body request: SurveyOptionRequest): UserProfileData
+
+    @POST("api/language/save")
+    suspend fun saveLanguageSelections(@Body request: LanguageOptionRequest): UserProfileData
 }

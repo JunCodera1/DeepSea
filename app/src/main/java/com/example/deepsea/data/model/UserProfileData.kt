@@ -8,7 +8,7 @@ data class UserProfileData(
     val name: String,
     val username: String,
     val joinDate: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")),
-    val courses: Set<Language> = emptySet(),
+    val courses: Set<LanguageOption> = emptySet(),
     val selectedSurveys: Set<SurveyOption> = emptySet(),
     val followers: Int,
     val following: Int,

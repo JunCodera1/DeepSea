@@ -1,6 +1,8 @@
 package com.example.deepsea.data.repository
 
 import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.LanguageOption
+import com.example.deepsea.data.model.LanguageOptionRequest
 import com.example.deepsea.data.model.SurveyOption
 import com.example.deepsea.data.model.SurveyOptionRequest
 import com.example.deepsea.data.model.UserProfileData
@@ -32,6 +34,16 @@ class UserProfileRepository @Inject constructor(
         return withContext(Dispatchers.IO) {
             val request = SurveyOptionRequest(userId = userId, selectedOptions =  surveySelections)
             userProfileService.saveSurveySelections(request)
+        }
+    }
+
+    suspend fun updateUserLanguageSelections(
+        userId:Long? ,
+        languageSelections: Set<LanguageOption>
+    ): UserProfileData {
+        return withContext(Dispatchers.IO) {
+            val request = LanguageOptionRequest(userId = userId, selectedOptions =  languageSelections)
+            userProfileService.saveLanguageSelections(request)
         }
     }
 }

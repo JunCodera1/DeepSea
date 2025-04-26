@@ -1,34 +1,50 @@
 package com.example.deepsea.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.deepsea.data.api.LanguageApiService
-import com.example.deepsea.data.model.LanguageData
+import com.example.deepsea.data.model.LanguageOption
+import com.example.deepsea.data.model.SurveyOption
+import com.example.deepsea.data.repository.UserProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.collections.toMutableSet
 
-class LanguageSelectionViewModel : ViewModel() {
-    private val _availableLanguages = MutableStateFlow<List<LanguageData>>(emptyList())
-    val availableLanguages = _availableLanguages.asStateFlow()
+class LanguageSelectionViewModel(
+    private val userRepository: UserProfileRepository
+) : ViewModel() {
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
+    private val _selectedLanguage = MutableStateFlow<Set<LanguageOption>>(emptySet())
+    val selectedLanguages: StateFlow<Set<LanguageOption>> = _selectedLanguage.asStateFlow()
 
-    fun fetchAvailableLanguages() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                // Call to API to get available languages
-                val languages = LanguageApiService.getAvailableLanguages()
-                _availableLanguages.value = languages
-            } catch (e: Exception) {
-                // Handle error
-                Log.e("LanguageVM", "Error fetching languages", e)
-            } finally {
-                _isLoading.value = false
-            }
+    fun toggleLanguageSelection(option: LanguageOption) {
+        val currentSelections = _selectedLanguage.value.toMutableSet()
+        if (currentSelections.contains(option)) {
+            currentSelections.remove(option)
+        } else {
+            currentSelections.add(option)
         }
+        _selectedLanguage.value = currentSelections
+    }
+
+    fun saveLanguageSelections(userId: Long?) {
+        viewModelScope.launch {
+            userRepository.updateUserLanguageSelections(
+                userId = userId,
+                languageSelections = _selectedLanguage.value
+            )
+        }
+    }
+}
+
+class LanguageSelectionViewModelFactory(private val userRepository: UserProfileRepository) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(LanguageSelectionViewModel::class.java)) {
+            return LanguageSelectionViewModel(userRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

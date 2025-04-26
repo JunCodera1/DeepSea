@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.collections.toMutableSet
 
-class SurveyViewModel(
+class SurveySelectionViewModel(
     private val userRepository: UserProfileRepository
 ) : ViewModel() {
 
@@ -41,8 +41,8 @@ class SurveyViewModel(
 class SurveyViewModelFactory(private val userRepository: UserProfileRepository) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SurveyViewModel::class.java)) {
-            return SurveyViewModel(userRepository) as T
+        if (modelClass.isAssignableFrom(SurveySelectionViewModel::class.java)) {
+            return SurveySelectionViewModel(userRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

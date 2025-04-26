@@ -28,5 +28,4 @@ object RetrofitClient {
 
     val authApi: ApiService = retrofit.create(ApiService::class.java)
     val userProfileService: UserProfileService = retrofit.create(UserProfileService::class.java)
-    val languageApi: LanguageApi = retrofit.create(LanguageApi::class.java)
 }

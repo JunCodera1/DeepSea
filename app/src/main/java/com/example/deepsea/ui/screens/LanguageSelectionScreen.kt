@@ -20,13 +20,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
+import com.example.deepsea.data.model.LanguageOption
+import com.example.deepsea.ui.viewmodel.LanguageSelectionViewModel
+import com.example.deepsea.utils.SessionManager
+
 
 @Composable
-fun LanguageSelectionPage(navController: NavController) {
+fun LanguageSelectionPage(
+    navController: NavController,
+    languageSelectionViewModel: LanguageSelectionViewModel,
+    sessionManager: SessionManager
+) {
+    val userId by sessionManager.userId.collectAsState(initial = null)
+
     // State to track selected languages using a set
-    var selectedLanguages by remember { mutableStateOf(setOf<String>()) }
+    val selectedLanguages by languageSelectionViewModel.selectedLanguages.collectAsState()
     val scrollState = rememberScrollState()
 
     // Purple color for selected state
@@ -112,43 +121,24 @@ fun LanguageSelectionPage(navController: NavController) {
             )
         }
 
-        // Language options
-        LanguageOption(
-            language = "English",
-            flagResId = R.drawable.flag_england,
-            isSelected = selectedLanguages.contains("English"),
-            onSelect = { toggleLanguageSelection("English", selectedLanguages) { selectedLanguages = it } }
+        val languagesIconMap = mapOf(
+            LanguageOption.JAPANESE to R.drawable.flag_japan,
+            LanguageOption.ITALY to R.drawable.flag_italy,
+            LanguageOption.GERMANY to R.drawable.flag_germany,
+            LanguageOption.ENGLISH to R.drawable.flag_england,
+            LanguageOption.FRENCH to R.drawable.flag_france,
+            LanguageOption.SPANISH to R.drawable.flag_spain,
         )
-        LanguageOption(
-            language = "Spanish",
-            flagResId = R.drawable.flag_spain,
-            isSelected = selectedLanguages.contains("Spanish"),
-            onSelect = { toggleLanguageSelection("Spanish", selectedLanguages) { selectedLanguages = it } }
-        )
-        LanguageOption(
-            language = "French",
-            flagResId = R.drawable.flag_france,
-            isSelected = selectedLanguages.contains("French"),
-            onSelect = { toggleLanguageSelection("French", selectedLanguages) { selectedLanguages = it } }
-        )
-        LanguageOption(
-            language = "German",
-            flagResId = R.drawable.flag_germany,
-            isSelected = selectedLanguages.contains("German"),
-            onSelect = { toggleLanguageSelection("German", selectedLanguages) { selectedLanguages = it } }
-        )
-        LanguageOption(
-            language = "Italian",
-            flagResId = R.drawable.flag_italy,
-            isSelected = selectedLanguages.contains("Italian"),
-            onSelect = { toggleLanguageSelection("Italian", selectedLanguages) { selectedLanguages = it } }
-        )
-        LanguageOption(
-            language = "Japanese",
-            flagResId = R.drawable.flag_japan,
-            isSelected = selectedLanguages.contains("Japanese"),
-            onSelect = { toggleLanguageSelection("Japanese", selectedLanguages) { selectedLanguages = it } }
-        )
+
+        // Render all language options
+        LanguageOption.values().forEach { option ->
+            LanguageOptionItem(
+                option = option,
+                iconResId = languagesIconMap[option] ?: R.drawable.ic_other, // Fallback icon
+                isSelected = selectedLanguages.contains(option),
+                onSelect = { languageSelectionViewModel.toggleLanguageSelection(option) }
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -157,6 +147,7 @@ fun LanguageSelectionPage(navController: NavController) {
         Button(
             onClick = {
                 if (isAnyLanguageSelected) {
+                    languageSelectionViewModel.saveLanguageSelections(userId = userId)
                     navController.navigate("daily-goal-selection") // Replace with your next screen route
                 }
             },
@@ -190,9 +181,9 @@ private fun toggleLanguageSelection(
 }
 
 @Composable
-fun LanguageOption(
-    language: String,
-    flagResId: Int,
+fun LanguageOptionItem(
+    option: LanguageOption,
+    iconResId: Int,
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
@@ -219,18 +210,18 @@ fun LanguageOption(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Flag
+            // Icon
             Image(
-                painter = painterResource(id = flagResId),
-                contentDescription = language,
+                painter = painterResource(id = iconResId),
+                contentDescription = option.displayName,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(4.dp))
             )
 
-            // Language name
+            // Language option name
             Text(
-                text = language,
+                text = option.displayName,
                 modifier = Modifier.padding(start = 16.dp),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
@@ -253,5 +244,4 @@ fun LanguageOption(
 @Preview(showBackground = true)
 @Composable
 fun LanguageSelectionPreview() {
-    LanguageSelectionPage(navController = rememberNavController())
 }
