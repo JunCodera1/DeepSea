@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens
+package com.example.deepsea.ui.screens.feature
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition

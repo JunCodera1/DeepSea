@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens
+package com.example.deepsea.ui.screens.feature
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween

@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens
+package com.example.deepsea.ui.screens.auth
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

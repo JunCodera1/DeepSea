@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens
+package com.example.deepsea.ui.screens.feature
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas

@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens
+package com.example.deepsea.ui.screens.path
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,28 +14,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
-import com.example.deepsea.data.model.LanguageOption
-import com.example.deepsea.ui.viewmodel.LanguageSelectionViewModel
+import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.FriendSuggestion
+import com.example.deepsea.data.model.LanguageOptionRequest
+import com.example.deepsea.data.model.SurveyOption
+import com.example.deepsea.data.model.SurveyOptionRequest
+import com.example.deepsea.data.model.SurveyOptionResponse
+import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.data.repository.UserProfileRepository
+import com.example.deepsea.ui.viewmodel.SurveySelectionViewModel
 import com.example.deepsea.utils.SessionManager
-
+import retrofit2.Response
 
 @Composable
-fun LanguageSelectionPage(
+fun SurveySelectionPage(
     navController: NavController,
-    languageSelectionViewModel: LanguageSelectionViewModel,
+    surveySelectionViewModel: SurveySelectionViewModel,
     sessionManager: SessionManager
 ) {
     val userId by sessionManager.userId.collectAsState(initial = null)
 
-    // State to track selected languages using a set
-    val selectedLanguages by languageSelectionViewModel.selectedLanguages.collectAsState()
+    // State to track selected survey options
+    val selectedSurveys by surveySelectionViewModel.selectedSurveys.collectAsState()
     val scrollState = rememberScrollState()
 
     // Purple color for selected state
@@ -63,9 +72,9 @@ fun LanguageSelectionPage(
             )
 
             LinearProgressIndicator(
-                progress = 0.1f,
+                progress = 0.2f,
                 modifier = Modifier
-                    .weight(0.2f)
+                    .weight(1f)
                     .padding(start = 16.dp),
                 color = Color(0xFF8CC83C),
                 trackColor = Color(0xFFEEEEEE)
@@ -95,7 +104,7 @@ fun LanguageSelectionPage(
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(
-                        text = "Select the languages you want to learn",
+                        text = "How did you hear about DeepSea? (Select all that apply)",
                         modifier = Modifier.padding(16.dp),
                         fontSize = 18.sp
                     )
@@ -103,86 +112,73 @@ fun LanguageSelectionPage(
             }
         }
 
-        // Header "For English speakers"
+        // Header
         Text(
-            text = "For English speakers",
-            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
+            text = "Select your answers",
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
 
-        // Selected languages counter
-        if (selectedLanguages.isNotEmpty()) {
+        // Selected options counter
+        if (selectedSurveys.isNotEmpty()) {
             Text(
-                text = "${selectedLanguages.size} language${if (selectedLanguages.size > 1) "s" else ""} selected",
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+                text = "${selectedSurveys.size} option${if (selectedSurveys.size > 1) "s" else ""} selected",
+                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
                 fontSize = 16.sp,
                 color = purpleColor
             )
         }
 
-        val languagesIconMap = mapOf(
-            LanguageOption.JAPANESE to R.drawable.flag_japan,
-            LanguageOption.ITALY to R.drawable.flag_italy,
-            LanguageOption.GERMANY to R.drawable.flag_germany,
-            LanguageOption.ENGLISH to R.drawable.flag_england,
-            LanguageOption.FRENCH to R.drawable.flag_france,
-            LanguageOption.SPANISH to R.drawable.flag_spain,
+        // Map of survey options to their corresponding drawable resources
+        val surveyIconMap = mapOf(
+            SurveyOption.FRIENDS to R.drawable.ic_friends,
+            SurveyOption.TV to R.drawable.ic_tv,
+            SurveyOption.TIKTOK to R.drawable.ic_tiktok,
+            SurveyOption.NEWS to R.drawable.ic_news,
+            SurveyOption.YOUTUBE to R.drawable.ic_youtube,
+            SurveyOption.SOCIAL to R.drawable.ic_social,
+            SurveyOption.OTHER to R.drawable.ic_other
         )
 
-        // Render all language options
-        LanguageOption.values().forEach { option ->
-            LanguageOptionItem(
+        // Render all survey options
+        SurveyOption.values().forEach { option ->
+            SurveyOptionItem(
                 option = option,
-                iconResId = languagesIconMap[option] ?: R.drawable.ic_other, // Fallback icon
-                isSelected = selectedLanguages.contains(option),
-                onSelect = { languageSelectionViewModel.toggleLanguageSelection(option) }
+                iconResId = surveyIconMap[option] ?: R.drawable.ic_other, // Fallback icon
+                isSelected = selectedSurveys.contains(option),
+                onSelect = { surveySelectionViewModel.toggleSurveySelection(option) }
             )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Continue button - enabled when at least one language is selected
-        val isAnyLanguageSelected = selectedLanguages.isNotEmpty()
+        // Continue button - changes color when at least one option is selected
+        val isAnyOptionSelected = selectedSurveys.isNotEmpty()
         Button(
             onClick = {
-                if (isAnyLanguageSelected) {
-                    languageSelectionViewModel.saveLanguageSelections(userId = userId)
-                    navController.navigate("daily-goal-selection") // Replace with your next screen route
+                if (isAnyOptionSelected) {
+                    surveySelectionViewModel.saveSurveySelections(userId = userId)
+                    navController.navigate("learn-selection")
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isAnyLanguageSelected) purpleColor else Color.LightGray
+                containerColor = if (isAnyOptionSelected) purpleColor else Color.LightGray
             ),
             shape = RoundedCornerShape(8.dp),
-            enabled = isAnyLanguageSelected
+            enabled = isAnyOptionSelected
         ) {
             Text("CONTINUE", fontSize = 16.sp)
         }
     }
 }
 
-// Helper function to toggle language selection
-private fun toggleLanguageSelection(
-    language: String,
-    currentSelections: Set<String>,
-    updateSelection: (Set<String>) -> Unit
-) {
-    val updatedSelections = currentSelections.toMutableSet()
-    if (updatedSelections.contains(language)) {
-        updatedSelections.remove(language)
-    } else {
-        updatedSelections.add(language)
-    }
-    updateSelection(updatedSelections)
-}
-
 @Composable
-fun LanguageOptionItem(
-    option: LanguageOption,
+fun SurveyOptionItem(
+    option: SurveyOption,
     iconResId: Int,
     isSelected: Boolean,
     onSelect: () -> Unit
@@ -219,7 +215,7 @@ fun LanguageOptionItem(
                     .clip(RoundedCornerShape(4.dp))
             )
 
-            // Language option name
+            // Survey option name
             Text(
                 text = option.displayName,
                 modifier = Modifier.padding(start = 16.dp),
@@ -243,5 +239,53 @@ fun LanguageOptionItem(
 
 @Preview(showBackground = true)
 @Composable
-fun LanguageSelectionPreview() {
+fun SurveySelectionPreview() {
+    // For preview only - mock objects
+    val mockNavController = rememberNavController()
+    val mockService = MockUserProfileService()
+    val mockRepository = UserProfileRepository(mockService)
+    val viewModel = SurveySelectionViewModel(mockRepository)
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
+
+    SurveySelectionPage(
+        navController = mockNavController,
+        surveySelectionViewModel = viewModel,
+        sessionManager = sessionManager)
+}
+
+// Mock class for preview
+class MockUserProfileService : UserProfileService {
+    override suspend fun getUserProfileById(id: Long?): UserProfileData {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getFriendSuggestions(): List<FriendSuggestion> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getUserProfile(userId: Long): Response<UserProfileData> {
+        throw NotImplementedError("Preview mock")
+    }
+
+    override fun updateSurveyOption(updateRequest: SurveyOptionRequest): Response<SurveyOptionResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun saveSurveySelections(request: SurveyOptionRequest): UserProfileData {
+        return UserProfileData(
+            name = "Preview User",
+            username = "preview_user",
+            followers = 0,
+            following = 0,
+            dayStreak = 0,
+            totalXp = 0,
+            currentLeague = "Bronze",
+            topFinishes = 0
+        )
+    }
+
+    override suspend fun saveLanguageSelections(request: LanguageOptionRequest): UserProfileData {
+        TODO("Not yet implemented")
+    }
 }

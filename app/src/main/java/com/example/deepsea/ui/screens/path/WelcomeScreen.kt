@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens
+package com.example.deepsea.ui.screens.path
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
