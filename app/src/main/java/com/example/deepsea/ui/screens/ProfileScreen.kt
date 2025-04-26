@@ -3,6 +3,8 @@ package com.example.deepsea.ui.profile
 import UserProfileViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,20 +17,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +44,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,8 +62,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deepsea.R
+import com.example.deepsea.data.api.LanguageApiService
 import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.ui.viewmodel.LanguageSelectionViewModel
 import com.example.deepsea.utils.SessionManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfilePage(sessionManager: SessionManager,
@@ -64,6 +79,9 @@ fun ProfilePage(sessionManager: SessionManager,
 
     val userProfile = viewModel.userProfileData.value
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val scope = rememberCoroutineScope()
 
 
     LaunchedEffect(userId) {
@@ -183,7 +201,28 @@ fun ProfilePage(sessionManager: SessionManager,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            LanguageFlags(userData = userProfile)
+            LanguageFlags(
+                userData = userProfile,
+                onAddLanguage = { languageCode ->
+                    // Handle adding language
+                    scope.launch {
+                        try {
+                            if (userId != null) {
+                                val success = LanguageApiService.addLanguageToUser(userId!!, languageCode)
+                                if (success) {
+                                    // Refresh user profile to show the new language
+                                    viewModel.fetchUserProfile(userId!!)
+                                    snackbarHostState.showSnackbar("Language added successfully!")
+                                } else {
+                                    snackbarHostState.showSnackbar("Failed to add language")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar("Error: ${e.message}")
+                        }
+                    }
+                }
+            )
 
             Spacer(modifier= Modifier.height(16.dp))
             Text(
@@ -612,7 +651,12 @@ fun achievementCard(
 }
 
 @Composable
-fun LanguageFlags(userData: UserProfileData?) {
+fun LanguageFlags(
+    userData: UserProfileData?,
+    onAddLanguage: (String) -> Unit
+) {
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -624,6 +668,7 @@ fun LanguageFlags(userData: UserProfileData?) {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
+            // Display existing languages
             userData?.courses?.forEach { language ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -631,8 +676,7 @@ fun LanguageFlags(userData: UserProfileData?) {
                     Image(
                         painter = painterResource(id = language.flagResId),
                         contentDescription = language.displayName,
-                        modifier = Modifier
-                            .size(40.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -642,8 +686,93 @@ fun LanguageFlags(userData: UserProfileData?) {
                     )
                 }
             }
+
+            // Add language button
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconButton(
+                    onClick = { showLanguageDialog = true },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .border(1.dp, Color.LightGray, CircleShape)
+                        .clip(CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Language",
+                        tint = Color(0xFF4DB6FF)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Add",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
         }
     }
+
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            onLanguageSelected = { languageCode ->
+                onAddLanguage(languageCode)
+                showLanguageDialog = false
+            }
+        )
+    }
+}
+@Composable
+fun LanguageSelectionDialog(
+    onDismissRequest: () -> Unit,
+    onLanguageSelected: (String) -> Unit
+) {
+    val viewModel: LanguageSelectionViewModel = viewModel()
+    val languages by viewModel.availableLanguages.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchAvailableLanguages()
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Select Language") },
+        text = {
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn {
+                    items(languages) { language ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onLanguageSelected(language.code) }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = language.flagResId),
+                                contentDescription = language.displayName,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(text = language.displayName)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 @Composable
 fun getRankIconFromXp(xp: Int?): Painter {

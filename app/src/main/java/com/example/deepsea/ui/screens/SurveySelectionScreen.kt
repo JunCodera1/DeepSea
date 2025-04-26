@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,11 +23,27 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
+import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.FriendSuggestion
+import com.example.deepsea.data.model.SurveyOption
+import com.example.deepsea.data.model.SurveyOptionRequest
+import com.example.deepsea.data.model.SurveyOptionResponse
+import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.data.repository.UserProfileRepository
+import com.example.deepsea.ui.viewmodel.SurveyViewModel
+import com.example.deepsea.utils.SessionManager
+import retrofit2.Response
 
 @Composable
-fun SurveySelectionPage(navController: NavController) {
+fun SurveySelectionPage(
+    navController: NavController,
+    surveyViewModel: SurveyViewModel,
+    sessionManager: SessionManager
+) {
+    val userId by sessionManager.userId.collectAsState(initial = null)
+
     // State to track selected survey options
-    var selectedSurveys by remember { mutableStateOf(setOf<String>()) }
+    val selectedSurveys by surveyViewModel.selectedSurveys.collectAsState()
     val scrollState = rememberScrollState()
 
     // Purple color for selected state
@@ -112,49 +129,26 @@ fun SurveySelectionPage(navController: NavController) {
             )
         }
 
-        // Survey options
-        SurveyOption(
-            survey = "Friends",
-            flagResId = R.drawable.ic_friends,
-            isSelected = selectedSurveys.contains("Friends"),
-            onSelect = { toggleSurveySelection("Friends", selectedSurveys) { selectedSurveys = it } }
+        // Map of survey options to their corresponding drawable resources
+        val surveyIconMap = mapOf(
+            SurveyOption.FRIENDS to R.drawable.ic_friends,
+            SurveyOption.TV to R.drawable.ic_tv,
+            SurveyOption.TIKTOK to R.drawable.ic_tiktok,
+            SurveyOption.NEWS to R.drawable.ic_news,
+            SurveyOption.YOUTUBE to R.drawable.ic_youtube,
+            SurveyOption.SOCIAL to R.drawable.ic_social,
+            SurveyOption.OTHER to R.drawable.ic_other
         )
-        SurveyOption(
-            survey = "TV",
-            flagResId = R.drawable.ic_tv,
-            isSelected = selectedSurveys.contains("TV"),
-            onSelect = { toggleSurveySelection("TV", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "TikTok",
-            flagResId = R.drawable.ic_tiktok,
-            isSelected = selectedSurveys.contains("TikTok"),
-            onSelect = { toggleSurveySelection("TikTok", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "News",
-            flagResId = R.drawable.ic_news,
-            isSelected = selectedSurveys.contains("News"),
-            onSelect = { toggleSurveySelection("News", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "Youtube",
-            flagResId = R.drawable.ic_youtube,
-            isSelected = selectedSurveys.contains("Youtube"),
-            onSelect = { toggleSurveySelection("Youtube", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "Social",
-            flagResId = R.drawable.ic_social,
-            isSelected = selectedSurveys.contains("Social"),
-            onSelect = { toggleSurveySelection("Social", selectedSurveys) { selectedSurveys = it } }
-        )
-        SurveyOption(
-            survey = "Other",
-            flagResId = R.drawable.ic_other,
-            isSelected = selectedSurveys.contains("Other"),
-            onSelect = { toggleSurveySelection("Other", selectedSurveys) { selectedSurveys = it } }
-        )
+
+        // Render all survey options
+        SurveyOption.values().forEach { option ->
+            SurveyOptionItem(
+                option = option,
+                iconResId = surveyIconMap[option] ?: R.drawable.ic_other, // Fallback icon
+                isSelected = selectedSurveys.contains(option),
+                onSelect = { surveyViewModel.toggleSurveySelection(option) }
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -163,6 +157,7 @@ fun SurveySelectionPage(navController: NavController) {
         Button(
             onClick = {
                 if (isAnyOptionSelected) {
+                    surveyViewModel.saveSurveySelections(userId = userId)
                     navController.navigate("learn-selection")
                 }
             },
@@ -180,25 +175,10 @@ fun SurveySelectionPage(navController: NavController) {
     }
 }
 
-// Helper function to toggle survey selection
-private fun toggleSurveySelection(
-    option: String,
-    currentSelections: Set<String>,
-    updateSelection: (Set<String>) -> Unit
-) {
-    val updatedSelections = currentSelections.toMutableSet()
-    if (updatedSelections.contains(option)) {
-        updatedSelections.remove(option)
-    } else {
-        updatedSelections.add(option)
-    }
-    updateSelection(updatedSelections)
-}
-
 @Composable
-fun SurveyOption(
-    survey: String,
-    flagResId: Int,
+fun SurveyOptionItem(
+    option: SurveyOption,
+    iconResId: Int,
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
@@ -227,8 +207,8 @@ fun SurveyOption(
         ) {
             // Icon
             Image(
-                painter = painterResource(id = flagResId),
-                contentDescription = survey,
+                painter = painterResource(id = iconResId),
+                contentDescription = option.displayName,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(4.dp))
@@ -236,7 +216,7 @@ fun SurveyOption(
 
             // Survey option name
             Text(
-                text = survey,
+                text = option.displayName,
                 modifier = Modifier.padding(start = 16.dp),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
@@ -259,5 +239,48 @@ fun SurveyOption(
 @Preview(showBackground = true)
 @Composable
 fun SurveySelectionPreview() {
-    SurveySelectionPage(navController = rememberNavController())
+    // For preview only - mock objects
+    val mockNavController = rememberNavController()
+    val mockService = MockUserProfileService()
+    val mockRepository = UserProfileRepository(mockService)
+    val viewModel = SurveyViewModel(mockRepository)
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
+
+    SurveySelectionPage(
+        navController = mockNavController,
+        surveyViewModel = viewModel,
+        sessionManager = sessionManager)
+}
+
+// Mock class for preview
+class MockUserProfileService : UserProfileService {
+    override suspend fun getUserProfileById(id: Long?): UserProfileData {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getFriendSuggestions(): List<FriendSuggestion> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getUserProfile(userId: Long): retrofit2.Response<UserProfileData> {
+        throw NotImplementedError("Preview mock")
+    }
+
+    override fun updateSurveyOption(updateRequest: SurveyOptionRequest): Response<SurveyOptionResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun saveSurveySelections(request: SurveyOptionRequest): UserProfileData {
+        return UserProfileData(
+            name = "Preview User",
+            username = "preview_user",
+            followers = 0,
+            following = 0,
+            dayStreak = 0,
+            totalXp = 0,
+            currentLeague = "Bronze",
+            topFinishes = 0
+        )
+    }
 }

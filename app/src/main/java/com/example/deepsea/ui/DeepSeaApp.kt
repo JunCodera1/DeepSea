@@ -51,6 +51,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.AI_assistant.VoiceAssistantScreen
+import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.api.RetrofitClient.userProfileService
+import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.screens.DailyGoalSelectionPage
@@ -61,6 +65,8 @@ import com.example.deepsea.ui.screens.PathSelectionPage
 import com.example.deepsea.ui.screens.SettingsPage
 import com.example.deepsea.ui.screens.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.ui.viewmodel.SurveyViewModel
+import com.example.deepsea.ui.viewmodel.SurveyViewModelFactory
 import com.example.deepsea.utils.SessionManager
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -84,7 +90,6 @@ fun DeepSeaApp() {
                         route = MainDestinations.HOME_ROUTE
                     ) { backStackEntry ->
                         MainContainer(
-                            onSnackSelected = deepSeaNavController::navigateToLogin,
                             authViewModel = authViewModel
                         )
                     }
@@ -160,7 +165,6 @@ fun DeepSeaApp() {
 @Composable
 fun MainContainer(
     modifier: Modifier = Modifier,
-    onSnackSelected: (Long, String, NavBackStackEntry) -> Unit,
     authViewModel: AuthViewModel
 ) {
     val deepSeaScaffoldState = rememberDeepSeaScaffoldState()
@@ -238,7 +242,18 @@ fun MainContainer(
                     DailyGoalSelectionPage(nestedNavController.navController)
                 }
                 composable("survey-selection") {
-                    SurveySelectionPage(nestedNavController.navController)
+                    val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)
+
+                    val surveyViewModel: SurveyViewModel = viewModel(
+                        factory = SurveyViewModelFactory(userProfileRepository)
+                    )
+                    val context = LocalContext.current
+                    val sessionManager = SessionManager(context)
+                    SurveySelectionPage(
+                        navController = nestedNavController.navController,
+                        surveyViewModel = surveyViewModel,
+                        sessionManager = sessionManager
+                    )
                 }
                 composable("learn-selection") {
                     LanguageSelectionPage(nestedNavController.navController)

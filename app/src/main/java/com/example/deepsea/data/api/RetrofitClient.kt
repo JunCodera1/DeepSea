@@ -20,7 +20,7 @@ object RetrofitClient {
         .writeTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    private val retrofit = Retrofit.Builder()
+    internal val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .client(client)
@@ -28,4 +28,5 @@ object RetrofitClient {
 
     val authApi: ApiService = retrofit.create(ApiService::class.java)
     val userProfileService: UserProfileService = retrofit.create(UserProfileService::class.java)
+    val languageApi: LanguageApi = retrofit.create(LanguageApi::class.java)
 }

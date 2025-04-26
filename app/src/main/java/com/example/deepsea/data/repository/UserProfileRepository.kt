@@ -1,7 +1,8 @@
-// 2. Repository
 package com.example.deepsea.data.repository
 
 import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.SurveyOption
+import com.example.deepsea.data.model.SurveyOptionRequest
 import com.example.deepsea.data.model.UserProfileData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,6 +23,15 @@ class UserProfileRepository @Inject constructor(
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }
+    }
+    suspend fun updateUserSurveySelections(
+        userId:Long? ,
+        surveySelections: Set<SurveyOption>
+    ): UserProfileData {
+        return withContext(Dispatchers.IO) {
+            val request = SurveyOptionRequest(userId = userId, selectedOptions =  surveySelections)
+            userProfileService.saveSurveySelections(request)
         }
     }
 }
