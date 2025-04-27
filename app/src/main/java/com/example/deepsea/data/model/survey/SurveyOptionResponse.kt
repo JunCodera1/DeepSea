@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.survey
 
 data class SurveyOptionResponse(
     val status: String,

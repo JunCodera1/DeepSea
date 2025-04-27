@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.language
 
 data class LanguageData(
     val code: String,

@@ -1,10 +1,10 @@
 package com.example.deepsea.data.api
 
-import com.example.deepsea.data.model.FriendSuggestion
-import com.example.deepsea.data.model.LanguageOptionRequest
-import com.example.deepsea.data.model.SurveyOptionRequest
-import com.example.deepsea.data.model.SurveyOptionResponse
-import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.data.model.user.FriendSuggestion
+import com.example.deepsea.data.model.language.LanguageOptionRequest
+import com.example.deepsea.data.model.survey.SurveyOptionRequest
+import com.example.deepsea.data.model.survey.SurveyOptionResponse
+import com.example.deepsea.data.model.user.UserProfileData
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

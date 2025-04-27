@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.auth
 
 data class LoginRequest(
     val email: String,

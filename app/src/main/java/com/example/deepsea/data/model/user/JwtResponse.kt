@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.user
 
 data class JwtResponse(
     val token: String,

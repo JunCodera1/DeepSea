@@ -1,5 +1,7 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.user
 
+import com.example.deepsea.data.model.language.LanguageOption
+import com.example.deepsea.data.model.survey.SurveyOption
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

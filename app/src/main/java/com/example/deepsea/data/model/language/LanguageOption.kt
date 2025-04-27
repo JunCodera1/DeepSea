@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.language
 
 import androidx.annotation.DrawableRes
 import com.example.deepsea.R

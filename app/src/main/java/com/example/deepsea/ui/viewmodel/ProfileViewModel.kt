@@ -2,7 +2,7 @@ package com.example.deepsea.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.data.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

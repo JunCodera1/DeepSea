@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.user
 
 data class UploadResponse(
     val success: Boolean,

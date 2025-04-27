@@ -3,7 +3,7 @@ package com.example.deepsea.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.deepsea.data.model.SurveyOption
+import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.repository.UserProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

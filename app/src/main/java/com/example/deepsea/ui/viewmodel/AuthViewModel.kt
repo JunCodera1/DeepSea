@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.LoginRequest
-import com.example.deepsea.data.model.RegisterRequest
+import com.example.deepsea.data.model.auth.LoginRequest
+import com.example.deepsea.data.model.auth.RegisterRequest
 import com.example.deepsea.utils.DashboardState
 import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.RegisterState

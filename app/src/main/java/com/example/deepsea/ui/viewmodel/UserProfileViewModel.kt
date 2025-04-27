@@ -4,7 +4,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.UserProfileData
+import com.example.deepsea.data.model.user.UserProfileData
 
 class UserProfileViewModel : ViewModel() {
     private val _userProfileData = mutableStateOf<UserProfileData?>(null)
