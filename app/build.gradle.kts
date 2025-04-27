@@ -85,4 +85,10 @@ dependencies {
     implementation ("androidx.compose.runtime:runtime-livedata:1.8.0") // To observe LiveData
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
+    // Google Sign-In
+    implementation ("com.google.android.gms:play-services-auth:19.2.0")
+    // Facebook Sign-In
+    implementation("com.facebook.android:facebook-login:18.0.2")
+    implementation("com.facebook.android:facebook-android-sdk:18.0.2")
+
 }

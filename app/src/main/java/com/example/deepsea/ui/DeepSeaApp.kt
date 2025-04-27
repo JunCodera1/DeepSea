@@ -225,7 +225,8 @@ fun MainContainer(
             builder = {
                 composable("welcome") {
                     WelcomePage(
-                        navController = nestedNavController
+                        navController = nestedNavController,
+                        authViewModel = authViewModel
                     )
                 }
 

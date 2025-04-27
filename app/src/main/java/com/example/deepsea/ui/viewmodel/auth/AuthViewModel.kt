@@ -99,6 +99,34 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Google login
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            try {
+                _loginState.value = LoginState.Loading
+                // Gọi API đăng nhập với Google
+                // authRepository.signInWithGoogle(idToken)
+                _loginState.value = LoginState.Success
+            } catch (e: Exception) {
+                _loginState.value = LoginState.Error(e.message ?: "Google sign in failed")
+            }
+        }
+    }
+
+    // Facebook login
+    fun signInWithFacebook(token: String) {
+        viewModelScope.launch {
+            try {
+                _loginState.value = LoginState.Loading
+                // Gọi API đăng nhập với Facebook
+                // authRepository.signInWithFacebook(token)
+                _loginState.value = LoginState.Success
+            } catch (e: Exception) {
+                _loginState.value = LoginState.Error(e.message ?: "Facebook sign in failed")
+            }
+        }
+    }
+
 
     fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
@@ -198,9 +226,5 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun resetLoginState() {
         _loginState.value = LoginState.Idle
-    }
-
-    fun resetRegisterState() {
-        _registerState.value = RegisterState.Idle
     }
 }
