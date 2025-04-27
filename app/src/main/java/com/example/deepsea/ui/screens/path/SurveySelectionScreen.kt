@@ -31,7 +31,7 @@ import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
 import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.data.repository.UserProfileRepository
-import com.example.deepsea.ui.viewmodel.SurveySelectionViewModel
+import com.example.deepsea.ui.viewmodel.surveySelection.SurveySelectionViewModel
 import com.example.deepsea.utils.SessionManager
 import retrofit2.Response
 

@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.viewmodel
+package com.example.deepsea.ui.viewmodel.auth
 
 import android.app.Application
 import android.content.Context

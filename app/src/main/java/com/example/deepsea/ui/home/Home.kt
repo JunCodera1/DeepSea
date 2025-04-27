@@ -57,22 +57,7 @@ import com.example.deepsea.R
 import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.nonSpatialExpressiveSpring
-import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.theme.DeepSeaTheme
-
-
-
-// Helper function to determine the index of the route
-private fun getRouteIndex(route: String): Int {
-    return when {
-        route.contains("learn") -> 0
-        route.contains("daily") -> 1
-        route.contains("rank") -> 2
-        route.contains("game") -> 3
-        route.contains("profile") -> 4
-        else -> -1
-    }
-}
 
 
 // Enum class with navigation info

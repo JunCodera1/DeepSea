@@ -25,7 +25,7 @@ import com.example.deepsea.ui.components.LoginTextField
 import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
-import com.example.deepsea.ui.viewmodel.AuthViewModel
+import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
 import com.example.deepsea.utils.LoginState
 
 @OptIn(ExperimentalSharedTransitionApi::class)

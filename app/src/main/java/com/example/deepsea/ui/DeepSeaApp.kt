@@ -38,7 +38,7 @@ import com.example.deepsea.ui.screens.auth.LoginPage
 import com.example.deepsea.ui.screens.auth.SignupPage
 import com.example.deepsea.ui.screens.path.WelcomePage
 import com.example.deepsea.ui.theme.DeepSeaTheme
-import com.example.deepsea.ui.viewmodel.AuthViewModel
+import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
 import com.example.deepsea.utils.UserState
 import android.util.Log
 import androidx.compose.foundation.layout.padding
@@ -61,10 +61,10 @@ import com.example.deepsea.ui.screens.feature.LearnPage
 import com.example.deepsea.ui.screens.feature.RankPage
 import com.example.deepsea.ui.screens.path.SurveySelectionPage
 import com.example.deepsea.ui.theme.FeatherGreen
-import com.example.deepsea.ui.viewmodel.LanguageSelectionViewModel
-import com.example.deepsea.ui.viewmodel.SurveySelectionViewModel
-import com.example.deepsea.ui.viewmodel.LanguageSelectionViewModelFactory
-import com.example.deepsea.ui.viewmodel.SurveyViewModelFactory
+import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModel
+import com.example.deepsea.ui.viewmodel.surveySelection.SurveySelectionViewModel
+import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModelFactory
+import com.example.deepsea.ui.viewmodel.surveySelection.SurveyViewModelFactory
 import com.example.deepsea.utils.SessionManager
 
 @OptIn(ExperimentalSharedTransitionApi::class)

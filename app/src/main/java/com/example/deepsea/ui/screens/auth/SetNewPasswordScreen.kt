@@ -34,7 +34,8 @@ fun SetNewPasswordScreen(
     confirmPassword: String,
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
-    onUpdateClicked: () -> Unit
+    onUpdateClicked: () -> Unit,
+    isLoading: Boolean
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
@@ -128,7 +129,7 @@ fun SetNewPasswordScreen(
                 else MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             )
         ) {
-            Text("Update Password")
+            Text(if (isLoading) "Loading..." else "Update Password")
         }
     }
 }

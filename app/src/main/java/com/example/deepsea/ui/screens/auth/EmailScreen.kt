@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.dp
 fun EmailScreen(
     email: String,
     onEmailChange: (String) -> Unit,
-    onResetClicked: () -> Unit
+    onResetClicked: () -> Unit,
+    isLoading: Boolean
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -61,6 +62,7 @@ fun EmailScreen(
 
         Button(
             onClick = onResetClicked,
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
@@ -70,7 +72,7 @@ fun EmailScreen(
                 else MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             )
         ) {
-            Text("Reset Password")
+            Text(if (isLoading) "Loading..." else "Reset Password")
         }
     }
 }

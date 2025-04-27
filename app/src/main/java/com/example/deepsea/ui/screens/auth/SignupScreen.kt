@@ -46,7 +46,7 @@ import com.example.deepsea.R
 import com.example.deepsea.ui.components.SignupTextField
 import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
-import com.example.deepsea.ui.viewmodel.AuthViewModel
+import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
 
 @Composable
 fun SignupPage(

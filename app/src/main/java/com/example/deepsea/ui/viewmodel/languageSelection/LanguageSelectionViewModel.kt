@@ -1,7 +1,6 @@
-package com.example.deepsea.ui.viewmodel
+package com.example.deepsea.ui.viewmodel.languageSelection
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.model.language.LanguageOption
 import com.example.deepsea.data.repository.UserProfileRepository
@@ -38,12 +37,3 @@ class LanguageSelectionViewModel(
     }
 }
 
-class LanguageSelectionViewModelFactory(private val userRepository: UserProfileRepository) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LanguageSelectionViewModel::class.java)) {
-            return LanguageSelectionViewModel(userRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}

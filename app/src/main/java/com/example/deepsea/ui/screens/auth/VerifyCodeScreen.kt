@@ -39,7 +39,8 @@ fun VerifyCodeScreen(
     verificationCode: List<String>,
     onCodeChange: (Int, String) -> Unit,
     onVerifyClicked: () -> Unit,
-    onResendClicked: () -> Unit
+    onResendClicked: () -> Unit,
+    isLoading: Boolean
 ) {
     val clipboardManager = LocalClipboardManager.current
 
