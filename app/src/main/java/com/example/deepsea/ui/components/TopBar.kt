@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -51,10 +52,16 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 
+// Sửa đổi cho TopBar.kt
+// Cập nhật TopBar để đổi hướng mũi tên khi mở rộng header
 @Composable
-fun TopBar(units: List<UnitData> = listOf(UnitData()),
-           visibleUnitIndex: Int = 0,
-           navController: NavController) {
+fun TopBar(
+    units: List<UnitData> = listOf(UnitData()),
+    visibleUnitIndex: Int = 0,
+    navController: NavController,
+    onExpandClick: () -> Unit = {}, // Callback cho sự kiện click
+    isExpanded: Boolean = false // Trạng thái mở rộng
+) {
     val systemUiController = rememberSystemUiController()
     val showStreakDialog = remember { mutableStateOf(false) }
 
@@ -67,7 +74,6 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()),
 
     systemUiController.setStatusBarColor(animatedColor)
     systemUiController.setNavigationBarColor(Color.White)
-
 
     Box(
         modifier = Modifier
@@ -104,7 +110,9 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()),
                 BarIcon(R.drawable.ic_heart, "5")
             }
 
-            Box {
+            Box(
+                modifier = Modifier.clickable { onExpandClick() } // Thêm clickable
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,10 +123,12 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()),
                     TitleText(text = "Section 1: Rookie", color = Color.White, fontSize = 18.sp)
                 }
 
+                // Sử dụng mũi tên lên hoặc xuống tùy thuộc vào trạng thái mở rộng
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
                     tint = Color.White,
-                    contentDescription = "up"
+                    contentDescription = if (isExpanded) "down" else "up",
+                    modifier = Modifier.align(Alignment.CenterEnd)
                 )
             }
         }
@@ -143,51 +153,6 @@ fun BarIcon(@DrawableRes icon: Int, text: String? = null, saturation: Float = 1f
         text?.let {
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = it, color = Color.White, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun StreakCalendar() {
-    val today = LocalDate.now()
-    val daysInMonth = YearMonth.now().lengthOfMonth()
-
-    Column {
-        Text("Tháng ${today.monthValue}/${today.year}", fontWeight = FontWeight.Bold)
-
-        // Dòng header
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-            listOf("S", "M", "T", "W", "T", "F", "S").forEach {
-                Text(it, fontSize = 14.sp)
-            }
-        }
-
-        // Hiển thị ngày
-        val firstDayOfWeek = YearMonth.now().atDay(1).dayOfWeek.value % 7
-        var dayCount = 1
-
-        for (week in 0..5) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                for (dayOfWeek in 0..6) {
-                    if (week == 0 && dayOfWeek < firstDayOfWeek || dayCount > daysInMonth) {
-                        Text("", modifier = Modifier.size(24.dp))
-                    } else {
-                        val isToday = dayCount == today.dayOfMonth
-                        Text(
-                            text = "$dayCount",
-                            modifier = Modifier
-                                .size(28.dp)
-                                .background(
-                                    if (isToday) Color(0xFFFFC107) else Color.Transparent,
-                                    shape = CircleShape
-                                ),
-                            color = if (isToday) Color.White else Color.Black,
-                            textAlign = TextAlign.Center
-                        )
-                        dayCount++
-                    }
-                }
-            }
         }
     }
 }

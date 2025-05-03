@@ -294,7 +294,7 @@ fun MainContainer(
                             UnitData(title = "Unit 6", color = Color.Blue)
                         )
                     }
-                    HomeScreen(units = units, navController = deepSeaNavController.navController)
+                    HomeScreen(navController = deepSeaNavController.navController)
                 }
                 composable("home/learn") {
                     // Load dashboard data when entering the main area
