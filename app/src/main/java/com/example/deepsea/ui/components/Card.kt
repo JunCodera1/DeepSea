@@ -3,6 +3,8 @@ package com.example.deepsea.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,9 +29,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.Modifier
@@ -34,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,7 +50,11 @@ import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
 import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.ui.profile.StatisticItem
+import com.example.deepsea.ui.screens.feature.LanguageProgress
+import com.example.deepsea.ui.screens.feature.game.Player
+import com.example.deepsea.ui.screens.feature.getLanguageLevel
 import com.example.deepsea.ui.theme.DeepSeaTheme
+import kotlin.random.Random
 
 @Composable
 fun DeepSeaCard(
@@ -321,6 +334,175 @@ fun FriendSuggestionCard() {
         }
     }
 }
+
+@Composable
+fun WeeklyStreakCard() {
+    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val streak = remember {
+        List(7) { Random.nextBoolean() }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Weekly Streak",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "${streak.count { it }} days",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                daysOfWeek.forEachIndexed { index, day ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (streak[index]) colorScheme.primary
+                                    else colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    color = if (streak[index]) colorScheme.primary
+                                    else colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (streak[index]) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = colorScheme.onPrimary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = day,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguageCard(language: LanguageProgress) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = language.name.first().toString(),
+                            color = colorScheme.onPrimaryContainer,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = language.name,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = getLanguageLevel(language.overallProgress),
+                            fontSize = 14.sp,
+                            color = colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "${language.overallProgress}%",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LinearProgressIndicator(
+                progress = language.overallProgress / 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = colorScheme.primary,
+                trackColor = colorScheme.surfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Skills breakdown
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SkillIndicator("Speaking", language.skills[0])
+                SkillIndicator("Writing", language.skills[1])
+                SkillIndicator("Reading", language.skills[2])
+                SkillIndicator("Listening", language.skills[3])
+            }
+        }
+    }
+}
+
 @Composable
 fun AchievementCard(
     title: String,
@@ -448,6 +630,119 @@ fun FriendSuggestionCard(
                     modifier = Modifier.size(16.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun GameModeCard(
+    title: String,
+    description: String,
+    iconContent: @Composable () -> Unit,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF0F7FF))
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                iconContent()
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = description,
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Filled.ArrowForward,
+                contentDescription = null,
+                tint = Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+fun PlayerScoreCard(
+    player: Player,
+    score: Int,
+    isCurrentPlayer: Boolean
+) {
+    Card(
+        modifier = Modifier.width(150.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = if (isCurrentPlayer) BorderStroke(2.dp, Color(0xFF0078D7)) else null
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (isCurrentPlayer) Color(0xFF0078D7) else Color(0xFFE1E8ED)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = null,
+                    tint = if (isCurrentPlayer) Color.White else Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = player.name,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp
+            )
+
+            Text(
+                text = "Level ${player.level}",
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = score.toString(),
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = if (isCurrentPlayer) Color(0xFF0078D7) else Color.DarkGray
+            )
         }
     }
 }

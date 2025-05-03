@@ -57,6 +57,7 @@ import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.ui.components.AchievementCard
 import com.example.deepsea.ui.components.FriendSuggestionCard
 import com.example.deepsea.ui.components.InviteFriendsCard
+import com.example.deepsea.ui.components.ProfileHeader
 import com.example.deepsea.ui.components.StatisticsCard
 import com.example.deepsea.ui.components.UserBasicInfoCard
 import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModel
@@ -179,32 +180,6 @@ fun ProfilePage(
         }
     }
 }
-
-@Composable
-fun ProfileHeader(onNavigateToSettings: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Profile",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
-
-        IconButton(onClick = onNavigateToSettings) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = Color(0xFF4DB6FF)
-            )
-        }
-    }
-}
-
-
 
 @Composable
 fun StatisticItem(

@@ -48,7 +48,7 @@ import com.example.deepsea.ui.screens.auth.ForgotPasswordPage
 import com.example.deepsea.ui.screens.auth.LoginPage
 import com.example.deepsea.ui.screens.auth.SignupPage
 import com.example.deepsea.ui.screens.feature.DailyPage
-import com.example.deepsea.ui.screens.feature.GamePage
+import com.example.deepsea.ui.screens.feature.game.GamePage
 import com.example.deepsea.ui.screens.feature.HomeScreen
 import com.example.deepsea.ui.screens.feature.LearnPage
 import com.example.deepsea.ui.screens.feature.RankPage
