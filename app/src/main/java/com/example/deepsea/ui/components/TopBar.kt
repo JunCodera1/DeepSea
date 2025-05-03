@@ -42,6 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.deepsea.R
 import com.example.deepsea.text.TitleText
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -50,8 +52,9 @@ import java.time.YearMonth
 
 
 @Composable
-@Preview
-fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0) {
+fun TopBar(units: List<UnitData> = listOf(UnitData()),
+           visibleUnitIndex: Int = 0,
+           navController: NavController) {
     val systemUiController = rememberSystemUiController()
     val showStreakDialog = remember { mutableStateOf(false) }
 
@@ -88,14 +91,7 @@ fun TopBar(units: List<UnitData> = listOf(UnitData()), visibleUnitIndex: Int = 0
             ) {
                 BarIcon(R.drawable.flag_japan)
                 if (showStreakDialog.value) {
-                    AlertDialog(
-                        onDismissRequest = { showStreakDialog.value = false },
-                        confirmButton = {},
-                        title = { Text("Streak Calendar") },
-                        text = {
-                            StreakCalendar()
-                        }
-                    )
+                    navController.navigate("home/streak")
                 }
 
                 BarIcon(

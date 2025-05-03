@@ -45,12 +45,8 @@ fun DailyGoalSelectionPage(
 
     val selectedGoal by viewModel.selectedGoal.collectAsState()
     val context = LocalContext.current
-    // Define colors
-    val lightBlue = Color(0xFFE1F5FE)
-    val blue = Color(0xFF29B6F6)
-    val green = Color(0xFF76C043)
 
-    // State to track selected goal
+    val green = Color(0xFF76C043)
 
     Column(
         modifier = Modifier
@@ -73,7 +69,7 @@ fun DailyGoalSelectionPage(
             )
 
             LinearProgressIndicator(
-                progress = 0.5f,
+                progress = 0.75f,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp),
@@ -140,7 +136,7 @@ fun DailyGoalSelectionPage(
             onClick = {
                 viewModel.submitGoal(
                     onSuccess = {
-                        navController.navigate("path_selection")
+                        navController.navigate("survey-selection")
                     },
                     onError = { errorMsg ->
                         Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()

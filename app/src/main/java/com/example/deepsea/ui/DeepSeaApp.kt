@@ -29,7 +29,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.data.api.RetrofitClient
@@ -37,6 +36,7 @@ import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.DeepSeaFAButton
 import com.example.deepsea.ui.components.DeepSeaScaffold
+import com.example.deepsea.ui.components.StreakScreen
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.home.DeepSeaBottomBar
 import com.example.deepsea.ui.home.composableWithCompositionLocal
@@ -167,25 +167,26 @@ fun MainContainer(
     authViewModel: AuthViewModel
 ) {
     val deepSeaScaffoldState = rememberDeepSeaScaffoldState()
-    val nestedNavController = rememberDeepSeaNavController()
-    val navBackStackEntry by nestedNavController.navController.currentBackStackEntryAsState()
+    val deepSeaNavController = rememberDeepSeaNavController()
+    val navBackStackEntry by deepSeaNavController.navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val isAuthRoute: Boolean = currentRoute != "login" &&
+    val isImportantRoute: Boolean = currentRoute != "login" &&
                                 currentRoute != "signup" &&
                                 currentRoute != "forgot-password" &&
                                 currentRoute != "welcome" &&
-                                currentRoute != "learn-selection" &&
+                                currentRoute != "language-selection" &&
                                 currentRoute != "survey-selection" &&
                                 currentRoute != "daily-goal-selection" &&
-                                currentRoute != "path_selection"
+                                currentRoute != "path_selection" &&
+                                currentRoute != "home/streak"
 
     val userState by authViewModel.userState.collectAsState()
 
     LaunchedEffect(userState, currentRoute) {
         Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
-        if (userState is UserState.NotLoggedIn && isAuthRoute && currentRoute != "welcome") {
+        if (userState is UserState.NotLoggedIn && isImportantRoute && currentRoute != "welcome") {
             Log.d("MainContainer", "User not logged in, navigating to welcome")
-            nestedNavController.navController.navigate("welcome") {
+            deepSeaNavController.navController.navigate("welcome") {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -194,39 +195,39 @@ fun MainContainer(
     DeepSeaScaffold(
         floatingActionButton = {
             Box { // This provides the alignment scope
-                if (isAuthRoute)
+                if (isImportantRoute)
                     DeepSeaFAButton(
                         modifier = Modifier.align(Alignment.TopCenter),
                         containerColor = Color(0xFFB2DFDB),
                         onItemClick = { title ->
                             when (title) {
-                                "Explore" -> nestedNavController.navController.navigate("explore_route")
-                                "Favorites" -> nestedNavController.navController.navigate("favorites_route")
-                                "Settings" -> nestedNavController.navController.navigate("settings_route")
-                                "Help" -> nestedNavController.navController.navigate("help_route")
-                                "Voice Assistant" -> nestedNavController.navController.navigate("home/voice_assistant")
+                                "Explore" -> deepSeaNavController.navController.navigate("explore_route")
+                                "Favorites" -> deepSeaNavController.navController.navigate("favorites_route")
+                                "Settings" -> deepSeaNavController.navController.navigate("settings_route")
+                                "Help" -> deepSeaNavController.navController.navigate("help_route")
+                                "Voice Assistant" -> deepSeaNavController.navController.navigate("home/voice_assistant")
                             }
                         }
                     )
             }
         },
         bottomBar = {
-            if (isAuthRoute)
+            if (isImportantRoute)
                 DeepSeaBottomBar(
-                    navController = nestedNavController.navController
+                    navController = deepSeaNavController.navController
                 )
         },
         modifier = modifier,
         snackBarHostState = deepSeaScaffoldState.snackBarHostState,
     ) { padding ->
         NavHost(
-            navController = nestedNavController.navController,
+            navController = deepSeaNavController.navController,
             startDestination = "welcome",
             modifier = modifier.padding(padding),
             builder = {
                 composable("welcome") {
                     WelcomePage(
-                        navController = nestedNavController,
+                        navController = deepSeaNavController,
                         authViewModel = authViewModel
                     )
                 }
@@ -238,7 +239,7 @@ fun MainContainer(
                     val sessionManager = SessionManager(context)
                     val userProfileService: UserProfileService = RetrofitClient.userProfileService
                     PathSelectionFlowPage(
-                        navController = nestedNavController.navController,
+                        navController = deepSeaNavController.navController,
                         sessionManager = sessionManager,
                         pathService = userProfileService
                     )
@@ -246,7 +247,7 @@ fun MainContainer(
                 composable("daily-goal-selection") {
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context)
-                    DailyGoalSelectionPage(navController = nestedNavController.navController,
+                    DailyGoalSelectionPage(navController = deepSeaNavController.navController,
                         sessionManager= sessionManager)
                 }
                 composable("survey-selection") {
@@ -258,12 +259,12 @@ fun MainContainer(
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context)
                     SurveySelectionPage(
-                        navController = nestedNavController.navController,
+                        navController = deepSeaNavController.navController,
                         surveySelectionViewModel = surveySelectionViewModel,
                         sessionManager = sessionManager
                     )
                 }
-                composable("learn-selection") {
+                composable("language-selection") {
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context)
                     val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)
@@ -272,7 +273,7 @@ fun MainContainer(
                         factory = LanguageSelectionViewModelFactory(userProfileRepository)
                     )
                     LanguageSelectionPage(
-                        navController = nestedNavController.navController,
+                        navController = deepSeaNavController.navController,
                         sessionManager = sessionManager,
                         languageSelectionViewModel = languageSelectionViewModel
                     )
@@ -293,8 +294,7 @@ fun MainContainer(
                             UnitData(title = "Unit 6", color = Color.Blue)
                         )
                     }
-                    val navController = rememberNavController()
-                    HomeScreen(units = units, navController = nestedNavController.navController)
+                    HomeScreen(units = units, navController = deepSeaNavController.navController)
                 }
                 composable("home/learn") {
                     // Load dashboard data when entering the main area
@@ -319,7 +319,16 @@ fun MainContainer(
                     ProfilePage(sessionManager = sessionManager,
                         paddingValues = padding,
                         onNavigateToSettings = {
-                            nestedNavController.navController.navigate("settings")
+                            deepSeaNavController.navController.navigate("settings")
+                        }
+                    )
+                }
+
+                composable("home/streak") {
+                    StreakScreen(
+                        currentStreak = 5,
+                        onDismissRequest = {
+                            deepSeaNavController.navController.navigate("home")
                         }
                     )
                 }
@@ -329,14 +338,14 @@ fun MainContainer(
                 }
                 composable("settings") {
                     SettingsPage(
-                        onBackPressed = { nestedNavController.navController.popBackStack() },
-                        onPreferencesClick = { nestedNavController.navController.navigate("preferences") },
-                        onProfileClick = { nestedNavController.navController.navigate("profile") },
-                        onNotificationsClick = { nestedNavController.navController.navigate("notifications") },
-                        onCoursesClick = { nestedNavController.navController.navigate("courses") },
-                        onPrivacySettingsClick = { nestedNavController.navController.navigate("privacy_settings") },
-                        onHelpCenterClick = { nestedNavController.navController.navigate("help_center") },
-                        onFeedbackClick = { nestedNavController.navController.navigate("feedback") },
+                        onBackPressed = { deepSeaNavController.navController.popBackStack() },
+                        onPreferencesClick = { deepSeaNavController.navController.navigate("preferences") },
+                        onProfileClick = { deepSeaNavController.navController.navigate("profile") },
+                        onNotificationsClick = { deepSeaNavController.navController.navigate("notifications") },
+                        onCoursesClick = { deepSeaNavController.navController.navigate("courses") },
+                        onPrivacySettingsClick = { deepSeaNavController.navController.navigate("privacy_settings") },
+                        onHelpCenterClick = { deepSeaNavController.navController.navigate("help_center") },
+                        onFeedbackClick = { deepSeaNavController.navController.navigate("feedback") },
                         onSignOut = { authViewModel.logout() },
                         paddingValues = padding
                     )
@@ -347,19 +356,19 @@ fun MainContainer(
                 // Auth Routes
                 composable("signup") {
                     SignupPage(
-                        navController = nestedNavController,
+                        navController = deepSeaNavController,
                         onSignUpClick = { username, email, password, avatar, name ->
                             // Updated to handle avatar
                             Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
                             authViewModel.signup(username, email, password, avatar)
                         },
                         onSignInClick = {
-                            nestedNavController.navController.navigate("login")
+                            deepSeaNavController.navController.navigate("login")
                         },
                         authViewModel = authViewModel,
                         onRegisterSuccess = {
                             Log.d("MainContainer", "Registration success, navigating to home/learn")
-                            nestedNavController.navController.navigate("home/learn") {
+                            deepSeaNavController.navController.navigate("home/learn") {
                                 popUpTo("welcome") { inclusive = true }
                             }
                         }
@@ -367,19 +376,19 @@ fun MainContainer(
                 }
                 composable("login") {
                     LoginPage(
-                        navController = nestedNavController,
+                        navController = deepSeaNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
                             Log.d("MainContainer", "Login success, navigating to learn-selection")
                         },
                         onSignInClick = { email, password ->
                             Log.d("MainContainer", "Attempting login with email: $email")
-                            authViewModel.login(email, password, nestedNavController.navController)
+                            authViewModel.login(email, password, deepSeaNavController.navController)
                         }
                     )
                 }
                 composable("forgot-password") {
-                    ForgotPasswordPage(nestedNavController.navController)
+                    ForgotPasswordPage(deepSeaNavController.navController)
                 }
             })
     }

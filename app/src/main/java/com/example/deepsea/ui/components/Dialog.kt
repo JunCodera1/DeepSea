@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -28,6 +30,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -49,6 +52,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -59,12 +64,18 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.daily.TaskCategory
+import com.example.deepsea.text.PrimaryText
+import com.example.deepsea.text.TitleText
 import com.example.deepsea.ui.screens.feature.Task
 import com.example.deepsea.ui.screens.feature.capitalize
 import com.example.deepsea.ui.screens.path.LanguageOptionItem
+import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.ui.theme.Gray
+import com.example.deepsea.ui.theme.Polar
 
 @Composable
 fun LanguageSelectionDialog(
@@ -152,6 +163,103 @@ fun LanguageSelectionDialog(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Dialog that appears when a star is tapped
+ * Provides feedback on level status and interactivity
+ *
+ * @param isDialogShown Controls dialog visibility
+ * @param isDialogInteractive Controls whether dialog shows interactive or locked state
+ * @param dialogTransition Vertical position of the dialog
+ */
+@Composable
+fun StarDialog(
+    isDialogShown: Boolean,
+    isDialogInteractive: Boolean,
+    dialogTransition: Float,
+    navController: NavController
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        // Animate dialog scaling
+        val animatedScale by animateFloatAsState(
+            targetValue = if (isDialogShown) 1f else 0f
+        )
+
+        // Dialog content
+        Column(
+            modifier = Modifier
+                .graphicsLayer {
+                    translationY = dialogTransition + 100.dp.toPx()
+                    transformOrigin = TransformOrigin(0.5f, 0f)
+                    scaleY = animatedScale
+                    scaleX = animatedScale
+                }
+                .fillMaxWidth(0.8f)
+                .background(
+                    color = if (isDialogInteractive) FeatherGreen else Polar,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = Gray,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Dialog title
+            TitleText(
+                text = "Make introductions",
+                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.5f),
+                fontSize = 19.sp
+            )
+
+            // Dialog description
+            PrimaryText(
+                text = "Complete all levels above to unlock this",
+                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
+            )
+
+            // Voice Assistant Button
+            Button(
+                onClick = { navController.navigate("home/voice_assistant") },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Filled.Call, contentDescription = "Voice")
+                    Text("Voice Assistant")
+                }
+            }
+
+            // Action button
+            Button(
+                onClick = { /* Handle button click */ },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDialogInteractive)
+                        Color.White
+                    else
+                        Color.DarkGray.copy(0.15f)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                TitleText(
+                    text = if (isDialogInteractive) "LET'S GO!" else "LOCKED",
+                    color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
+                    fontSize = 18.sp
+                )
             }
         }
     }

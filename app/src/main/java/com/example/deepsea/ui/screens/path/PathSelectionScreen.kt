@@ -76,7 +76,7 @@ fun PathSelectionPage(
             )
 
             LinearProgressIndicator(
-                progress = 0.8f,
+                progress = 0.5f,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp),
@@ -176,7 +176,7 @@ fun PathSelectionFlowPage(
 
                 if (isLast) {
                     viewModel.saveAllPaths()
-                    navController.navigate("home") {
+                    navController.navigate("daily-goal-selection") {
                         popUpTo("language_flow") { inclusive = true }
                     }
                 } else {

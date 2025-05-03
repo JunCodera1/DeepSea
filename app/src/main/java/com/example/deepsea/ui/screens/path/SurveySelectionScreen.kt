@@ -76,7 +76,7 @@ fun SurveySelectionPage(
             )
 
             LinearProgressIndicator(
-                progress = 0.2f,
+                progress = 1f,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 16.dp),
@@ -163,7 +163,7 @@ fun SurveySelectionPage(
             onClick = {
                 if (isAnyOptionSelected) {
                     surveySelectionViewModel.saveSurveySelections(userId = userId)
-                    navController.navigate("learn-selection")
+                    navController.navigate("home")
                 }
             },
             modifier = Modifier

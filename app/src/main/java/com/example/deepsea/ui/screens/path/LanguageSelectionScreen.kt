@@ -63,7 +63,7 @@ fun LanguageSelectionPage(
             )
 
             LinearProgressIndicator(
-                progress = 0.1f,
+                progress = 0.25f,
                 modifier = Modifier
                     .weight(0.2f)
                     .padding(start = 16.dp),
@@ -149,7 +149,7 @@ fun LanguageSelectionPage(
             onClick = {
                 if (isAnyLanguageSelected) {
                     languageSelectionViewModel.saveLanguageSelections(userId = userId)
-                    navController.navigate("daily-goal-selection") // Replace with your next screen route
+                    navController.navigate("path_selection") // Replace with your next screen route
                 }
             },
             modifier = Modifier

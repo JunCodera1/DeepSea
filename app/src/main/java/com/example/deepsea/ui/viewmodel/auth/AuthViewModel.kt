@@ -78,7 +78,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     _loginState.value = LoginState.Success
 
                     if (jwtResponse.firstLogin == true) {
-                        navController.navigate("survey-selection") {
+                        navController.navigate("language-selection") {
                             popUpTo("login") { inclusive = true }
                         }
                     } else {

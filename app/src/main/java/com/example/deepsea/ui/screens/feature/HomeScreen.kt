@@ -49,6 +49,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.text.PrimaryText
 import com.example.deepsea.text.TitleText
+import com.example.deepsea.ui.components.StarDialog
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.components.UnitsLazyColumn
@@ -106,6 +107,7 @@ fun HomeScreen(units: List<UnitData> = emptyList(), navController: NavController
             TopBar(
                 units = units,
                 visibleUnitIndex = visibleHeadingIndex,
+                navController= navController
             )
         }
     ) {
@@ -175,103 +177,6 @@ private fun handleStarTap(
         // Cập nhật vị trí dialog sau khi scroll hoàn tất
         val finalDialogPosition = starCoordinate - scrollBy
         onDialogStateChange(true, isInteractive, finalDialogPosition)
-    }
-}
-
-/**
- * Dialog that appears when a star is tapped
- * Provides feedback on level status and interactivity
- *
- * @param isDialogShown Controls dialog visibility
- * @param isDialogInteractive Controls whether dialog shows interactive or locked state
- * @param dialogTransition Vertical position of the dialog
- */
-@Composable
-fun StarDialog(
-    isDialogShown: Boolean,
-    isDialogInteractive: Boolean,
-    dialogTransition: Float,
-    navController: NavController
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        // Animate dialog scaling
-        val animatedScale by animateFloatAsState(
-            targetValue = if (isDialogShown) 1f else 0f
-        )
-
-        // Dialog content
-        Column(
-            modifier = Modifier
-                .graphicsLayer {
-                    translationY = dialogTransition + 100.dp.toPx()
-                    transformOrigin = TransformOrigin(0.5f, 0f)
-                    scaleY = animatedScale
-                    scaleX = animatedScale
-                }
-                .fillMaxWidth(0.8f)
-                .background(
-                    color = if (isDialogInteractive) FeatherGreen else Polar,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = Gray,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Dialog title
-            TitleText(
-                text = "Make introductions",
-                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.5f),
-                fontSize = 19.sp
-            )
-
-            // Dialog description
-            PrimaryText(
-                text = "Complete all levels above to unlock this",
-                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
-            )
-
-            // Voice Assistant Button
-            Button(
-                onClick = { navController.navigate("home/voice_assistant") },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(Icons.Filled.Call, contentDescription = "Voice")
-                    Text("Voice Assistant")
-                }
-            }
-
-            // Action button
-            Button(
-                onClick = { /* Handle button click */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDialogInteractive)
-                        Color.White
-                    else
-                        Color.DarkGray.copy(0.15f)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                TitleText(
-                    text = if (isDialogInteractive) "LET'S GO!" else "LOCKED",
-                    color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
-                    fontSize = 18.sp
-                )
-            }
-        }
     }
 }
 
