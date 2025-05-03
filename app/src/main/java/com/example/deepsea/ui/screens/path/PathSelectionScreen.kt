@@ -42,8 +42,8 @@ import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.course.path.PathOption
-import com.example.deepsea.ui.viewmodel.languageSelection.PathSelectionViewModel
-import com.example.deepsea.ui.viewmodel.languageSelection.PathSelectionViewModelFactory
+import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModel
+import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModelFactory
 import com.example.deepsea.utils.SessionManager
 
 @Composable

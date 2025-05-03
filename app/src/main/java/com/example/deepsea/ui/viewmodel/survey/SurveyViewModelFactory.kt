@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.viewmodel.surveySelection
+package com.example.deepsea.ui.viewmodel.survey
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

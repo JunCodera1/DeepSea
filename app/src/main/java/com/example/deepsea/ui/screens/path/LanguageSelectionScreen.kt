@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.data.model.course.language.LanguageOption
-import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModel
+import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModel
 import com.example.deepsea.utils.SessionManager
 
 

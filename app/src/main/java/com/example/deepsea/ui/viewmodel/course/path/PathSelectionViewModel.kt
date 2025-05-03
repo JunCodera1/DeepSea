@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.viewmodel.languageSelection
+package com.example.deepsea.ui.viewmodel.course.path
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.viewmodel.languageSelection
+package com.example.deepsea.ui.viewmodel.course.language
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

@@ -61,10 +61,10 @@ import com.example.deepsea.ui.screens.path.WelcomePage
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
-import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModel
-import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModelFactory
-import com.example.deepsea.ui.viewmodel.surveySelection.SurveySelectionViewModel
-import com.example.deepsea.ui.viewmodel.surveySelection.SurveyViewModelFactory
+import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModel
+import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModelFactory
+import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
+import com.example.deepsea.ui.viewmodel.survey.SurveyViewModelFactory
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
 

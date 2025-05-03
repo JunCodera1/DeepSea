@@ -25,17 +25,16 @@ import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
 import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.course.UserPathDto
-import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.user.FriendSuggestion
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
-import com.example.deepsea.data.model.course.path.PathOption
 import com.example.deepsea.data.model.course.path.PathOptionRequest
+import com.example.deepsea.data.model.goal.DailyGoalOption
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
 import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.data.repository.UserProfileRepository
-import com.example.deepsea.ui.viewmodel.surveySelection.SurveySelectionViewModel
+import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
 import com.example.deepsea.utils.SessionManager
 import retrofit2.Response
 
@@ -298,6 +297,13 @@ class MockUserProfileService : UserProfileService {
     }
 
     override suspend fun getUserPaths(userId: Long): List<UserPathDto> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateDailyGoal(
+        profileId: Long,
+        dailyGoal: DailyGoalOption
+    ): Response<Unit> {
         TODO("Not yet implemented")
     }
 

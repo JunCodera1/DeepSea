@@ -1,8 +1,8 @@
-package com.example.deepsea.ui.viewmodel.languageSelection
+package com.example.deepsea.ui.viewmodel.survey
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.deepsea.data.model.course.language.LanguageOption
+import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.repository.UserProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,28 +10,28 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.collections.toMutableSet
 
-class LanguageSelectionViewModel(
+class SurveySelectionViewModel(
     private val userRepository: UserProfileRepository
 ) : ViewModel() {
 
-    private val _selectedLanguage = MutableStateFlow<Set<LanguageOption>>(emptySet())
-    val selectedLanguages: StateFlow<Set<LanguageOption>> = _selectedLanguage.asStateFlow()
+    private val _selectedSurveys = MutableStateFlow<Set<SurveyOption>>(emptySet())
+    val selectedSurveys: StateFlow<Set<SurveyOption>> = _selectedSurveys.asStateFlow()
 
-    fun toggleLanguageSelection(option: LanguageOption) {
-        val currentSelections = _selectedLanguage.value.toMutableSet()
+    fun toggleSurveySelection(option: SurveyOption) {
+        val currentSelections = _selectedSurveys.value.toMutableSet()
         if (currentSelections.contains(option)) {
             currentSelections.remove(option)
         } else {
             currentSelections.add(option)
         }
-        _selectedLanguage.value = currentSelections
+        _selectedSurveys.value = currentSelections
     }
 
-    fun saveLanguageSelections(userId: Long?) {
+    fun saveSurveySelections(userId: Long?) {
         viewModelScope.launch {
-            userRepository.updateUserLanguageSelections(
+            userRepository.updateUserSurveySelections(
                 userId = userId,
-                languageSelections = _selectedLanguage.value
+                surveySelections = _selectedSurveys.value
             )
         }
     }
