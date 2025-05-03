@@ -1,8 +1,8 @@
 package com.example.deepsea.data.repository
 
 import com.example.deepsea.data.api.UserProfileService
-import com.example.deepsea.data.model.language.LanguageOption
-import com.example.deepsea.data.model.language.LanguageOptionRequest
+import com.example.deepsea.data.model.course.language.LanguageOption
+import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.user.UserProfileData

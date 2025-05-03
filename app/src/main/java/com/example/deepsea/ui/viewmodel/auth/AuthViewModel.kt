@@ -42,7 +42,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val userState: StateFlow<UserState> = _userState.asStateFlow()
 
     init {
-        // Kiểm tra xem người dùng đã đăng nhập chưa khi khởi tạo ViewModel
         viewModelScope.launch {
             val token = sessionManager.authToken.first()
             if (token != null) {
@@ -64,14 +63,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     val jwtResponse = response.body()!!
                     Log.d("AuthViewModel", "Login response: $jwtResponse")
 
-                    val username = jwtResponse.username ?: "user"
-                    val userEmail = jwtResponse.email ?: email
+                    val username = jwtResponse.username
+                    val userEmail = jwtResponse.email
 
                     sessionManager.saveAuthToken(
-                        jwtResponse.token,
-                        username,
-                        jwtResponse.id ?: 0,
-                        userEmail
+                        token = jwtResponse.token,
+                        username = username,
+                        userId = jwtResponse.id,
+                        email = userEmail,
+                        profileId = jwtResponse.profile_id
                     )
 
                     _userState.value = UserState.LoggedIn(username, userEmail)

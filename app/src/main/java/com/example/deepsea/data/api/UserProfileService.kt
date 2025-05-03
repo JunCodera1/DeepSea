@@ -1,7 +1,11 @@
 package com.example.deepsea.data.api
 
+import com.example.deepsea.data.model.course.UserPathDto
+import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.user.FriendSuggestion
-import com.example.deepsea.data.model.language.LanguageOptionRequest
+import com.example.deepsea.data.model.course.language.LanguageOptionRequest
+import com.example.deepsea.data.model.course.path.PathOption
+import com.example.deepsea.data.model.course.path.PathOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
 import com.example.deepsea.data.model.user.UserProfileData
@@ -29,4 +33,10 @@ interface UserProfileService {
 
     @POST("api/language/save")
     suspend fun saveLanguageSelections(@Body request: LanguageOptionRequest): UserProfileData
+
+    @POST("api/courses/path")
+    suspend fun savePath(@Body request: PathOptionRequest): Response<Unit>
+
+    @GET("/api/courses/{userId}")
+    suspend fun getUserPaths(@Path("userId") userId: Long): List<UserPathDto>
 }

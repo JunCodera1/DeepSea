@@ -4,10 +4,30 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,13 +37,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
+import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.course.path.PathOption
+import com.example.deepsea.ui.viewmodel.languageSelection.PathSelectionViewModel
+import com.example.deepsea.ui.viewmodel.languageSelection.PathSelectionViewModelFactory
+import com.example.deepsea.utils.SessionManager
 
 @Composable
-fun PathSelectionPage(navController: NavController) {
-    var selectedPath by remember { mutableStateOf<String?>(null) }
+fun PathSelectionPage(
+    languageName: String,
+    onPathSelected: (PathOption) -> Unit,
+    onBack: () -> Unit
+) {
+    var selectedPath by remember { mutableStateOf<PathOption?>(null) }
     val purpleColor = Color(0xFF6750A4)
 
     Column(
@@ -43,7 +72,7 @@ fun PathSelectionPage(navController: NavController) {
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(24.dp)
-                    .clickable { navController.popBackStack() }
+                    .clickable { onBack() }
             )
 
             LinearProgressIndicator(
@@ -67,23 +96,23 @@ fun PathSelectionPage(navController: NavController) {
         )
 
         // Option: Learning for the first time
-        PathOption(
+        PathOptionItem(
             path = "beginner",
             imageResId = R.drawable.ic_beginner,
-            title = "Learning French for the first time?",
+            title = "Learning $languageName for the first time?",
             subtitle = "Start from scratch!",
-            isSelected = selectedPath == "beginner",
-            onSelect = { selectedPath = "beginner" }
+            isSelected = selectedPath == PathOption.BEGINNER,
+            onSelect = { selectedPath = PathOption.BEGINNER }
         )
 
         // Option: Already know some
-        PathOption(
+        PathOptionItem(
             path = "professor",
             imageResId = R.drawable.ic_professor,
-            title = "Already know some French?",
+            title = "Already know some $languageName?",
             subtitle = "Check your level here!",
-            isSelected = selectedPath == "professor",
-            onSelect = { selectedPath = "professor" }
+            isSelected = selectedPath == PathOption.PROFESSOR,
+            onSelect = { selectedPath = PathOption.PROFESSOR }
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -91,8 +120,8 @@ fun PathSelectionPage(navController: NavController) {
         // Continue button
         Button(
             onClick = {
-                selectedPath?.let {
-                    navController.navigate("home")
+                selectedPath?.let {path ->
+                    onPathSelected(path)
                 }
             },
             modifier = Modifier
@@ -110,7 +139,61 @@ fun PathSelectionPage(navController: NavController) {
 }
 
 @Composable
-fun PathOption(
+fun PathSelectionFlowPage(
+    navController: NavController,
+    pathService: UserProfileService,
+    sessionManager: SessionManager
+) {
+    val profileId by sessionManager.profileId.collectAsState(initial = null)
+    val factory = remember { PathSelectionViewModelFactory(pathService, sessionManager) }
+    val viewModel: PathSelectionViewModel = viewModel(factory = factory)
+    // Khi profileId có giá trị, gọi fetchPaths một lần
+    LaunchedEffect(profileId) {
+        profileId?.let {
+            viewModel.fetchPaths(it)
+        }
+    }
+
+    val userPaths = viewModel.userPaths
+    val selectedLanguages = userPaths.keys.toList()
+
+    var currentIndex by remember { mutableStateOf(0) }
+    val currentLanguage = selectedLanguages.getOrNull(currentIndex)
+    val isLast = currentIndex == selectedLanguages.lastIndex
+
+    if (selectedLanguages.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("No languages selected. Please go back and select languages.")
+        }
+        return
+    }
+
+    currentLanguage?.let { language ->
+        PathSelectionPage(
+            languageName = language.displayName,
+            onPathSelected = { path ->
+                viewModel.setPath(language, path)
+
+                if (isLast) {
+                    viewModel.saveAllPaths()
+                    navController.navigate("home") {
+                        popUpTo("language_flow") { inclusive = true }
+                    }
+                } else {
+                    currentIndex++
+                }
+            },
+            onBack = {
+                if (currentIndex > 0) currentIndex-- else navController.popBackStack()
+            },
+        )
+    }
+}
+
+
+
+@Composable
+fun PathOptionItem(
     path: String,
     imageResId: Int,
     title: String,
@@ -163,6 +246,10 @@ fun PathOption(
 @Preview(showBackground = true)
 @Composable
 fun PathSelectionPagePreview() {
-    PathSelectionPage(navController = rememberNavController())
+    PathSelectionPage(
+        languageName = "Spanish",
+        onPathSelected = {},
+        onBack = {}
+    )
 }
 

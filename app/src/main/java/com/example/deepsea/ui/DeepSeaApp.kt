@@ -3,69 +3,70 @@
 package com.example.deepsea.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.deepsea.AI_assistant.VoiceAssistantScreen
+import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.DeepSeaFAButton
 import com.example.deepsea.ui.components.DeepSeaScaffold
+import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.home.DeepSeaBottomBar
 import com.example.deepsea.ui.home.composableWithCompositionLocal
 import com.example.deepsea.ui.navigation.MainDestinations
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.navigation.rememberDeepSeaScaffoldState
+import com.example.deepsea.ui.profile.ProfilePage
+import com.example.deepsea.ui.screens.auth.ForgotPasswordPage
 import com.example.deepsea.ui.screens.auth.LoginPage
 import com.example.deepsea.ui.screens.auth.SignupPage
-import com.example.deepsea.ui.screens.path.WelcomePage
-import com.example.deepsea.ui.theme.DeepSeaTheme
-import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
-import com.example.deepsea.utils.UserState
-import android.util.Log
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.remember
-import androidx.navigation.compose.rememberNavController
-import com.example.deepsea.AI_assistant.VoiceAssistantScreen
-import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.repository.UserProfileRepository
-import com.example.deepsea.ui.components.UnitData
-import com.example.deepsea.ui.profile.ProfilePage
-import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
-import com.example.deepsea.ui.screens.auth.ForgotPasswordPage
-import com.example.deepsea.ui.screens.feature.HomeScreen
-import com.example.deepsea.ui.screens.path.LanguageSelectionPage
-import com.example.deepsea.ui.screens.path.PathSelectionPage
-import com.example.deepsea.ui.screens.feature.SettingsPage
 import com.example.deepsea.ui.screens.feature.DailyPage
 import com.example.deepsea.ui.screens.feature.GamePage
+import com.example.deepsea.ui.screens.feature.HomeScreen
 import com.example.deepsea.ui.screens.feature.LearnPage
 import com.example.deepsea.ui.screens.feature.RankPage
+import com.example.deepsea.ui.screens.feature.SettingsPage
+import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
+import com.example.deepsea.ui.screens.path.LanguageSelectionPage
+import com.example.deepsea.ui.screens.path.PathSelectionFlowPage
 import com.example.deepsea.ui.screens.path.SurveySelectionPage
+import com.example.deepsea.ui.screens.path.WelcomePage
+import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
 import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModel
-import com.example.deepsea.ui.viewmodel.surveySelection.SurveySelectionViewModel
 import com.example.deepsea.ui.viewmodel.languageSelection.LanguageSelectionViewModelFactory
+import com.example.deepsea.ui.viewmodel.surveySelection.SurveySelectionViewModel
 import com.example.deepsea.ui.viewmodel.surveySelection.SurveyViewModelFactory
 import com.example.deepsea.utils.SessionManager
+import com.example.deepsea.utils.UserState
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -231,11 +232,16 @@ fun MainContainer(
                 }
 
 
-
-
                 // Selection for learn Routes
                 composable("path_selection") {
-                    PathSelectionPage(nestedNavController.navController)
+                    val context = LocalContext.current
+                    val sessionManager = SessionManager(context)
+                    val userProfileService: UserProfileService = RetrofitClient.userProfileService
+                    PathSelectionFlowPage(
+                        navController = nestedNavController.navController,
+                        sessionManager = sessionManager,
+                        pathService = userProfileService
+                    )
                 }
                 composable("daily-goal-selection") {
                     DailyGoalSelectionPage(nestedNavController.navController)

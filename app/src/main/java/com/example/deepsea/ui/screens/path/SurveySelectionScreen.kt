@@ -24,8 +24,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
 import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.course.UserPathDto
+import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.user.FriendSuggestion
-import com.example.deepsea.data.model.language.LanguageOptionRequest
+import com.example.deepsea.data.model.course.language.LanguageOptionRequest
+import com.example.deepsea.data.model.course.path.PathOption
+import com.example.deepsea.data.model.course.path.PathOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
@@ -288,4 +292,13 @@ class MockUserProfileService : UserProfileService {
     override suspend fun saveLanguageSelections(request: LanguageOptionRequest): UserProfileData {
         TODO("Not yet implemented")
     }
+
+    override suspend fun savePath(request: PathOptionRequest): Response<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getUserPaths(userId: Long): List<UserPathDto> {
+        TODO("Not yet implemented")
+    }
+
 }

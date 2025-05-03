@@ -2,7 +2,7 @@ package com.example.deepsea.ui.viewmodel.languageSelection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.deepsea.data.model.language.LanguageOption
+import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.repository.UserProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

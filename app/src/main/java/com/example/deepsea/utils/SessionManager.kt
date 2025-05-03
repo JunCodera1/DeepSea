@@ -19,6 +19,7 @@ class SessionManager(private val context: Context) {
         private val KEY_TOKEN = stringPreferencesKey("jwt_token")
         private val KEY_USERNAME = stringPreferencesKey("username")
         private val KEY_USER_ID = longPreferencesKey("user_id")
+        private val KEY_PROFILE_ID = longPreferencesKey("profile_id")
         private val KEY_EMAIL = stringPreferencesKey("email")
         private val KEY_IS_FIRST_LOGIN = booleanPreferencesKey("is_first_login")
     }
@@ -30,12 +31,13 @@ class SessionManager(private val context: Context) {
     }
 
 
-    suspend fun saveAuthToken(token: String, username: String, userId: Long, email: String) {
+    suspend fun saveAuthToken(token: String, username: String, userId: Long, profileId: Long, email: String) {
         context.dataStore.edit { preferences ->
             preferences[KEY_TOKEN] = token
             preferences[KEY_USERNAME] = username
             preferences[KEY_USER_ID] = userId
             preferences[KEY_EMAIL] = email
+            preferences[KEY_PROFILE_ID] = profileId
         }
     }
 
@@ -49,6 +51,10 @@ class SessionManager(private val context: Context) {
 
     val userId: Flow<Long?> = context.dataStore.data.map { preferences ->
         preferences[KEY_USER_ID]
+    }
+
+    val profileId: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[KEY_PROFILE_ID]
     }
 
     val email: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -67,4 +73,6 @@ class SessionManager(private val context: Context) {
             preferences.remove(KEY_EMAIL)
         }
     }
+
+
 }
