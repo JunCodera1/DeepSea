@@ -244,7 +244,10 @@ fun MainContainer(
                     )
                 }
                 composable("daily-goal-selection") {
-                    DailyGoalSelectionPage(nestedNavController.navController)
+                    val context = LocalContext.current
+                    val sessionManager = SessionManager(context)
+                    DailyGoalSelectionPage(navController = nestedNavController.navController,
+                        sessionManager= sessionManager)
                 }
                 composable("survey-selection") {
                     val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)

@@ -29,6 +29,7 @@ import com.example.deepsea.data.model.user.FriendSuggestion
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.course.path.PathOptionRequest
 import com.example.deepsea.data.model.goal.DailyGoalOption
+import com.example.deepsea.data.model.goal.DailyGoalRequest
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
@@ -301,10 +302,9 @@ class MockUserProfileService : UserProfileService {
     }
 
     override suspend fun updateDailyGoal(
-        profileId: Long,
-        dailyGoal: DailyGoalOption
+        profileId: Long?,
+        dailyGoal: DailyGoalRequest
     ): Response<Unit> {
         TODO("Not yet implemented")
     }
-
 }

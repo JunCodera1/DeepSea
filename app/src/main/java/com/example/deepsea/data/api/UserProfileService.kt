@@ -7,6 +7,7 @@ import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.course.path.PathOption
 import com.example.deepsea.data.model.course.path.PathOptionRequest
 import com.example.deepsea.data.model.goal.DailyGoalOption
+import com.example.deepsea.data.model.goal.DailyGoalRequest
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
 import com.example.deepsea.data.model.user.UserProfileData
@@ -42,9 +43,9 @@ interface UserProfileService {
     @GET("/api/courses/{userId}")
     suspend fun getUserPaths(@Path("userId") userId: Long): List<UserPathDto>
 
-    @PUT("users/{userId}/daily-goal")
+    @PUT("/api/users/{userId}/daily-goal")
     suspend fun updateDailyGoal(
-        @Path("profileId") profileId: Long,
-        @Body dailyGoal: DailyGoalOption
+        @Path("userId") profileId: Long?,
+        @Body dailyGoal: DailyGoalRequest
     ): Response<Unit>
 }

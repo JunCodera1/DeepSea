@@ -123,6 +123,7 @@ fun LanguageSelectionPage(
 
         val languagesIconMap = mapOf(
             LanguageOption.JAPANESE to R.drawable.flag_japan,
+            LanguageOption.KOREAN to R.drawable.flag_korea,
             LanguageOption.ITALY to R.drawable.flag_italy,
             LanguageOption.GERMANY to R.drawable.flag_germany,
             LanguageOption.ENGLISH to R.drawable.flag_england,

@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens.path
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,25 +10,47 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
+import com.example.deepsea.data.model.goal.DailyGoalOption
+import com.example.deepsea.ui.viewmodel.goal.DailyGoalViewModelFactory
+import com.example.deepsea.utils.SessionManager
+import com.example.deepsea.viewmodel.DailyGoalViewModel
+import kotlin.jvm.java
 
 @Composable
-fun DailyGoalSelectionPage(navController: NavController) {
+fun DailyGoalSelectionPage(
+    navController: NavController,
+    sessionManager: SessionManager
+) {
+
+    val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+        "ViewModelStoreOwner is null"
+    }
+    val viewModel = ViewModelProvider(
+        viewModelStoreOwner,
+        DailyGoalViewModelFactory(sessionManager)
+    )[DailyGoalViewModel::class.java]
+
+    val selectedGoal by viewModel.selectedGoal.collectAsState()
+    val context = LocalContext.current
     // Define colors
     val lightBlue = Color(0xFFE1F5FE)
     val blue = Color(0xFF29B6F6)
     val green = Color(0xFF76C043)
 
     // State to track selected goal
-    var selectedGoal by remember { mutableStateOf("Serious") }
 
     Column(
         modifier = Modifier
@@ -82,36 +105,31 @@ fun DailyGoalSelectionPage(navController: NavController) {
                 GoalOption(
                     label = "Casual",
                     minutes = 5,
-                    isSelected = selectedGoal == "Casual",
-                    onSelect = { selectedGoal = "Casual" }
+                    isSelected = selectedGoal == DailyGoalOption.CASUAL,
+                    onSelect = { viewModel.selectGoal(DailyGoalOption.CASUAL) }
                 )
-
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 GoalOption(
                     label = "Regular",
                     minutes = 10,
-                    isSelected = selectedGoal == "Regular",
-                    onSelect = { selectedGoal = "Regular" }
+                    isSelected = selectedGoal == DailyGoalOption.REGULAR,
+                    onSelect = { viewModel.selectGoal(DailyGoalOption.REGULAR) }
                 )
-
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 GoalOption(
                     label = "Serious",
                     minutes = 15,
-                    isSelected = selectedGoal == "Serious",
-                    onSelect = { selectedGoal = "Serious" }
+                    isSelected = selectedGoal == DailyGoalOption.SERIOUS,
+                    onSelect = { viewModel.selectGoal(DailyGoalOption.SERIOUS) }
                 )
-
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 GoalOption(
                     label = "Intense",
                     minutes = 20,
-                    isSelected = selectedGoal == "Intense",
-                    onSelect = { selectedGoal = "Intense" }
+                    isSelected = selectedGoal == DailyGoalOption.INTENSE,
+                    onSelect = { viewModel.selectGoal(DailyGoalOption.INTENSE) }
                 )
+
             }
         }
 
@@ -120,7 +138,14 @@ fun DailyGoalSelectionPage(navController: NavController) {
         // Continue button
         Button(
             onClick = {
-                navController.navigate("path_selection") // Replace with your next screen route
+                viewModel.submitGoal(
+                    onSuccess = {
+                        navController.navigate("path_selection")
+                    },
+                    onError = { errorMsg ->
+                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                    }
+                )
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -177,5 +202,5 @@ fun GoalOption(
 @Preview(showBackground = true)
 @Composable
 fun DailyGoalSelectionPreview() {
-    DailyGoalSelectionPage(navController = rememberNavController())
+//    DailyGoalSelectionPage(navController = rememberNavController())
 }
