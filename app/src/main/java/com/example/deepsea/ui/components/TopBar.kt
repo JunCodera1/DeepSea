@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -28,6 +29,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -57,13 +60,30 @@ import java.time.YearMonth
 @Composable
 fun TopBar(
     units: List<UnitData> = listOf(UnitData()),
+    sectionData: SectionData,
     visibleUnitIndex: Int = 0,
     navController: NavController,
     onExpandClick: () -> Unit = {}, // Callback cho sự kiện click
-    isExpanded: Boolean = false // Trạng thái mở rộng
+    isExpanded: Boolean = false, // Trạng thái mở rộng
+    sections: List<SectionData> = listOf(sectionData)
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    // Find index of current section in the sections list
+    val initialPage = sections.indexOf(sectionData).takeIf { it >= 0 } ?: 0
+
+    // Set up pager state for horizontal swiping between sections
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { sections.size }
+    )
+
+    // Keep track of which tab is selected (overview or units)
+    var selectedTab by remember { mutableStateOf(0) }
+
     val systemUiController = rememberSystemUiController()
     val showStreakDialog = remember { mutableStateOf(false) }
+
 
     val currentUnit = units.getOrNull(visibleUnitIndex)
     val animatedColor by animateColorAsState(
@@ -120,7 +140,7 @@ fun TopBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    TitleText(text = "Section 1: Rookie", color = Color.White, fontSize = 18.sp)
+                    TitleText(text = sections[pagerState.currentPage].title, color = Color.White, fontSize = 18.sp)
                 }
 
                 // Sử dụng mũi tên lên hoặc xuống tùy thuộc vào trạng thái mở rộng

@@ -149,11 +149,14 @@ fun UnitContent(
  * @param starCountPerUnit Number of stars/lessons to display per unit
  * @param onStarClicked Callback when a star is clicked
  */
+
+
 @Composable
-fun  UnitsListScreen(
+fun SingleUnitScreen(
     modifier: Modifier,
     state: LazyListState,
     units: List<UnitData>,
+    unitIndex: Int,
     starCountPerUnit: Int,
     onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit
 ) {
@@ -163,36 +166,34 @@ fun  UnitsListScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Generate items for each unit
-        units.forEachIndexed { unitIndex, unit ->
-            item {
-                // Unit header with title and description
-                UnitHeader(
-                    modifier = Modifier.fillMaxWidth(),
-                    data = unit
-                )
+        item {
+            val unit = units[unitIndex] // ✅ Fix lỗi ở đây
 
-                // Space between header and content
-                Spacer(modifier = Modifier.height(48.dp))
+            UnitHeader(
+                modifier = Modifier.fillMaxWidth(),
+                data = unit
+            )
 
-                // Unit content with stars and background image
-                UnitContent(
-                    unitIndex = unitIndex,
-                    starCount = starCountPerUnit,
-                    unitImage = unit.image,
-                    colorMain = unit.color,
-                    colorDark = unit.darkerColor,
-                    onStarClicked = onStarClicked
-                )
-            }
+            Spacer(modifier = Modifier.height(48.dp))
+
+            UnitContent(
+                unitIndex = unitIndex,
+                starCount = starCountPerUnit,
+                unitImage = unit.image,
+                colorMain = unit.color,
+                colorDark = unit.darkerColor,
+                onStarClicked = onStarClicked
+            )
         }
 
-        // Add space at the bottom for better scrolling experience
         item {
             Spacer(modifier = Modifier.height(400.dp))
         }
     }
 }
+
+
+
 
 /**
  * Header component for each unit, displaying title, description, and an icon

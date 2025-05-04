@@ -1,42 +1,38 @@
 package com.example.deepsea.ui.screens.feature
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.R
 import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.StarDialog
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.components.UnitData
-import com.example.deepsea.ui.components.UnitsListScreen
+import com.example.deepsea.ui.theme.Blue
+import com.example.deepsea.ui.theme.BlueDark
+import com.example.deepsea.ui.theme.Cyan
 import com.example.deepsea.ui.theme.CyanDark
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
@@ -48,12 +44,8 @@ import com.example.deepsea.ui.theme.PinkDark
 import com.example.deepsea.ui.theme.Rose3
 import com.example.deepsea.ui.theme.Shadow3
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import com.example.deepsea.R
-import com.example.deepsea.ui.theme.Blue
-import com.example.deepsea.ui.theme.BlueDark
-import com.example.deepsea.ui.theme.Cyan
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * HomeScreen là màn hình chính của ứng dụng DeepSea
@@ -66,55 +58,116 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
     val defaultSections = remember {
         if (sections.isEmpty()) {
             listOf(
+                // Section 1: Rookie
                 listOf(
-                    UnitData(title = "Unit 1", color = FeatherGreen, description = "Order food"),
-                    UnitData(title = "Unit 2", color = FunctionalRedDark, darkerColor = Pink40, description = "Describe people"),
-                    UnitData(title = "Unit 3", color = Ocean3, description = "Introduce yourself"),
-                    UnitData(title = "Unit 4", color = PinkDark, description = "Order food and drink"),
-                    UnitData(title = "Unit 5", color = CyanDark, darkerColor = Pink40, description = "Talk about countries"),
-                    UnitData(title = "Unit 6", color = Shadow3, description = "Ask for directions"),
-                    UnitData(title = "Unit 7", color = Rose3, description = "Describe Belongings"),
-                    UnitData(title = "Unit 8", color = Lavender3, description = "Talk about neighbors"),
-                    UnitData(title = "Unit 9", color = Ocean3, description = "Tell time"),
-                    UnitData(title = "Unit 10", color = FeatherGreen, description = "Get help when travelling"),
-                    )
+                    UnitData(title = "Unit 1", color = FeatherGreen, description = "Introduce yourself"),
+                    UnitData(title = "Unit 2", color = Ocean3, description = "Greet others"),
+                    UnitData(title = "Unit 3", color = PinkDark, description = "Say goodbye"),
+                    UnitData(title = "Unit 4", color = FunctionalRedDark, darkerColor = Pink40, description = "Talk about where you’re from"),
+                    UnitData(title = "Unit 5", color = Lavender3, description = "Exchange contact info"),
+                ),
+                // Section 2: Explorer
+                listOf(
+                    UnitData(title = "Unit 6", color = CyanDark, description = "Talk about daily routines"),
+                    UnitData(title = "Unit 7", color = Shadow3, description = "Describe people"),
+                    UnitData(title = "Unit 8", color = Rose3, description = "Talk about your home"),
+                    UnitData(title = "Unit 9", color = FeatherGreen, description = "Talk about your family"),
+                    UnitData(title = "Unit 10", color = Ocean3, description = "Talk about weather"),
+                ),
+                // Section 3: Traveler
+                listOf(
+                    UnitData(title = "Unit 11", color = Cyan, description = "Order food"),
+                    UnitData(title = "Unit 12", color = Pink40, description = "Order drinks"),
+                    UnitData(title = "Unit 13", color = BlueDark, description = "Go shopping"),
+                    UnitData(title = "Unit 14", color = Rose3, description = "Ask about prices"),
+                    UnitData(title = "Unit 15", color = FunctionalRedDark, description = "Talk about preferences"),
+                ),
+                // Section 4: Navigator
+                listOf(
+                    UnitData(title = "Unit 16", color = CyanDark, description = "Ask for directions"),
+                    UnitData(title = "Unit 17", color = Shadow3, description = "Use public transport"),
+                    UnitData(title = "Unit 18", color = Lavender3, description = "Book a taxi"),
+                    UnitData(title = "Unit 19", color = FeatherGreenDark, description = "Find places in a city"),
+                    UnitData(title = "Unit 20", color = Blue, description = "Tell time & make appointments"),
+                ),
+                // Section 5: Socializer
+                listOf(
+                    UnitData(title = "Unit 21", color = PinkDark, description = "Talk about hobbies"),
+                    UnitData(title = "Unit 22", color = Cyan, description = "Talk about plans"),
+                    UnitData(title = "Unit 23", color = Rose3, description = "Make invitations"),
+                    UnitData(title = "Unit 24", color = Lavender3, description = "Accept or decline invitations"),
+                    UnitData(title = "Unit 25", color = FunctionalRedDark, description = "Describe past experiences"),
+                ),
+                // Section 6: Professional
+                listOf(
+                    UnitData(title = "Unit 26", color = BlueDark, description = "Talk about jobs"),
+                    UnitData(title = "Unit 27", color = FeatherGreen, description = "At a job interview"),
+                    UnitData(title = "Unit 28", color = Ocean3, description = "Talk about work routines"),
+                    UnitData(title = "Unit 29", color = Pink40, description = "Solve problems at work"),
+                    UnitData(title = "Unit 30", color = CyanDark, description = "Talk about the future"),
+                )
             )
         } else {
             sections
         }
     }
-    val sections = defaultSections
 
     val sampleSections = listOf(
         SectionData(
-            title = "Basic Conversation",
+            title = "Section 1: Rookie",
             color = FeatherGreen,
             darkerColor = FeatherGreenDark,
             description = "Learn how to introduce yourself and greet others.",
-            image = R.drawable.cut,
+            image = R.drawable.ic_handshake, // 🤝 giới thiệu bản thân
             level = "A1",
-            units = sections[0]
+            units = defaultSections[0]
         ),
         SectionData(
-            title = "Daily Life",
+            title = "Section 2: Explorer",
             color = Cyan,
             darkerColor = CyanDark,
             description = "Talk about your daily routines and habits.",
-            image = R.drawable.cut,
+            image = R.drawable.ic_calendar, // 🗓️ thói quen hàng ngày
             level = "A1",
-            units = sections[0]
+            units = defaultSections[1]
         ),
         SectionData(
-            title = "Shopping",
+            title = "Section 3: Traveler",
             color = Blue,
             darkerColor = BlueDark,
             description = "Learn useful phrases for shopping situations.",
-            image = R.drawable.cut,
+            image = R.drawable.ic_shopping_cart, // 🛒 mua sắm
             level = "A2",
-            units = sections[0]
+            units = defaultSections[2]
+        ),
+        SectionData(
+            title = "Section 4: Navigator",
+            color = Pink40,
+            darkerColor = PinkDark,
+            description = "Ask for directions and use public transport.",
+            image = R.drawable.ic_map, // 🗺️ hỏi đường
+            level = "A2",
+            units = defaultSections[3] // có thể đổi theo logic của bạn
+        ),
+        SectionData(
+            title = "Section 5: Socializer",
+            color = Rose3,
+            darkerColor = FunctionalRedDark,
+            description = "Talk about friends, family, and social life.",
+            image = R.drawable.ic_people, // 👥 xã hội
+            level = "B1",
+            units = defaultSections[4]
+        ),
+        SectionData(
+            title = "Section 6: Professional",
+            color = Shadow3,
+            darkerColor = Color.Gray,
+            description = "Learn vocabulary for work and job interviews.",
+            image = R.drawable.ic_briefcase, // 💼 công việc
+            level = "B1",
+            units = defaultSections[5]
         )
     )
-
 
     // Quản lý trạng thái pager
     val pagerState = rememberPagerState(pageCount = { defaultSections.size })
@@ -124,18 +177,18 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
     // Trạng thái dialog
     var isDialogShown by remember { mutableStateOf(false) }
     var isDialogInteractive by remember { mutableStateOf(false) }
-    var dialogTransition by remember { mutableStateOf(0f) }
-    var rootHeight by remember { mutableStateOf(0f) }
+    var dialogTransition by remember { mutableFloatStateOf(0f) }
+    var rootHeight by remember { mutableFloatStateOf(0f) }
 
     // Trạng thái mở rộng header (hiển thị màn hình chi tiết)
     var isHeaderExpanded by remember { mutableStateOf(false) }
-    var selectedSectionIndex by remember { mutableStateOf(0) }
-    var selectedUnitIndex by remember { mutableStateOf(0) }
+    var selectedSectionIndex by remember { mutableIntStateOf(0) }
+    var selectedUnitIndex by remember { mutableIntStateOf(0) }
 
     // Hiển thị giao diện tương ứng với trạng thái
     if (isHeaderExpanded) {
         val currentSection = defaultSections.getOrNull(selectedSectionIndex) ?: defaultSections.first()
-        val currentUnit = currentSection
+        currentSection
         val unitListStates = remember {
             mutableMapOf<Int, LazyListState>().apply {
                 defaultSections.indices.forEach { index ->
@@ -165,100 +218,57 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             navController = navController
         )
     } else {
-        Scaffold { paddingValues ->
-            Box {
-                // Horizontal Pager cho các section
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxWidth()
-                ) { page ->
-                    val lazyListState = rememberLazyListState()
-                    val units = defaultSections.getOrNull(page) ?: listOf()
-                    // Theo dõi đơn vị hiện tại cho thanh trên cùng
-                    val visibleHeadingIndex by remember {
-                        derivedStateOf {
-                            lazyListState.firstVisibleItemIndex.coerceIn(0, units.size - 1)
-                        }
-                    }
+        val sectionList: List<SectionData> = sampleSections // hoặc biến nào đó cùng kiểu
+        val visibleUnitIndices = remember { mutableStateMapOf<Int, Int>() }
+        Scaffold(
+            topBar = {
+                TopBar(
+                    units = defaultSections.getOrNull(selectedSectionIndex) ?: listOf(),
+                    visibleUnitIndex = visibleUnitIndices.getOrDefault(selectedSectionIndex, 0),
+                    navController = navController,
+                    onExpandClick = {
+                        isHeaderExpanded = true
+                        selectedUnitIndex = visibleUnitIndices.getOrDefault(selectedSectionIndex, 0)
+                    },
+                    isExpanded = false,
+                    sectionData = sectionList.getOrNull(selectedSectionIndex) ?: sectionList[0],
+                    sections = sampleSections
+                )
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding())
+            ) {
+                val lazyListState = rememberLazyListState()
+                val units = defaultSections.getOrNull(selectedSectionIndex) ?: listOf()
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .pointerInput(Unit) {
-                                detectTapGestures(onPress = {
-                                    isDialogShown = false
-                                })
-                            }
-                    ) {
-                        Scaffold(
-                            topBar = {
-                                TopBar(
-                                    units = units,
-                                    visibleUnitIndex = visibleHeadingIndex,
-                                    navController = navController,
-                                    onExpandClick = {
-                                        // Khi nhấn vào header, mở rộng thành màn hình chi tiết
-                                        selectedSectionIndex = page
-                                        selectedUnitIndex = visibleHeadingIndex
-                                        isHeaderExpanded = true
-                                    },
-                                    isExpanded = false // Trạng thái không mở rộng trong HomeScreen
-                                )
-                            }
-                        ) { innerPadding ->
-                            UnitsListScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                state = lazyListState,
-                                units = units,
-                                starCountPerUnit = starCountPerUnit
-                            ) { starCoordinate, isInteractive ->
-                                // Xử lý nhấn vào sao với cuộn mượt
-                                handleStarTap(
-                                    coroutineScope = coroutineScope,
-                                    starCoordinate = starCoordinate,
-                                    isInteractive = isInteractive,
-                                    rootHeight = rootHeight,
-                                    lazyListState = lazyListState,
-                                    onDialogStateChange = { shown, interactive, transition ->
-                                        isDialogShown = shown
-                                        isDialogInteractive = interactive
-                                        dialogTransition = transition
-                                    }
-                                )
-                            }
-                        }
-                    }
+                LaunchedEffect(remember { derivedStateOf { lazyListState.firstVisibleItemIndex } }) {
+                    visibleUnitIndices[selectedSectionIndex] = lazyListState.firstVisibleItemIndex
+                        .coerceIn(0, units.size - 1)
                 }
 
-                // Chỉ số trang (pagination dots)
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 68.dp), // Đặt ở trên navigation bar
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    for (i in 0 until defaultSections.size) {
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (pagerState.currentPage == i) Color.White
-                                    else Color.White.copy(alpha = 0.5f)
-                                )
-                                .pointerInput(Unit) {
-                                    detectTapGestures {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(i)
-                                        }
-                                    }
-                                }
-                        )
-                    }
+                UnitsListScreen(
+                    modifier = Modifier,
+                    state = lazyListState,
+                    units = units,
+                    starCountPerUnit = starCountPerUnit
+                ) { starCoordinate, isInteractive ->
+                    handleStarTap(
+                        coroutineScope = coroutineScope,
+                        starCoordinate = starCoordinate,
+                        isInteractive = isInteractive,
+                        rootHeight = rootHeight,
+                        lazyListState = lazyListState,
+                        onDialogStateChange = { shown, interactive, transition ->
+                            isDialogShown = shown
+                            isDialogInteractive = interactive
+                            dialogTransition = transition
+                        }
+                    )
                 }
 
-                // Dialog overlay cho tương tác sao
                 StarDialog(
                     isDialogShown = isDialogShown,
                     isDialogInteractive = isDialogInteractive,
@@ -268,6 +278,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
                 )
             }
         }
+
     }
 }
 
