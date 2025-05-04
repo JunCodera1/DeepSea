@@ -58,55 +58,61 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
     val defaultSections = remember {
         if (sections.isEmpty()) {
             listOf(
-                // Section 1: Rookie
+                // Section 1: Beginner
                 listOf(
-                    UnitData(title = "Unit 1", color = FeatherGreen, description = "Introduce yourself"),
-                    UnitData(title = "Unit 2", color = Ocean3, description = "Greet others"),
-                    UnitData(title = "Unit 3", color = PinkDark, description = "Say goodbye"),
-                    UnitData(title = "Unit 4", color = FunctionalRedDark, darkerColor = Pink40, description = "Talk about where you’re from"),
-                    UnitData(title = "Unit 5", color = Lavender3, description = "Exchange contact info"),
+                    UnitData(title = "Unit 1", color = FeatherGreen, description = "Introduce yourself", image = R.drawable.ic_self_intro),
+                    UnitData(title = "Unit 2", color = Ocean3, description = "Greet others", image = R.drawable.ic_greeting),
+                    UnitData(title = "Unit 3", color = PinkDark, description = "Say goodbye", image = R.drawable.ic_goodbye),
+                    UnitData(title = "Unit 4", color = FunctionalRedDark, darkerColor = Pink40, description = "Talk about where you’re from", image = R.drawable.ic_world_map),
+                    UnitData(title = "Unit 5", color = Lavender3, description = "Exchange contact info", image = R.drawable.ic_contact_info),
                 ),
+
                 // Section 2: Explorer
                 listOf(
-                    UnitData(title = "Unit 6", color = CyanDark, description = "Talk about daily routines"),
-                    UnitData(title = "Unit 7", color = Shadow3, description = "Describe people"),
-                    UnitData(title = "Unit 8", color = Rose3, description = "Talk about your home"),
-                    UnitData(title = "Unit 9", color = FeatherGreen, description = "Talk about your family"),
-                    UnitData(title = "Unit 10", color = Ocean3, description = "Talk about weather"),
+                    UnitData(title = "Unit 6", color = CyanDark, description = "Talk about daily routines", image = R.drawable.ic_routine),
+                    UnitData(title = "Unit 7", color = Shadow3, description = "Describe people", image = R.drawable.ic_people),
+                    UnitData(title = "Unit 8", color = Rose3, description = "Talk about your home", image = R.drawable.ic_home),
+                    UnitData(title = "Unit 9", color = FeatherGreen, description = "Talk about your family", image = R.drawable.ic_family),
+                    UnitData(title = "Unit 10", color = Ocean3, description = "Talk about weather", image = R.drawable.ic_weather),
                 ),
+
                 // Section 3: Traveler
                 listOf(
-                    UnitData(title = "Unit 11", color = Cyan, description = "Order food"),
-                    UnitData(title = "Unit 12", color = Pink40, description = "Order drinks"),
-                    UnitData(title = "Unit 13", color = BlueDark, description = "Go shopping"),
-                    UnitData(title = "Unit 14", color = Rose3, description = "Ask about prices"),
-                    UnitData(title = "Unit 15", color = FunctionalRedDark, description = "Talk about preferences"),
+                    UnitData(title = "Unit 11", color = Cyan, description = "Order food", image = R.drawable.ic_food),
+                    UnitData(title = "Unit 12", color = Pink40, description = "Order drinks", image = R.drawable.ic_drinks),
+                    UnitData(title = "Unit 13", color = BlueDark, description = "Go shopping", image = R.drawable.ic_shopping_cart),
+                    UnitData(title = "Unit 14", color = Rose3, description = "Ask about prices", image = R.drawable.ic_price_tag),
+                    UnitData(title = "Unit 15", color = FunctionalRedDark, description = "Talk about preferences", image = R.drawable.ic_preferences),
                 ),
+
                 // Section 4: Navigator
                 listOf(
-                    UnitData(title = "Unit 16", color = CyanDark, description = "Ask for directions"),
-                    UnitData(title = "Unit 17", color = Shadow3, description = "Use public transport"),
-                    UnitData(title = "Unit 18", color = Lavender3, description = "Book a taxi"),
-                    UnitData(title = "Unit 19", color = FeatherGreenDark, description = "Find places in a city"),
-                    UnitData(title = "Unit 20", color = Blue, description = "Tell time & make appointments"),
+                    UnitData(title = "Unit 16", color = CyanDark, description = "Ask for directions", image = R.drawable.ic_directions),
+                    UnitData(title = "Unit 17", color = Shadow3, description = "Use public transport", image = R.drawable.ic_transport),
+                    UnitData(title = "Unit 18", color = Lavender3, description = "Book a taxi", image = R.drawable.ic_taxi),
+                    UnitData(title = "Unit 19", color = FeatherGreenDark, description = "Find places in a city", image = R.drawable.ic_map),
+                    UnitData(title = "Unit 20", color = Blue, description = "Tell time & make appointments", image = R.drawable.ic_clock),
                 ),
+
                 // Section 5: Socializer
                 listOf(
-                    UnitData(title = "Unit 21", color = PinkDark, description = "Talk about hobbies"),
-                    UnitData(title = "Unit 22", color = Cyan, description = "Talk about plans"),
-                    UnitData(title = "Unit 23", color = Rose3, description = "Make invitations"),
-                    UnitData(title = "Unit 24", color = Lavender3, description = "Accept or decline invitations"),
-                    UnitData(title = "Unit 25", color = FunctionalRedDark, description = "Describe past experiences"),
+                    UnitData(title = "Unit 21", color = PinkDark, description = "Talk about hobbies", image = R.drawable.ic_hobbies),
+                    UnitData(title = "Unit 22", color = Cyan, description = "Talk about plans", image = R.drawable.ic_calendar),
+                    UnitData(title = "Unit 23", color = Rose3, description = "Make invitations", image = R.drawable.ic_invite),
+                    UnitData(title = "Unit 24", color = Lavender3, description = "Accept or decline invitations", image = R.drawable.ic_check_cross),
+                    UnitData(title = "Unit 25", color = FunctionalRedDark, description = "Describe past experiences", image = R.drawable.ic_experience),
                 ),
+
                 // Section 6: Professional
                 listOf(
-                    UnitData(title = "Unit 26", color = BlueDark, description = "Talk about jobs"),
-                    UnitData(title = "Unit 27", color = FeatherGreen, description = "At a job interview"),
-                    UnitData(title = "Unit 28", color = Ocean3, description = "Talk about work routines"),
-                    UnitData(title = "Unit 29", color = Pink40, description = "Solve problems at work"),
-                    UnitData(title = "Unit 30", color = CyanDark, description = "Talk about the future"),
+                    UnitData(title = "Unit 26", color = BlueDark, description = "Talk about jobs", image = R.drawable.ic_jobs),
+                    UnitData(title = "Unit 27", color = FeatherGreen, description = "At a job interview", image = R.drawable.ic_interview),
+                    UnitData(title = "Unit 28", color = Ocean3, description = "Talk about work routines", image = R.drawable.ic_work_routine),
+                    UnitData(title = "Unit 29", color = Pink40, description = "Solve problems at work", image = R.drawable.ic_problem_solve),
+                    UnitData(title = "Unit 30", color = CyanDark, description = "Talk about the future", image = R.drawable.ic_future),
+                ),
+
                 )
-            )
         } else {
             sections
         }
@@ -119,7 +125,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             darkerColor = FeatherGreenDark,
             description = "Learn how to introduce yourself and greet others.",
             image = R.drawable.ic_handshake, // 🤝 giới thiệu bản thân
-            level = "A1",
+            level = "N5",
             units = defaultSections[0]
         ),
         SectionData(
@@ -128,7 +134,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             darkerColor = CyanDark,
             description = "Talk about your daily routines and habits.",
             image = R.drawable.ic_calendar, // 🗓️ thói quen hàng ngày
-            level = "A1",
+            level = "N5",
             units = defaultSections[1]
         ),
         SectionData(
@@ -137,7 +143,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             darkerColor = BlueDark,
             description = "Learn useful phrases for shopping situations.",
             image = R.drawable.ic_shopping_cart, // 🛒 mua sắm
-            level = "A2",
+            level = "N4",
             units = defaultSections[2]
         ),
         SectionData(
@@ -146,7 +152,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             darkerColor = PinkDark,
             description = "Ask for directions and use public transport.",
             image = R.drawable.ic_map, // 🗺️ hỏi đường
-            level = "A2",
+            level = "N4",
             units = defaultSections[3] // có thể đổi theo logic của bạn
         ),
         SectionData(
@@ -155,7 +161,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             darkerColor = FunctionalRedDark,
             description = "Talk about friends, family, and social life.",
             image = R.drawable.ic_people, // 👥 xã hội
-            level = "B1",
+            level = "N3",
             units = defaultSections[4]
         ),
         SectionData(
@@ -164,7 +170,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             darkerColor = Color.Gray,
             description = "Learn vocabulary for work and job interviews.",
             image = R.drawable.ic_briefcase, // 💼 công việc
-            level = "B1",
+            level = "N3",
             units = defaultSections[5]
         )
     )
@@ -218,7 +224,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
 
                 coroutineScope.launch {
                     pagerState.scrollToPage(sectionIndex)
-                    delay(100)
+                    delay(1000)
                     unitListStates[sectionIndex]?.scrollToItem(unitIndex)
                 }
             }

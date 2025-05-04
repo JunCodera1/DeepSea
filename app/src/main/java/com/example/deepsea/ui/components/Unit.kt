@@ -87,9 +87,7 @@ fun UnitContent(
     starCount: Int,
     onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit
 ) {
-    // Use Box to allow overlapping components (stars and background image)
     Box {
-        // Stars column
         Column(
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
@@ -130,11 +128,6 @@ fun UnitContent(
                     alignment = if (unitIndex % 2 == 0) Alignment.CenterEnd else Alignment.CenterStart
                 ),
             painter = painterResource(id = unitImage),
-//            colorFilter = ColorFilter.colorMatrix(
-//                colorMatrix = ColorMatrix().apply {
-//                    setToSaturation(0f) // Make image grayscale
-//                }
-//            ),
             contentDescription = "Unit image"
         )
     }
