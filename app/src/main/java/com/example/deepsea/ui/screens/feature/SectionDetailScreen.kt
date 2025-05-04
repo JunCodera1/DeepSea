@@ -1,29 +1,20 @@
 package com.example.deepsea.ui.screens.feature
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,82 +22,75 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.foundation.gestures.detectTapGestures
-import com.example.deepsea.R
-import com.example.deepsea.ui.components.TopBar
-import com.example.deepsea.ui.components.UnitData
+import com.example.deepsea.ui.components.SectionData
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.Image
+import androidx.compose.ui.input.pointer.pointerInput
+import com.example.deepsea.ui.components.TopBar
 
-/**
- * Màn hình chi tiết đơn vị học tập
- * Hiển thị khi người dùng nhấn vào phần header trong TopBar
- * Hỗ trợ vuốt ngang để xem các unit khác nhau
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun UnitDetailScreen(
-    unit: UnitData,
-    progress: Int = 0,
-    totalUnits: Int = 10,
+fun SectionDetailScreen(
+    section: SectionData,
     onContinueClick: () -> Unit,
     onSeeDetailsClick: () -> Unit,
     navController: NavController,
-    units: List<UnitData> = listOf(unit)
+    sections: List<SectionData> = listOf(section)
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    // Tìm index của unit hiện tại trong danh sách units
-    val initialPage = units.indexOf(unit).takeIf { it >= 0 } ?: 0
+    // Tìm index của section hiện tại trong danh sách sections
+    val initialPage = sections.indexOf(section).takeIf { it >= 0 } ?: 0
 
-    // Thiết lập pager state để vuốt ngang giữa các unit
+    // Thiết lập pager state để vuốt ngang giữa các section
     val pagerState = rememberPagerState(
         initialPage = initialPage,
-        pageCount = { units.size }
+        pageCount = { sections.size }
     )
 
-    // Thiết lập UI với Scaffold để giữ lại TopBar
+    // Thiết lập UI với Scaffold
     Scaffold(
         topBar = {
-            TopBar(
-                units = units,
-                visibleUnitIndex = pagerState.currentPage,
+            SectionTopBar(
+                section = sections[pagerState.currentPage],
                 navController = navController,
-                onExpandClick = onContinueClick, // Sử dụng onContinueClick để quay lại màn hình chính khi nhấn lại
-                isExpanded = true // Trạng thái mở rộng trong UnitDetailScreen
+                onExpandClick = onContinueClick,
+                isExpanded = true
             )
         }
     ) { paddingValues ->
-        // Horizontal Pager cho phép vuốt ngang giữa các unit
+        // Horizontal Pager cho phép vuốt ngang giữa các section
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) { page ->
-            val currentUnit = units.getOrNull(page) ?: unit
+            val currentSection = sections.getOrNull(page) ?: section
 
             // Content với phần đệm để không che khuất TopBar
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(currentUnit.color)
+                    .background(currentSection.color)
             ) {
                 // Mascot image at the top
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp), // Giảm chiều cao vì đã có TopBar ở trên
+                        .height(260.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Sử dụng trường image từ currentUnit
+                    // Sử dụng trường image từ currentSection
                     Image(
-                        painter = painterResource(id = currentUnit.image),
-                        contentDescription = "Unit Image",
+                        painter = painterResource(id = currentSection.image),
+                        contentDescription = "Section Image",
                         modifier = Modifier.size(200.dp),
                         contentScale = ContentScale.Fit
                     )
 
-                    // Add dandelions or decorations around
+                    // Add decorations around
                     Box(
                         modifier = Modifier
                             .size(20.dp)
@@ -132,26 +116,32 @@ fun UnitDetailScreen(
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 16.dp, vertical = 24.dp),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = currentUnit.color.copy(alpha = 0.8f))
+                    colors = CardDefaults.cardColors(
+                        containerColor = currentSection.color.copy(alpha = 0.8f)
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 4.dp
+                    ),
+                    border = null
                 ) {
                     Column(
                         modifier = Modifier
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Section title - sử dụng title của unit hiện tại
+                        // Section title
                         Text(
-                            text = currentUnit.title,
+                            text = currentSection.title,
                             color = Color.White,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
 
-                        // Hiển thị description từ currentUnit
+                        // Section description
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = currentUnit.description,
+                            text = currentSection.description,
                             color = Color.White.copy(alpha = 0.9f),
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center
@@ -159,9 +149,9 @@ fun UnitDetailScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Progress indicator - hiển thị trang hiện tại trong tổng số unit
+                        // Progress indicator - hiển thị trang hiện tại trong tổng số section
                         Text(
-                            text = "${page + 1} / ${units.size} UNITS",
+                            text = "${page + 1} / ${sections.size} SECTIONS",
                             color = Color.White,
                             fontSize = 16.sp
                         )
@@ -178,7 +168,7 @@ fun UnitDetailScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth((page + 1).toFloat() / units.size)
+                                    .fillMaxWidth((page + 1).toFloat() / sections.size)
                                     .height(8.dp)
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(Color.White)
@@ -187,17 +177,27 @@ fun UnitDetailScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // "See Details" button - sử dụng màu darkerColor
+                        // Unit count indicator
+                        Text(
+                            text = "${currentSection.units.size} UNITS",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // "See Details" button
                         Button(
                             onClick = onSeeDetailsClick,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = currentUnit.darkerColor
+                                containerColor = currentSection.darkerColor
                             ),
                             shape = RoundedCornerShape(32.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "A1 • SEE DETAILS",
+                                text = "${currentSection.level} • SEE DETAILS",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -217,7 +217,7 @@ fun UnitDetailScreen(
                         ) {
                             Text(
                                 text = "JUMP HERE",
-                                color = currentUnit.color,
+                                color = currentSection.color,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
@@ -230,7 +230,7 @@ fun UnitDetailScreen(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            repeat(units.size) { index ->
+                            repeat(sections.size) { index ->
                                 Box(
                                     modifier = Modifier
                                         .padding(horizontal = 4.dp)
@@ -253,6 +253,57 @@ fun UnitDetailScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SectionTopBar(
+    section: SectionData,
+    navController: NavController,
+    onExpandClick: () -> Unit,
+    isExpanded: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(section.color)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Back button
+        Button(
+            onClick = { navController.navigate("home") },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White.copy(alpha = 0.2f)
+            ),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            Text("Back", color = Color.White)
+        }
+
+        // Title
+        Text(
+            text = section.title,
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center
+        )
+
+        // Expand/Collapse or Action Button
+        Button(
+            onClick = onExpandClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White.copy(alpha = 0.2f)
+            ),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            Text(if (isExpanded) "Collapse" else "Expand", color = Color.White)
         }
     }
 }

@@ -21,10 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -33,11 +30,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
 import com.example.deepsea.text.PrimaryText
+
 import com.example.deepsea.text.TitleText
 import com.example.deepsea.ui.screens.feature.orderToPercentage
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
+import androidx.compose.ui.Modifier
 
+// Added missing imports
+
+
+data class SectionData(
+    val title: String,
+    val color: Color,
+    val darkerColor: Color = color,
+    val description: String = "",
+    @DrawableRes val image: Int = R.drawable.cut,
+    val level: String = "A1",
+    val units: List<UnitData> = emptyList()
+)
 /**
  * Data class representing a learning unit with its visual properties
  *
@@ -139,7 +150,7 @@ fun UnitContent(
  * @param onStarClicked Callback when a star is clicked
  */
 @Composable
-fun  UnitsLazyColumn(
+fun  UnitsListScreen(
     modifier: Modifier,
     state: LazyListState,
     units: List<UnitData>,
@@ -239,6 +250,7 @@ fun UnitHeader(
         }
     }
 }
+
 
 /**
  * Calculates the horizontal alignment percentage for each star in a unit.

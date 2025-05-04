@@ -181,7 +181,8 @@ fun StarDialog(
     isDialogShown: Boolean,
     isDialogInteractive: Boolean,
     dialogTransition: Float,
-    navController: NavController
+    navController: NavController,
+    xpAmount: Int // 🆕 thêm dòng này
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -256,7 +257,7 @@ fun StarDialog(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 TitleText(
-                    text = if (isDialogInteractive) "LET'S GO!" else "LOCKED",
+                    text = if (isDialogInteractive) "+ Start +$xpAmount XP" else "LOCKED",
                     color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
                     fontSize = 18.sp
                 )

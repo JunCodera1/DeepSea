@@ -1,12 +1,16 @@
 package com.example.deepsea.ui.screens.feature
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -24,22 +28,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.ui.unit.max
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.StarDialog
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.components.UnitData
-import com.example.deepsea.ui.components.UnitsLazyColumn
+import com.example.deepsea.ui.components.UnitsListScreen
+import com.example.deepsea.ui.theme.CyanDark
 import com.example.deepsea.ui.theme.FeatherGreen
+import com.example.deepsea.ui.theme.FeatherGreenDark
+import com.example.deepsea.ui.theme.FunctionalRedDark
+import com.example.deepsea.ui.theme.Lavender3
+import com.example.deepsea.ui.theme.Ocean3
+import com.example.deepsea.ui.theme.Pink40
+import com.example.deepsea.ui.theme.PinkDark
+import com.example.deepsea.ui.theme.Rose3
+import com.example.deepsea.ui.theme.Shadow3
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.example.deepsea.R
+import com.example.deepsea.ui.theme.Blue
+import com.example.deepsea.ui.theme.BlueDark
+import com.example.deepsea.ui.theme.Cyan
+import kotlinx.coroutines.delay
 
 /**
  * HomeScreen là màn hình chính của ứng dụng DeepSea
@@ -53,23 +67,54 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
         if (sections.isEmpty()) {
             listOf(
                 listOf(
-                    UnitData(title = "Section 1: Rookie", color = FeatherGreen),
-                    UnitData(title = "Unit 2", color = Color.Red, darkerColor = Color.Red),
-                    UnitData(title = "Unit 3", color = Color.Yellow)
-                ),
-                listOf(
-                    UnitData(title = "Section 2: Explorer", color = Color.Gray),
-                    UnitData(title = "Unit 5", color = Color.Magenta)
-                ),
-                listOf(
-                    UnitData(title = "Section 3: Traveler", color = Color.Blue),
-                    UnitData(title = "Unit 7", color = Color.Cyan)
-                )
+                    UnitData(title = "Unit 1", color = FeatherGreen, description = "Order food"),
+                    UnitData(title = "Unit 2", color = FunctionalRedDark, darkerColor = Pink40, description = "Describe people"),
+                    UnitData(title = "Unit 3", color = Ocean3, description = "Introduce yourself"),
+                    UnitData(title = "Unit 4", color = PinkDark, description = "Order food and drink"),
+                    UnitData(title = "Unit 5", color = CyanDark, darkerColor = Pink40, description = "Talk about countries"),
+                    UnitData(title = "Unit 6", color = Shadow3, description = "Ask for directions"),
+                    UnitData(title = "Unit 7", color = Rose3, description = "Describe Belongings"),
+                    UnitData(title = "Unit 8", color = Lavender3, description = "Talk about neighbors"),
+                    UnitData(title = "Unit 9", color = Ocean3, description = "Tell time"),
+                    UnitData(title = "Unit 10", color = FeatherGreen, description = "Get help when travelling"),
+                    )
             )
         } else {
             sections
         }
     }
+    val sections = defaultSections
+
+    val sampleSections = listOf(
+        SectionData(
+            title = "Basic Conversation",
+            color = FeatherGreen,
+            darkerColor = FeatherGreenDark,
+            description = "Learn how to introduce yourself and greet others.",
+            image = R.drawable.cut,
+            level = "A1",
+            units = sections[0]
+        ),
+        SectionData(
+            title = "Daily Life",
+            color = Cyan,
+            darkerColor = CyanDark,
+            description = "Talk about your daily routines and habits.",
+            image = R.drawable.cut,
+            level = "A1",
+            units = sections[0]
+        ),
+        SectionData(
+            title = "Shopping",
+            color = Blue,
+            darkerColor = BlueDark,
+            description = "Learn useful phrases for shopping situations.",
+            image = R.drawable.cut,
+            level = "A2",
+            units = sections[0]
+        )
+    )
+
 
     // Quản lý trạng thái pager
     val pagerState = rememberPagerState(pageCount = { defaultSections.size })
@@ -90,41 +135,45 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
     // Hiển thị giao diện tương ứng với trạng thái
     if (isHeaderExpanded) {
         val currentSection = defaultSections.getOrNull(selectedSectionIndex) ?: defaultSections.first()
-        val currentUnit = currentSection.getOrNull(selectedUnitIndex) ?: currentSection.first()
-
-        UnitDetailScreen(
-            unit = currentUnit,
-            progress = selectedUnitIndex,
-            totalUnits = currentSection.size,
+        val currentUnit = currentSection
+        val unitListStates = remember {
+            mutableMapOf<Int, LazyListState>().apply {
+                defaultSections.indices.forEach { index ->
+                    put(index, LazyListState())
+                }
+            }
+        }
+        SectionDetailScreen(
+            section = sampleSections[0],
+            sections = sampleSections,
             onContinueClick = {
-                // Xử lý nhấn nút Continue
                 isHeaderExpanded = false
-            },
-            onSeeDetailsClick = {
-                // Xử lý nhấn nút See Details
-                isHeaderExpanded = false
-                navController.navigate("details/${currentUnit.title}")
-            },
-            navController = navController,
-            units = currentSection
+                coroutineScope.launch {
+                    val targetSection = selectedSectionIndex
+                    val targetUnit = selectedUnitIndex
+
+                    pagerState.scrollToPage(targetSection)
+
+                    delay(100)
+
+                    // Scroll đến đúng Unit
+                    unitListStates[targetSection]?.scrollToItem(targetUnit)
+                }
+            }
+            ,
+            onSeeDetailsClick = {  },
+            navController = navController
         )
     } else {
         Scaffold { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .onGloballyPositioned {
-                        rootHeight = it.parentCoordinates!!.size.height.toFloat()
-                    }
-            ) {
+            Box {
                 // Horizontal Pager cho các section
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxWidth()
                 ) { page ->
-                    val units = defaultSections.getOrNull(page) ?: listOf()
                     val lazyListState = rememberLazyListState()
-
+                    val units = defaultSections.getOrNull(page) ?: listOf()
                     // Theo dõi đơn vị hiện tại cho thanh trên cùng
                     val visibleHeadingIndex by remember {
                         derivedStateOf {
@@ -157,8 +206,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
                                 )
                             }
                         ) { innerPadding ->
-                            // Khu vực nội dung với danh sách cuộn đơn vị
-                            UnitsLazyColumn(
+                            UnitsListScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 state = lazyListState,
                                 units = units,
@@ -215,7 +263,8 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
                     isDialogShown = isDialogShown,
                     isDialogInteractive = isDialogInteractive,
                     dialogTransition = dialogTransition,
-                    navController = navController
+                    navController = navController,
+                    xpAmount = 15
                 )
             }
         }
@@ -224,11 +273,11 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
 
 // Các hàm hỗ trợ khác giữ nguyên
 private fun handleStarTap(
-    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    coroutineScope: CoroutineScope,
     starCoordinate: Float,
     isInteractive: Boolean,
     rootHeight: Float,
-    lazyListState: androidx.compose.foundation.lazy.LazyListState,
+    lazyListState: LazyListState,
     onDialogStateChange: (shown: Boolean, interactive: Boolean, transition: Float) -> Unit
 ) {
     val midCoordinate = rootHeight / 2
