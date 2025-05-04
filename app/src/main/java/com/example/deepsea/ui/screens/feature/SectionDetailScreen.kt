@@ -34,6 +34,7 @@ import com.example.deepsea.ui.components.TopBar
 fun SectionDetailScreen(
     section: SectionData,
     onContinueClick: () -> Unit,
+    onJumpToSection: (sectionIndex: Int, unitIndex: Int) -> Unit,
     onSeeDetailsClick: () -> Unit,
     navController: NavController,
     sections: List<SectionData> = listOf(section)
@@ -208,7 +209,9 @@ fun SectionDetailScreen(
 
                         // "Continue" button
                         Button(
-                            onClick = onContinueClick,
+                            onClick = {
+                                onJumpToSection(page, 0)
+                                      },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.White
                             ),

@@ -184,38 +184,44 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
     var isHeaderExpanded by remember { mutableStateOf(false) }
     var selectedSectionIndex by remember { mutableIntStateOf(0) }
     var selectedUnitIndex by remember { mutableIntStateOf(0) }
+    val unitListStates = remember {
+        mutableMapOf<Int, LazyListState>().apply {
+            defaultSections.indices.forEach { index ->
+                put(index, LazyListState())
+            }
+        }
+    }
+
+    val currentSection = sampleSections.getOrNull(selectedSectionIndex) ?: sampleSections.first()
+    val currentUnits = defaultSections.getOrNull(selectedSectionIndex) ?: emptyList()
+
 
     // Hiển thị giao diện tương ứng với trạng thái
     if (isHeaderExpanded) {
-        val currentSection = defaultSections.getOrNull(selectedSectionIndex) ?: defaultSections.first()
-        currentSection
-        val unitListStates = remember {
-            mutableMapOf<Int, LazyListState>().apply {
-                defaultSections.indices.forEach { index ->
-                    put(index, LazyListState())
-                }
-            }
-        }
         SectionDetailScreen(
-            section = sampleSections[0],
+            section = currentSection, // sử dụng đúng section hiện tại
             sections = sampleSections,
             onContinueClick = {
                 isHeaderExpanded = false
                 coroutineScope.launch {
-                    val targetSection = selectedSectionIndex
-                    val targetUnit = selectedUnitIndex
-
-                    pagerState.scrollToPage(targetSection)
-
+                    pagerState.scrollToPage(selectedSectionIndex)
                     delay(100)
+                    unitListStates[selectedSectionIndex]?.scrollToItem(selectedUnitIndex)
+                }
+            },
+            onSeeDetailsClick = { },
+            navController = navController,
+            onJumpToSection = { sectionIndex, unitIndex ->
+                selectedSectionIndex = sectionIndex
+                selectedUnitIndex = unitIndex
+                isHeaderExpanded = false
 
-                    // Scroll đến đúng Unit
-                    unitListStates[targetSection]?.scrollToItem(targetUnit)
+                coroutineScope.launch {
+                    pagerState.scrollToPage(sectionIndex)
+                    delay(100)
+                    unitListStates[sectionIndex]?.scrollToItem(unitIndex)
                 }
             }
-            ,
-            onSeeDetailsClick = {  },
-            navController = navController
         )
     } else {
         val sectionList: List<SectionData> = sampleSections // hoặc biến nào đó cùng kiểu
