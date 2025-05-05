@@ -50,6 +50,7 @@ import com.example.deepsea.ui.screens.auth.SignupPage
 import com.example.deepsea.ui.screens.feature.DailyPage
 import com.example.deepsea.ui.screens.feature.game.GamePage
 import com.example.deepsea.ui.screens.feature.HomeScreen
+import com.example.deepsea.ui.screens.feature.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.LearnPage
 import com.example.deepsea.ui.screens.feature.RankPage
 import com.example.deepsea.ui.screens.feature.SettingsPage
@@ -178,7 +179,8 @@ fun MainContainer(
                                 currentRoute != "survey-selection" &&
                                 currentRoute != "daily-goal-selection" &&
                                 currentRoute != "path_selection" &&
-                                currentRoute != "home/streak"
+                                currentRoute != "home/streak" &&
+                                currentRoute != "listening-screen"
 
     val userState by authViewModel.userState.collectAsState()
 
@@ -279,21 +281,8 @@ fun MainContainer(
                     )
                 }
 
-
-
-
                 // Main Routes
                 composable("home") {
-                    val units = remember {
-                        listOf(
-                            UnitData(title = "Unit 1", color = FeatherGreen),
-                            UnitData(title = "Unit 2", color = Color.Red, darkerColor = Color.Red),
-                            UnitData(title = "Unit 3", color = Color.Yellow),
-                            UnitData(title = "Unit 4", color = Color.Gray),
-                            UnitData(title = "Unit 5", color = Color.Magenta),
-                            UnitData(title = "Unit 6", color = Color.Blue)
-                        )
-                    }
                     HomeScreen(navController = deepSeaNavController.navController)
                 }
                 composable("home/learn") {
@@ -311,6 +300,10 @@ fun MainContainer(
 
                 composable("home/rank") {
                     RankPage()
+                }
+
+                composable("listening-screen"){
+                    LanguageListeningScreen()
                 }
 
                 composable("home/profile/{userId}") { backStackEntry ->

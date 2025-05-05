@@ -305,9 +305,6 @@ fun SelectableStarButton(
     onStarClicked: (coordinateInRoot: Float, isInteractive : Boolean) -> Unit,
     isInitial: Boolean = false,
 ) {
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
     var isClicked by remember {
         mutableStateOf(false)
     }
@@ -462,9 +459,6 @@ fun SelectableStarButton(
 fun StarButton(
     onStarClicked: (coordinateInRoot: Float, isInteractive : Boolean) -> Unit,
 ) {
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
     //val isClicked by interactionSource.collectIsPressedAsState()
     var isClicked by remember {
         mutableStateOf(false)

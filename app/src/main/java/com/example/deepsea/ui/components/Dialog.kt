@@ -246,7 +246,7 @@ fun StarDialog(
 
             // Action button
             Button(
-                onClick = { /* Handle button click */ },
+                onClick = { navController.navigate("listening-screen") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isDialogInteractive)
@@ -257,7 +257,7 @@ fun StarDialog(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 TitleText(
-                    text = if (isDialogInteractive) "+ Start +$xpAmount XP" else "LOCKED",
+                    text = if (isDialogInteractive) "Start +$xpAmount XP" else "LOCKED",
                     color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
                     fontSize = 18.sp
                 )
