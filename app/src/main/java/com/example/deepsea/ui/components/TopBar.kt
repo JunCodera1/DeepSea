@@ -14,15 +14,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,24 +47,20 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import com.example.deepsea.R
 import com.example.deepsea.text.TitleText
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import java.time.LocalDate
-import java.time.YearMonth
 
 
 // Sửa đổi cho TopBar.kt
 // Cập nhật TopBar để đổi hướng mũi tên khi mở rộng header
 @Composable
 fun TopBar(
+    sectionIndex: Int,
     units: List<UnitData> = listOf(UnitData()),
     sectionData: SectionData,
     visibleUnitIndex: Int = 0,
@@ -83,6 +85,7 @@ fun TopBar(
 
     val systemUiController = rememberSystemUiController()
     val showStreakDialog = remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
 
     val currentUnit = units.getOrNull(visibleUnitIndex)
@@ -115,10 +118,57 @@ fun TopBar(
                     .padding(top = 20.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BarIcon(R.drawable.flag_japan)
-                if (showStreakDialog.value) {
-                    navController.navigate("home/streak")
+                Box(
+                    modifier = Modifier
+                        .wrapContentSize(Alignment.TopStart) // Giữ kích thước nhỏ
+                ) {
+                    BarIcon(
+                        icon = R.drawable.flag_japan,
+                        onClick = { expanded = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.flag_japan),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Japanese", fontWeight = FontWeight.Bold)
+                                }
+                            },
+                            onClick = {
+                                // Xử lý chọn
+                                expanded = false
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Add Course", color = Color.Gray)
+                                }
+                            },
+                            onClick = {},
+                            enabled = false
+                        )
+                    }
                 }
+
+
 
                 BarIcon(
                     icon = R.drawable.ic_fire,
@@ -140,7 +190,7 @@ fun TopBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    TitleText(text = sections[pagerState.currentPage].title, color = Color.White, fontSize = 18.sp)
+                    TitleText(text = sections[sectionIndex].title, color = Color.White, fontSize = 18.sp)
                 }
 
                 // Sử dụng mũi tên lên hoặc xuống tùy thuộc vào trạng thái mở rộng
@@ -177,3 +227,140 @@ fun BarIcon(@DrawableRes icon: Int, text: String? = null, saturation: Float = 1f
     }
 }
 
+@Composable
+fun LanguageDropdown() {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .wrapContentSize(Alignment.TopStart)
+    ) {
+        // Custom button that shows the flag and triggers dropdown
+        Box(
+            modifier = Modifier
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(8.dp)
+                .clickable { expanded = true }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(Color.Red, CircleShape)
+                )
+            }
+        }
+
+        // Dropdown menu
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(Color.White)
+                .width(200.dp)
+        ) {
+            // Japanese option
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(Color.Red, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Japanese", fontWeight = FontWeight.Bold)
+                    }
+                },
+                onClick = {
+                    // Handle selection
+                    expanded = false
+                }
+            )
+
+            // Divider
+            Divider(color = Color.LightGray, thickness = 1.dp)
+
+            // Add Course option (disabled)
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add Course", color = Color.Gray)
+                    }
+                },
+                onClick = { },
+                enabled = false
+            )
+        }
+
+        // Text below the flag button
+        Text(
+            text = "Japanese",
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(top = 45.dp),
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+fun CourseButton() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Course",
+                tint = Color.Gray,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Course",
+            color = Color.Gray,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+fun LanguageSelector() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LanguageDropdown()
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        CourseButton()
+    }
+}

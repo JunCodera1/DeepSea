@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavController) {
-    val defaultSections = remember {
+    val sampleUnits = remember {
         if (sections.isEmpty()) {
             listOf(
                 // Section 1: Beginner
@@ -126,7 +126,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             description = "Learn how to introduce yourself and greet others.",
             image = R.drawable.ic_handshake, // 🤝 giới thiệu bản thân
             level = "N5",
-            units = defaultSections[0]
+            units = sampleUnits[0]
         ),
         SectionData(
             title = "Section 2: Explorer",
@@ -135,7 +135,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             description = "Talk about your daily routines and habits.",
             image = R.drawable.ic_calendar, // 🗓️ thói quen hàng ngày
             level = "N5",
-            units = defaultSections[1]
+            units = sampleUnits[1]
         ),
         SectionData(
             title = "Section 3: Traveler",
@@ -144,7 +144,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             description = "Learn useful phrases for shopping situations.",
             image = R.drawable.ic_shopping_cart, // 🛒 mua sắm
             level = "N4",
-            units = defaultSections[2]
+            units = sampleUnits[2]
         ),
         SectionData(
             title = "Section 4: Navigator",
@@ -153,7 +153,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             description = "Ask for directions and use public transport.",
             image = R.drawable.ic_map, // 🗺️ hỏi đường
             level = "N4",
-            units = defaultSections[3] // có thể đổi theo logic của bạn
+            units = sampleUnits[3] // có thể đổi theo logic của bạn
         ),
         SectionData(
             title = "Section 5: Socializer",
@@ -162,7 +162,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             description = "Talk about friends, family, and social life.",
             image = R.drawable.ic_people, // 👥 xã hội
             level = "N3",
-            units = defaultSections[4]
+            units = sampleUnits[4]
         ),
         SectionData(
             title = "Section 6: Professional",
@@ -171,12 +171,12 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
             description = "Learn vocabulary for work and job interviews.",
             image = R.drawable.ic_briefcase, // 💼 công việc
             level = "N3",
-            units = defaultSections[5]
+            units = sampleUnits[5]
         )
     )
 
     // Quản lý trạng thái pager
-    val pagerState = rememberPagerState(pageCount = { defaultSections.size })
+    val pagerState = rememberPagerState(pageCount = { sampleUnits.size })
     val coroutineScope = rememberCoroutineScope()
     val starCountPerUnit = 5
 
@@ -192,14 +192,14 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
     var selectedUnitIndex by remember { mutableIntStateOf(0) }
     val unitListStates = remember {
         mutableMapOf<Int, LazyListState>().apply {
-            defaultSections.indices.forEach { index ->
+            sampleUnits.indices.forEach { index ->
                 put(index, LazyListState())
             }
         }
     }
 
     val currentSection = sampleSections.getOrNull(selectedSectionIndex) ?: sampleSections.first()
-    val currentUnits = defaultSections.getOrNull(selectedSectionIndex) ?: emptyList()
+    val currentUnits = sampleUnits.getOrNull(selectedSectionIndex) ?: emptyList()
 
 
     // Hiển thị giao diện tương ứng với trạng thái
@@ -235,7 +235,8 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
         Scaffold(
             topBar = {
                 TopBar(
-                    units = defaultSections.getOrNull(selectedSectionIndex) ?: listOf(),
+                    sectionIndex = selectedSectionIndex,
+                    units = sampleUnits.getOrNull(selectedSectionIndex) ?: listOf(),
                     visibleUnitIndex = visibleUnitIndices.getOrDefault(selectedSectionIndex, 0),
                     navController = navController,
                     onExpandClick = {
@@ -254,7 +255,7 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
                     .padding(top = paddingValues.calculateTopPadding())
             ) {
                 val lazyListState = rememberLazyListState()
-                val units = defaultSections.getOrNull(selectedSectionIndex) ?: listOf()
+                val units = sampleUnits.getOrNull(selectedSectionIndex) ?: listOf()
 
                 LaunchedEffect(remember { derivedStateOf { lazyListState.firstVisibleItemIndex } }) {
                     visibleUnitIndices[selectedSectionIndex] = lazyListState.firstVisibleItemIndex
@@ -263,9 +264,24 @@ fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavC
 
                 UnitsListScreen(
                     modifier = Modifier,
+                    totalSectionCount = sampleSections.size,
                     state = lazyListState,
                     units = units,
-                    starCountPerUnit = starCountPerUnit
+                    starCountPerUnit = starCountPerUnit,
+                    sectionIndex = selectedSectionIndex,
+                    onJumpToSection = { sectionIndex, unitIndex ->
+                        selectedSectionIndex = sectionIndex + 1
+                        selectedUnitIndex = unitIndex
+                        isHeaderExpanded = false
+
+                        coroutineScope.launch {
+                            pagerState.scrollToPage(sectionIndex)
+                            delay(1000)
+                            unitListStates[sectionIndex]?.scrollToItem(unitIndex)
+                        }
+                    },
+                    section = sectionList.getOrNull(selectedSectionIndex) ?: sectionList[0],
+                    sections = sampleSections
                 ) { starCoordinate, isInteractive ->
                     handleStarTap(
                         coroutineScope = coroutineScope,

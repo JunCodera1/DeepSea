@@ -26,7 +26,6 @@ import com.example.deepsea.ui.components.SectionData
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
 import androidx.compose.ui.input.pointer.pointerInput
-import com.example.deepsea.ui.components.TopBar
 
 
 @OptIn(ExperimentalFoundationApi::class)
