@@ -36,8 +36,8 @@ import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.DeepSeaFAButton
 import com.example.deepsea.ui.components.DeepSeaScaffold
 import com.example.deepsea.ui.components.StreakScreen
-import com.example.deepsea.ui.home.DeepSeaBottomBar
-import com.example.deepsea.ui.home.composableWithCompositionLocal
+import com.example.deepsea.ui.components.DeepSeaBottomBar
+import com.example.deepsea.ui.components.composableWithCompositionLocal
 import com.example.deepsea.ui.navigation.MainDestinations
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.navigation.rememberDeepSeaScaffoldState
@@ -52,6 +52,7 @@ import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.screens.feature.rank.RankPage
+import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.path.LanguageSelectionPage
@@ -195,24 +196,24 @@ fun MainContainer(
     }
 
     DeepSeaScaffold(
-        floatingActionButton = {
-            Box { // This provides the alignment scope
-                if (isImportantRoute)
-                    DeepSeaFAButton(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = Color(0xFFB2DFDB),
-                        onItemClick = { title ->
-                            when (title) {
-                                "Explore" -> deepSeaNavController.navController.navigate("explore_route")
-                                "Favorites" -> deepSeaNavController.navController.navigate("favorites_route")
-                                "Settings" -> deepSeaNavController.navController.navigate("settings_route")
-                                "Help" -> deepSeaNavController.navController.navigate("help_route")
-                                "Voice Assistant" -> deepSeaNavController.navController.navigate("home/voice_assistant")
-                            }
-                        }
-                    )
-            }
-        },
+//        floatingActionButton = {
+//            Box { // This provides the alignment scope
+//                if (isImportantRoute)
+//                    DeepSeaFAButton(
+//                        modifier = Modifier.align(Alignment.TopCenter),
+//                        containerColor = Color(0xFFB2DFDB),
+//                        onItemClick = { title ->
+//                            when (title) {
+//                                "Explore" -> deepSeaNavController.navController.navigate("explore_route")
+//                                "Favorites" -> deepSeaNavController.navController.navigate("favorites_route")
+//                                "Settings" -> deepSeaNavController.navController.navigate("settings_route")
+//                                "Help" -> deepSeaNavController.navController.navigate("help_route")
+//                                "Voice Assistant" -> deepSeaNavController.navController.navigate("home/voice_assistant")
+//                            }
+//                        }
+//                    )
+//            }
+//        },
         bottomBar = {
             if (isImportantRoute)
                 DeepSeaBottomBar(
@@ -324,6 +325,10 @@ fun MainContainer(
                             deepSeaNavController.navController.navigate("home")
                         }
                     )
+                }
+
+                composable("home/review") {
+                    ReviewScreen()
                 }
 
                 composable("home/game") {

@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.home
+package com.example.deepsea.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -82,12 +81,19 @@ enum class HomeSections(
         Color(0xFF1E8A44),
         Color(0xFF4BAD6C)
     ),
+    REVIEW(
+        R.string.home_review,
+        "home/review",
+        R.drawable.home_review,
+        Color(0xFFC97C00),
+        Color(0xFFE7A439)
+    ),
     RANK(
         R.string.home_rank,
         "home/rank",
         R.drawable.home_rank,
-        Color(0xFFC97C00),
-        Color(0xFFE7A439)
+        Color(0xFF00C6C9),
+        Color(0xFF95DFDF)
     ),
     GAME(
         R.string.home_game,
@@ -216,15 +222,6 @@ fun DeepSeaBottomBar(navController: NavController) {
                                     tint = Color.Unspecified
                                 )
                             }
-                        },
-                        label = {
-                            Text(
-                                text = stringResource(id = section.title),
-                                fontSize = 14.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) section.primaryColor else BottomNavUnselectedItemColor,
-                                maxLines = 1
-                            )
                         },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = BottomNavSelectedItemColor,

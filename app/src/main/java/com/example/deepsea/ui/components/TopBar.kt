@@ -32,6 +32,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,6 +98,12 @@ fun TopBar(
 
     systemUiController.setStatusBarColor(animatedColor)
     systemUiController.setNavigationBarColor(Color.White)
+    LaunchedEffect(showStreakDialog.value) {
+        if (showStreakDialog.value) {
+            navController.navigate("home/streak")
+            showStreakDialog.value = false // reset nếu cần
+        }
+    }
 
     Box(
         modifier = Modifier
