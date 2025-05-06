@@ -40,7 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.deepsea.data.model.audio.TranslationExercise
+import com.example.deepsea.data.model.exercise.TranslationExercise
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -263,7 +263,7 @@ fun AudioControls(
         horizontalArrangement = Arrangement.Center
     ) {
         // Regular Speed Audio Button
-        AudioButton(
+        AudioWorldBuildingButton(
             size = 64.dp,
             isPlaying = isAudioPlaying,
             icon = "🔊",
@@ -274,7 +274,7 @@ fun AudioControls(
         Spacer(modifier = Modifier.width(16.dp))
 
         // Slow Audio Button
-        AudioButton(
+        AudioWorldBuildingButton(
             size = 64.dp,
             isPlaying = isAudioPlaying,
             icon = "🐢",

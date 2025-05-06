@@ -49,6 +49,7 @@ import com.example.deepsea.ui.screens.feature.daily.DailyPage
 import com.example.deepsea.ui.screens.feature.game.GamePage
 import com.example.deepsea.ui.screens.feature.home.HomeScreen
 import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
+import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.screens.feature.rank.RankPage
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
@@ -178,7 +179,8 @@ fun MainContainer(
                                 currentRoute != "path_selection" &&
                                 currentRoute != "home/streak" &&
                                 currentRoute != "listening-screen" &&
-                                currentRoute != "word-building-screen"
+                                currentRoute != "word-building-screen" &&
+                                currentRoute != "matching-pair-screen"
 
     val userState by authViewModel.userState.collectAsState()
 
@@ -294,6 +296,10 @@ fun MainContainer(
 
                 composable("listening-screen"){
                     LanguageListeningScreen()
+                }
+
+                composable("matching-pair-screen") {
+                    MatchingPairsScreen()
                 }
 
                 composable("word-building-screen") {

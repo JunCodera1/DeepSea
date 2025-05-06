@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.deepsea.data.model.audio.HearingExercise
+import com.example.deepsea.data.model.exercise.HearingExercise
 import com.example.deepsea.ui.viewmodel.learn.LanguageListeningViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

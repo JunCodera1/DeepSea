@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.audio.TranslationExercise
+import com.example.deepsea.data.model.exercise.TranslationExercise
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

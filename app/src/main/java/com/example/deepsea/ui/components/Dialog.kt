@@ -246,7 +246,7 @@ fun StarDialog(
 
             // Action button
             Button(
-                onClick = { navController.navigate("word-building-screen") },
+                onClick = { navController.navigate("matching-pair-screen") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isDialogInteractive)

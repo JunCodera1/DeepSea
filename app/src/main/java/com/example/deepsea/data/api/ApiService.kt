@@ -2,9 +2,9 @@ package com.example.deepsea.data.api
 
 
 import com.example.deepsea.data.model.audio.AudioResponse
-import com.example.deepsea.data.model.audio.HearingExercise
+import com.example.deepsea.data.model.exercise.HearingExercise
 import com.example.deepsea.data.model.audio.SpellingResponse
-import com.example.deepsea.data.model.audio.TranslationExercise
+import com.example.deepsea.data.model.exercise.TranslationExercise
 import com.example.deepsea.data.model.user.JwtResponse
 import com.example.deepsea.data.model.auth.LoginRequest
 import com.example.deepsea.data.model.user.MessageResponse

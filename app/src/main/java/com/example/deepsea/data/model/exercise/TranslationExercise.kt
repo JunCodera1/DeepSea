@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model.audio
+package com.example.deepsea.data.model.exercise
 
 /**
  * Data class representing a translation exercise where

@@ -8,7 +8,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.audio.HearingExercise
+import com.example.deepsea.data.model.exercise.HearingExercise
 import com.example.deepsea.utils.AudioPlaybackManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
