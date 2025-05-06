@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model
+package com.example.deepsea.data.model.audio
 
 data class HearingExercise(
     val id: String,

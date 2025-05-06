@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens.feature
+package com.example.deepsea.ui.screens.feature.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -30,6 +30,8 @@ import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.StarDialog
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.components.UnitData
+import com.example.deepsea.ui.screens.feature.home.SectionDetailScreen
+import com.example.deepsea.ui.screens.feature.home.UnitsListScreen
 import com.example.deepsea.ui.theme.Blue
 import com.example.deepsea.ui.theme.BlueDark
 import com.example.deepsea.ui.theme.Cyan

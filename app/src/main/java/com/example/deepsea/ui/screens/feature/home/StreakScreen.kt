@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
-import com.example.deepsea.ui.navigation.DeepSeaNavController
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle

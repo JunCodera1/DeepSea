@@ -17,7 +17,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +36,6 @@ import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.DeepSeaFAButton
 import com.example.deepsea.ui.components.DeepSeaScaffold
 import com.example.deepsea.ui.components.StreakScreen
-import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.home.DeepSeaBottomBar
 import com.example.deepsea.ui.home.composableWithCompositionLocal
 import com.example.deepsea.ui.navigation.MainDestinations
@@ -47,20 +45,19 @@ import com.example.deepsea.ui.profile.ProfilePage
 import com.example.deepsea.ui.screens.auth.ForgotPasswordPage
 import com.example.deepsea.ui.screens.auth.LoginPage
 import com.example.deepsea.ui.screens.auth.SignupPage
-import com.example.deepsea.ui.screens.feature.DailyPage
+import com.example.deepsea.ui.screens.feature.daily.DailyPage
 import com.example.deepsea.ui.screens.feature.game.GamePage
-import com.example.deepsea.ui.screens.feature.HomeScreen
-import com.example.deepsea.ui.screens.feature.LanguageListeningScreen
-import com.example.deepsea.ui.screens.feature.LearnPage
-import com.example.deepsea.ui.screens.feature.RankPage
-import com.example.deepsea.ui.screens.feature.SettingsPage
+import com.example.deepsea.ui.screens.feature.home.HomeScreen
+import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
+import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
+import com.example.deepsea.ui.screens.feature.rank.RankPage
+import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.path.LanguageSelectionPage
 import com.example.deepsea.ui.screens.path.PathSelectionFlowPage
 import com.example.deepsea.ui.screens.path.SurveySelectionPage
 import com.example.deepsea.ui.screens.path.WelcomePage
 import com.example.deepsea.ui.theme.DeepSeaTheme
-import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
 import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModel
 import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModelFactory
@@ -180,7 +177,8 @@ fun MainContainer(
                                 currentRoute != "daily-goal-selection" &&
                                 currentRoute != "path_selection" &&
                                 currentRoute != "home/streak" &&
-                                currentRoute != "listening-screen"
+                                currentRoute != "listening-screen" &&
+                                currentRoute != "word-building-screen"
 
     val userState by authViewModel.userState.collectAsState()
 
@@ -285,14 +283,6 @@ fun MainContainer(
                 composable("home") {
                     HomeScreen(navController = deepSeaNavController.navController)
                 }
-                composable("home/learn") {
-                    // Load dashboard data when entering the main area
-                    LaunchedEffect(Unit) {
-                        Log.d("MainContainer", "Loading dashboard data")
-                        authViewModel.loadDashboard()
-                    }
-                    LearnPage()
-                }
 
                 composable("home/daily") {
                     DailyPage()
@@ -304,6 +294,10 @@ fun MainContainer(
 
                 composable("listening-screen"){
                     LanguageListeningScreen()
+                }
+
+                composable("word-building-screen") {
+                    WordBuildingScreen()
                 }
 
                 composable("home/profile/{userId}") { backStackEntry ->

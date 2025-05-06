@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.viewmodel
+package com.example.deepsea.ui.viewmodel.learn
 
 import android.app.Application
 import android.media.MediaPlayer
@@ -8,7 +8,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.HearingExercise
+import com.example.deepsea.data.model.audio.HearingExercise
 import com.example.deepsea.utils.AudioPlaybackManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.UUID
-
 
 class LanguageListeningViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentExercise = MutableStateFlow(

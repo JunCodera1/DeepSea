@@ -1,9 +1,10 @@
 package com.example.deepsea.data.api
 
 
-import com.example.deepsea.data.model.AudioResponse
-import com.example.deepsea.data.model.HearingExercise
-import com.example.deepsea.data.model.SpellingResponse
+import com.example.deepsea.data.model.audio.AudioResponse
+import com.example.deepsea.data.model.audio.HearingExercise
+import com.example.deepsea.data.model.audio.SpellingResponse
+import com.example.deepsea.data.model.audio.TranslationExercise
 import com.example.deepsea.data.model.user.JwtResponse
 import com.example.deepsea.data.model.auth.LoginRequest
 import com.example.deepsea.data.model.user.MessageResponse
@@ -59,4 +60,7 @@ interface ApiService {
 
     @GET("api/spelling/{word}")
     suspend fun getSpelling(@Path("word") word: String): Response<SpellingResponse>
+
+    @GET("api/exercises/translation")
+    suspend fun getTranslationExercise(): Response<TranslationExercise>
 }

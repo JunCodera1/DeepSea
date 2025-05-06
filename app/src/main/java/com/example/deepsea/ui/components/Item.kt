@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
 import com.example.deepsea.data.model.daily.TaskCategory
 import com.example.deepsea.ui.screens.feature.game.LeaderboardEntry
-import com.example.deepsea.ui.screens.feature.Task
+import com.example.deepsea.ui.screens.feature.daily.Task
 
 @Composable
 fun TaskItem(task: Task, onTaskUpdated: (Task) -> Unit) {

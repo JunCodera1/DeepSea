@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens.feature
+package com.example.deepsea.ui.screens.feature.settings
 
 import androidx.compose.foundation.clickable
 

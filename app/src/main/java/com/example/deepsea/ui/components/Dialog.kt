@@ -70,8 +70,8 @@ import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.daily.TaskCategory
 import com.example.deepsea.text.PrimaryText
 import com.example.deepsea.text.TitleText
-import com.example.deepsea.ui.screens.feature.Task
-import com.example.deepsea.ui.screens.feature.capitalize
+import com.example.deepsea.ui.screens.feature.daily.Task
+import com.example.deepsea.ui.screens.feature.daily.capitalize
 import com.example.deepsea.ui.screens.path.LanguageOptionItem
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.Gray
@@ -246,7 +246,7 @@ fun StarDialog(
 
             // Action button
             Button(
-                onClick = { navController.navigate("listening-screen") },
+                onClick = { navController.navigate("word-building-screen") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isDialogInteractive)

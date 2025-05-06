@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens.feature
+package com.example.deepsea.ui.screens.feature.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

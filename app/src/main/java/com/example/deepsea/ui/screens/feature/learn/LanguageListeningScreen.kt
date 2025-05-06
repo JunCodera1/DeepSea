@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.screens.feature
+package com.example.deepsea.ui.screens.feature.learn
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -28,16 +28,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.deepsea.data.model.HearingExercise
-import com.example.deepsea.ui.viewmodel.LanguageListeningViewModel
+import com.example.deepsea.data.model.audio.HearingExercise
+import com.example.deepsea.ui.viewmodel.learn.LanguageListeningViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 
 @Composable
 fun LanguageListeningScreen(
@@ -281,10 +283,10 @@ fun AudioControls(
 
 @Composable
 fun AudioButton(
-    size: androidx.compose.ui.unit.Dp,
+    size: Dp,
     isPlaying: Boolean,
     icon: String,
-    iconSize: androidx.compose.ui.unit.TextUnit,
+    iconSize: TextUnit,
     onClick: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "audio_animation")
@@ -454,7 +456,7 @@ fun SpellingAnimationDots() {
 @Composable
 fun FeedbackMessage(
     message: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     color: Color
 ) {
     Row(

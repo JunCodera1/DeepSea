@@ -32,7 +32,7 @@ import com.example.deepsea.R
 import com.example.deepsea.text.PrimaryText
 
 import com.example.deepsea.text.TitleText
-import com.example.deepsea.ui.screens.feature.orderToPercentage
+import com.example.deepsea.ui.screens.feature.home.orderToPercentage
 import com.example.deepsea.ui.theme.FeatherGreen
 import com.example.deepsea.ui.theme.FeatherGreenDark
 import androidx.compose.ui.Modifier

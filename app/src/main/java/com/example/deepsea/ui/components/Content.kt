@@ -27,9 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.data.model.daily.TaskCategory
-import com.example.deepsea.ui.screens.feature.DailySummary
-import com.example.deepsea.ui.screens.feature.LanguageProgress
-import com.example.deepsea.ui.screens.feature.Task
+import com.example.deepsea.ui.screens.feature.daily.DailySummary
+import com.example.deepsea.ui.screens.feature.daily.LanguageProgress
+import com.example.deepsea.ui.screens.feature.daily.Task
 
 @Composable
 fun LanguageProgressContent() {

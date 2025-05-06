@@ -50,9 +50,9 @@ import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
 import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.ui.profile.StatisticItem
-import com.example.deepsea.ui.screens.feature.LanguageProgress
+import com.example.deepsea.ui.screens.feature.daily.LanguageProgress
 import com.example.deepsea.ui.screens.feature.game.Player
-import com.example.deepsea.ui.screens.feature.getLanguageLevel
+import com.example.deepsea.ui.screens.feature.daily.getLanguageLevel
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import kotlin.random.Random
 

@@ -1,5 +1,6 @@
-package com.example.deepsea.ui.screens.feature
+package com.example.deepsea.ui.screens.feature.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -104,7 +105,7 @@ fun UnitsListScreen(
                     containerColor = Color.White,
                     contentColor = Color(0xFF3399FF)
                 ),
-                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF3399FF)),
+                border = BorderStroke(2.dp, Color(0xFF3399FF)),
                 modifier = Modifier
                     .width(200.dp)
                     .height(48.dp)
