@@ -1,14 +1,14 @@
 package com.example.deepsea.ui.screens.feature
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +17,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,19 +29,40 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.deepsea.data.model.HearingExercise
 import com.example.deepsea.ui.viewmodel.LanguageListeningViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 @Composable
-fun LanguageListeningScreen(viewModel: LanguageListeningViewModel = viewModel()) {
+fun LanguageListeningScreen(
+    viewModel: LanguageListeningViewModel = viewModel(),
+    onNavigateToSettings: () -> Unit = {}
+) {
     val hearingExercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
     val hearts by viewModel.hearts.collectAsState()
     val isAudioPlaying by viewModel.isAudioPlaying.collectAsState()
     val isSpellingPlaying by viewModel.isSpellingPlaying.collectAsState()
     val selectedOption by viewModel.selectedOption.collectAsState()
+    val isAnswerCorrect by viewModel.isAnswerCorrect.collectAsState()
+
+    val scope = rememberCoroutineScope()
+    var showFeedback by remember { mutableStateOf(false) }
+
+    // Show feedback when answer is checked
+    LaunchedEffect(isAnswerCorrect) {
+        if (isAnswerCorrect != null) {
+            showFeedback = true
+            delay(1500)
+            showFeedback = false
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -45,63 +70,11 @@ fun LanguageListeningScreen(viewModel: LanguageListeningViewModel = viewModel())
             .padding(16.dp)
     ) {
         // Top Bar with Settings and Progress
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Settings Icon
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.LightGray.copy(alpha = 0.3f))
-                    .clickable { /* Open Settings */ },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "⚙️",
-                    fontSize = 20.sp
-                )
-            }
-
-            // Progress Bar
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-                    .height(24.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.LightGray)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width((userProgress * 100).dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Green)
-                )
-            }
-
-            // Hearts
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "❤️",
-                    fontSize = 24.sp
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = hearts.toString(),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red
-                )
-            }
-        }
+        TopBar(
+            progress = userProgress,
+            hearts = hearts,
+            onSettingsClick = onNavigateToSettings
+        )
 
         // Main Instruction
         Text(
@@ -112,71 +85,65 @@ fun LanguageListeningScreen(viewModel: LanguageListeningViewModel = viewModel())
         )
 
         // Audio Buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 24.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            // Regular Audio Button
-            AudioButton(
-                size = 100.dp,
-                isPlaying = isAudioPlaying,
-                icon = "🔊",
-                iconSize = 36.sp,
-                onClick = { viewModel.playAudio() }
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Slow Audio Button
-            AudioButton(
-                size = 70.dp,
-                isPlaying = isAudioPlaying,
-                icon = "🐢🔊",
-                iconSize = 20.sp,
-                onClick = { viewModel.playSlowAudio() }
-            )
-        }
+        AudioControls(
+            isAudioPlaying = isAudioPlaying,
+            onPlayNormal = { viewModel.playAudio() },
+            onPlaySlow = { viewModel.playSlowAudio() },
+            onPlayExerciseAudio = { viewModel.playExerciseAudio() }
+        )
 
         Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-        // Answer Options
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(top = 16.dp)
+        // Feedback animation when answer is checked
+        AnimatedVisibility(
+            visible = showFeedback,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
-            items(hearingExercise.options.size) { index ->
-                val option = hearingExercise.options[index]
-                val isSelected = selectedOption == option
-                val isCorrect = selectedOption != null && option == hearingExercise.correctAnswer
-
-                AnswerOption(
-                    text = option,
-                    isSelected = isSelected,
-                    isCorrect = isCorrect,
-                    isWrong = isSelected && !isCorrect,
-                    isPlayingSpelling = isSpellingPlaying && isSelected,
-                    onClick = { viewModel.checkAnswer(option) }
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isAnswerCorrect == true) {
+                    FeedbackMessage(
+                        message = "Great job!",
+                        icon = Icons.Default.Check,
+                        color = Color.Green
+                    )
+                } else if (isAnswerCorrect == false) {
+                    FeedbackMessage(
+                        message = "Try again!",
+                        icon = Icons.Default.Close,
+                        color = Color.Red
+                    )
+                }
             }
+        }
+
+        // Answer Options
+        if (!showFeedback) {
+            AnswerOptions(
+                options = hearingExercise.options,
+                correctAnswer = hearingExercise.correctAnswer,
+                selectedOption = selectedOption,
+                isSpellingPlaying = isSpellingPlaying,
+                onOptionClick = { viewModel.checkAnswer(it) }
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Bottom Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+        // Skip Listening Option
+        TextButton(
+            onClick = { /* Skip listening functionality */ },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text(
                 text = "CAN'T LISTEN NOW",
                 color = Color.Gray,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
+                fontSize = 16.sp
             )
         }
 
@@ -198,6 +165,117 @@ fun LanguageListeningScreen(viewModel: LanguageListeningViewModel = viewModel())
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+}
+
+@Composable
+fun TopBar(
+    progress: Float,
+    hearts: Int,
+    onSettingsClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Settings Icon
+        IconButton(
+            onClick = onSettingsClick,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray.copy(alpha = 0.3f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = Color.DarkGray
+            )
+        }
+
+        // Progress Bar
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp)
+                .height(24.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.LightGray)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(progress) // Use fraction instead of fixed width
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.Green)
+            )
+        }
+
+        // Hearts
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "❤️",
+                fontSize = 24.sp
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = hearts.toString(),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red
+            )
+        }
+    }
+}
+
+@Composable
+fun AudioControls(
+    isAudioPlaying: Boolean,
+    onPlayNormal: () -> Unit,
+    onPlaySlow: () -> Unit,
+    onPlayExerciseAudio: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        // Main Audio Button
+        AudioButton(
+            size = 100.dp,
+            isPlaying = isAudioPlaying,
+            icon = "🔊",
+            iconSize = 36.sp,
+            onClick = onPlayExerciseAudio
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Regular Speed Audio Button
+        AudioButton(
+            size = 70.dp,
+            isPlaying = isAudioPlaying,
+            icon = "🎧",
+            iconSize = 24.sp,
+            onClick = onPlayNormal
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Slow Audio Button
+        AudioButton(
+            size = 70.dp,
+            isPlaying = isAudioPlaying,
+            icon = "🐢",
+            iconSize = 24.sp,
+            onClick = onPlaySlow
+        )
     }
 }
 
@@ -246,6 +324,38 @@ fun AudioButton(
 }
 
 @Composable
+fun AnswerOptions(
+    options: List<String>,
+    correctAnswer: String,
+    selectedOption: String?,
+    isSpellingPlaying: Boolean,
+    onOptionClick: (String) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
+        items(options.size) { index ->
+            val option = options[index]
+            val isSelected = selectedOption == option
+            val isCorrect = selectedOption != null && option == correctAnswer
+            val isWrong = isSelected && option != correctAnswer
+
+            AnswerOption(
+                text = option,
+                isSelected = isSelected,
+                isCorrect = isCorrect,
+                isWrong = isWrong,
+                isPlayingSpelling = isSpellingPlaying && isSelected,
+                onClick = { onOptionClick(option) }
+            )
+        }
+    }
+}
+
+@Composable
 fun AnswerOption(
     text: String,
     isSelected: Boolean,
@@ -280,7 +390,8 @@ fun AnswerOption(
     ) {
         Text(
             text = text,
-            fontSize = 16.sp,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
             color = when {
                 isCorrect -> Color.Green.copy(alpha = 0.8f)
                 isWrong -> Color.Red.copy(alpha = 0.8f)
@@ -288,7 +399,7 @@ fun AnswerOption(
             }
         )
 
-        // Hiệu ứng đang phát âm spelling
+        // Spelling animation effect
         if (isPlayingSpelling) {
             Box(
                 modifier = Modifier
@@ -299,10 +410,10 @@ fun AnswerOption(
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp),
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Hiệu ứng sóng âm nhỏ
+                // Sound wave animation effect
                 SpellingAnimationDots()
             }
         }
@@ -340,5 +451,102 @@ fun SpellingAnimationDots() {
     }
 }
 
-// Use auto-imports in Android Studio to resolve missing imports
-// LazyVerticalGrid từ androidx.compose.foundation.lazy.grid
+@Composable
+fun FeedbackMessage(
+    message: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(32.dp)
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = message,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LanguageListeningScreenPreview() {
+    // Create a mock ViewModel for preview
+    val mockViewModel = object {
+        val currentExercise = MutableStateFlow(
+            HearingExercise(
+                id = "1",
+                audio = "audio_url",
+                correctAnswer = "ください",
+                options = listOf("ください", "おちゃ", "ごはん", "と")
+            )
+        )
+        val userProgress = MutableStateFlow(0.4f)
+        val hearts = MutableStateFlow(3)
+        val isAudioPlaying = MutableStateFlow(false)
+        val isSpellingPlaying = MutableStateFlow(false)
+        val selectedOption = MutableStateFlow<String?>(null)
+        val isAnswerCorrect = MutableStateFlow<Boolean?>(null)
+
+        fun playAudio() {}
+        fun playSlowAudio() {}
+        fun playExerciseAudio() {}
+        fun checkAnswer(option: String) {}
+        fun checkExercise() {}
+    }
+
+    // Material theme wrapper
+    MaterialTheme {
+        Surface {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Top Bar Preview
+                TopBar(progress = 0.4f, hearts = 3, onSettingsClick = {})
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Audio Controls Preview
+                AudioControls(
+                    isAudioPlaying = false,
+                    onPlayNormal = {},
+                    onPlaySlow = {},
+                    onPlayExerciseAudio = {}
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Answer Options Preview
+                AnswerOptions(
+                    options = listOf("ください", "おちゃ", "ごはん", "と"),
+                    correctAnswer = "ください",
+                    selectedOption = "おちゃ",
+                    isSpellingPlaying = false,
+                    onOptionClick = {}
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Feedback Message Preview
+                FeedbackMessage(
+                    message = "Great job!",
+                    icon = Icons.Default.Check,
+                    color = Color.Green
+                )
+            }
+        }
+    }
+}
