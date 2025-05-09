@@ -1,22 +1,22 @@
 package com.example.deepsea.data.api
 
 import com.example.deepsea.data.model.course.UserPathDto
-import com.example.deepsea.data.model.course.language.LanguageOption
-import com.example.deepsea.data.model.user.FriendSuggestion
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
-import com.example.deepsea.data.model.course.path.PathOption
 import com.example.deepsea.data.model.course.path.PathOptionRequest
-import com.example.deepsea.data.model.goal.DailyGoalOption
 import com.example.deepsea.data.model.goal.DailyGoalRequest
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
+import com.example.deepsea.data.model.user.FriendSuggestion
 import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
+import com.example.deepsea.data.model.leaderboard.LeaderboardRankResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface UserProfileService {
     @GET("api/users/data/{id}/profile")
@@ -48,4 +48,13 @@ interface UserProfileService {
         @Path("userId") profileId: Long?,
         @Body dailyGoal: DailyGoalRequest
     ): Response<Unit>
+
+    @GET("api/leaderboard/top")
+    suspend fun getTopLeaderboard(): List<LeaderboardEntry>
+
+    @GET("api/leaderboard/all")
+    suspend fun getAllUsersSortedByXp(): List<UserProfileData>
+
+    @GET("api/leaderboard/rank")
+    suspend fun getUserRank(@Query("userId") userId: Long): LeaderboardRankResponse
 }

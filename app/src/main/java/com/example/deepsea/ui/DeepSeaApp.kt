@@ -24,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModelProvider
@@ -39,7 +38,6 @@ import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.repository.UserProfileRepository
-import com.example.deepsea.ui.components.DeepSeaFAButton
 import com.example.deepsea.ui.components.DeepSeaScaffold
 import com.example.deepsea.ui.components.StreakScreen
 import com.example.deepsea.ui.components.DeepSeaBottomBar
@@ -58,7 +56,7 @@ import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
 import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
-import com.example.deepsea.ui.screens.feature.rank.RankPage
+import com.example.deepsea.ui.screens.feature.leaderboard.LeaderboardPage
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
@@ -318,7 +316,7 @@ fun MainContainer(
                 }
 
                 composable("home/rank") {
-                    RankPage()
+                    LeaderboardPage()
                 }
 
                 composable("listening-screen") {

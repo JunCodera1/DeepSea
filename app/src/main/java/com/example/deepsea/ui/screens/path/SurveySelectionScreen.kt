@@ -30,6 +30,8 @@ import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.course.path.PathOptionRequest
 import com.example.deepsea.data.model.goal.DailyGoalOption
 import com.example.deepsea.data.model.goal.DailyGoalRequest
+import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
+import com.example.deepsea.data.model.leaderboard.LeaderboardRankResponse
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
@@ -305,6 +307,18 @@ class MockUserProfileService : UserProfileService {
         profileId: Long?,
         dailyGoal: DailyGoalRequest
     ): Response<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getTopLeaderboard(): List<LeaderboardEntry> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getAllUsersSortedByXp(): List<UserProfileData> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getUserRank(userId: Long): LeaderboardRankResponse {
         TODO("Not yet implemented")
     }
 }
