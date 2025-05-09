@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
  * Hiển thị danh sách các đơn vị học tập với các ngôi sao tương tác
  * Hỗ trợ vuốt ngang để chuyển giữa các section
  */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(sections: List<List<UnitData>> = emptyList(), navController: NavController) {
