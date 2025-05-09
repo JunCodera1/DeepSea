@@ -103,6 +103,12 @@ val CyanDark = Color(0xFF00a17a)
 val Blue = Color(0xFF1baef3)
 val BlueDark = Color(0xFF1277a6)
 
-
+val YellowPrimary = Color(0xFFFFD900)
+val PurpleLight = Color(0xFFE399FF)
+val Purple = Color(0xFFA560E8)
+val BlueLight = Color(0xFF5EBFF7)
+val BluePrimary = Color(0xFF1CB0F6)
+val GreenLight = Color(0xFF7BE05A)
+val Green = Color(0xFF58CC02)
 
 const val AlphaNearOpaque = 0.95f

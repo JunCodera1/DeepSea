@@ -44,7 +44,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun LanguageListeningScreen(
     viewModel: LanguageListeningViewModel = viewModel(),
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    onComplete: () -> Unit
 ) {
     val hearingExercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
@@ -167,6 +168,7 @@ fun LanguageListeningScreen(
                 fontWeight = FontWeight.Bold
             )
         }
+
     }
 }
 

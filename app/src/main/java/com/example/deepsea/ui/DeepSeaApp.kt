@@ -10,13 +10,18 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -50,6 +56,7 @@ import com.example.deepsea.ui.screens.feature.game.GamePage
 import com.example.deepsea.ui.screens.feature.home.HomeScreen
 import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
+import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.screens.feature.rank.RankPage
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
@@ -65,8 +72,10 @@ import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewMod
 import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModelFactory
 import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
 import com.example.deepsea.ui.viewmodel.survey.SurveyViewModelFactory
+import com.example.deepsea.utils.LessonProgressTracker
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
+import kotlin.random.Random
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -182,7 +191,8 @@ fun MainContainer(
                                 currentRoute != "listening-screen" &&
                                 currentRoute != "word-building-screen" &&
                                 currentRoute != "matching-pair-screen"
-
+    val progressTracker = remember { LessonProgressTracker() }
+    var allLessonsCompleted by remember { mutableStateOf(false) }
     val userState by authViewModel.userState.collectAsState()
 
     LaunchedEffect(userState, currentRoute) {
@@ -247,6 +257,22 @@ fun MainContainer(
                         pathService = userProfileService
                     )
                 }
+                composable("random_lesson_selector") {
+                    LaunchedEffect(Unit) {
+                        // Reset progress when starting a new session
+                        progressTracker.reset()
+                        allLessonsCompleted = false
+
+                        // Choose a random lesson to start with
+                        val randomLesson = getRandomLessonRoute()
+                        deepSeaNavController.navController.navigate(randomLesson)
+                    }
+
+                    // Just a loading screen while navigating
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Loading lesson...")
+                    }
+                }
                 composable("daily-goal-selection") {
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context)
@@ -295,16 +321,36 @@ fun MainContainer(
                     RankPage()
                 }
 
-                composable("listening-screen"){
-                    LanguageListeningScreen()
+                composable("listening-screen") {
+                    LanguageListeningScreen(onComplete = {
+                        progressTracker.markLessonCompleted("listening")
+                        navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
+                    })
+                }
+
+                composable("quiz-image-screen") {
+                    QuizImageScreen(
+                        lessonId = 3,
+                        onBack = { deepSeaNavController.navController.navigate("home") },
+                        onComplete = {
+                            progressTracker.markLessonCompleted("quiz")
+                            navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
+                        },
+                    )
                 }
 
                 composable("matching-pair-screen") {
-                    MatchingPairsScreen()
+                    MatchingPairsScreen(onComplete = {
+                        progressTracker.markLessonCompleted("matching")
+                        navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
+                    })
                 }
 
                 composable("word-building-screen") {
-                    WordBuildingScreen()
+                    WordBuildingScreen(onComplete = {
+                        progressTracker.markLessonCompleted("word-building")
+                        navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
+                    })
                 }
 
                 composable("home/profile/{userId}") { backStackEntry ->
@@ -400,3 +446,28 @@ fun <T> nonSpatialExpressiveSpring() = spring<T>(
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 val LocalNavAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
+
+// Helper function to get a random lesson route
+private fun getRandomLessonRoute(): String {
+    val lessonRoutes = listOf(
+        "listening-screen",
+        "quiz-image-screen",
+        "matching-pair-screen",
+        "word-building-screen"
+    )
+    return lessonRoutes[Random.nextInt(lessonRoutes.size)]
+}
+
+// Helper function to navigate to the next random lesson or finish if all are completed
+private fun navigateToNextLessonOrFinish(
+    navController: NavController,
+    progressTracker: LessonProgressTracker
+) {
+    if (progressTracker.areAllLessonsCompleted()) {
+        // All lessons completed, go to completion screen
+        navController.navigate("lessons-completed")
+    } else {
+        // Find a random lesson that hasn't been completed yet
+        navController.navigate(getRandomLessonRoute())
+    }
+}

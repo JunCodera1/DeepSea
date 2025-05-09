@@ -57,6 +57,7 @@ fun RankPage() {
     val pagerState = rememberPagerState(pageCount = { tiers.size }, initialPage = 3) // Start with Diamond
     val coroutineScope = rememberCoroutineScope()
 
+
     Box(
         modifier = Modifier
             .fillMaxSize()

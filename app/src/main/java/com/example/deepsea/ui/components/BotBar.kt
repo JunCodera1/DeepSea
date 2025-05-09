@@ -74,13 +74,6 @@ enum class HomeSections(
         Color(0xFF10805E),
         Color(0xFF38A78F)
     ),
-    DAILY(
-        R.string.home_daily,
-        "home/daily",
-        R.drawable.home_daily,
-        Color(0xFF1E8A44),
-        Color(0xFF4BAD6C)
-    ),
     REVIEW(
         R.string.home_review,
         "home/review",
@@ -119,8 +112,6 @@ private val BottomNavUnselectedItemColor = Color(0x99FFFFFF)
 
 @Composable
 fun DeepSeaBottomBar(navController: NavController) {
-    var showMoreOptions by remember { mutableStateOf(false) }
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()

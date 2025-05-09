@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,7 +50,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun WordBuildingScreen(
     viewModel: WordBuildingViewModel = viewModel(),
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    onComplete: () -> Unit
 ) {
     val exercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
@@ -286,10 +289,10 @@ fun AudioControls(
 
 @Composable
 fun AudioWorldBuildingButton(
-    size: androidx.compose.ui.unit.Dp,
+    size: Dp,
     isPlaying: Boolean,
     icon: String,
-    iconSize: androidx.compose.ui.unit.TextUnit,
+    iconSize: TextUnit,
     onClick: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "audio_animation")
@@ -439,7 +442,7 @@ fun WordOptions(
             WordOption(
                 text = word,
                 isUsed = isUsed,
-                onClick = { if (!isUsed) onWordClick(word) }
+                onClick = { if (!isUsed) onWordClick(word) },
             )
         }
     }

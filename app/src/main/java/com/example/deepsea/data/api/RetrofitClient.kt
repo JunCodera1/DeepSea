@@ -28,4 +28,10 @@ object RetrofitClient {
 
     val authApi: ApiService = retrofit.create(ApiService::class.java)
     val userProfileService: UserProfileService = retrofit.create(UserProfileService::class.java)
+    val lessonApi: LessonApi by lazy {
+        retrofit.create(LessonApi::class.java)
+    }
+    val vocabularyApiService: VocabularyApiService by lazy {
+        retrofit.create(VocabularyApiService::class.java)
+    }
 }

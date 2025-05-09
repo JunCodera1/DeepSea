@@ -182,7 +182,7 @@ fun StarDialog(
     isDialogInteractive: Boolean,
     dialogTransition: Float,
     navController: NavController,
-    xpAmount: Int // 🆕 thêm dòng này
+    xpAmount: Int
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -244,9 +244,12 @@ fun StarDialog(
                 }
             }
 
-            // Action button
+            // Action button - This will now start a random lesson
             Button(
-                onClick = { navController.navigate("matching-pair-screen") },
+                onClick = {
+                    // Navigate to random lesson screen
+                    navController.navigate("random_lesson_selector")
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isDialogInteractive)

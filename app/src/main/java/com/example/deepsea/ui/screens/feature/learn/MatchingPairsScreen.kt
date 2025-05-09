@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -7,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -34,7 +36,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun MatchingPairsScreen(
     viewModel: MatchingPairsViewModel = viewModel(),
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    onComplete: () -> Unit
 ) {
     val englishWords by viewModel.englishWords.collectAsState()
     val japaneseWords by viewModel.japaneseWords.collectAsState()
@@ -43,7 +46,6 @@ fun MatchingPairsScreen(
     val hearts by viewModel.hearts.collectAsState()
     val showFeedback by viewModel.showFeedback.collectAsState()
     val isCorrectMatch by viewModel.isCorrectMatch.collectAsState()
-    val correctAnswerForFeedback by viewModel.correctAnswerForFeedback.collectAsState()
 
     // Simulate audio completion after a delay
     LaunchedEffect(isAudioPlaying) {
@@ -137,6 +139,7 @@ fun MatchingPairsScreen(
                 color = Color.DarkGray
             )
 
+
             // Word Matching Grid - English side (left column)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -144,6 +147,7 @@ fun MatchingPairsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.weight(1f)
             ) {
+                // Left column - English words
                 items(englishWords) { pair ->
                     WordCard(
                         text = pair.english,
@@ -154,6 +158,8 @@ fun MatchingPairsScreen(
                         }
                     )
                 }
+
+                // Right column - Japanese words
                 items(japaneseWords) { pair ->
                     WordCard(
                         text = pair.japanese,
@@ -189,7 +195,7 @@ fun MatchingPairsScreen(
             } else {
                 // Check button (visible only during gameplay)
                 Button(
-                    onClick = { /* Check functionality */ },
+                    onClick = { onComplete },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
@@ -279,67 +285,168 @@ fun MatchingPairsScreen(
 @Composable
 fun WordCard(
     text: String,
-    pronunciation: String = "",
+    pronunciation: String? = null,
+    isSelected: Boolean,
+    isMatched: Boolean,
+    onClick: () -> Unit,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .aspectRatio(1f) // Square cards
+            .clickable(onClick = onClick, enabled = !isMatched),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                isMatched -> Color.Green.copy(alpha = 0.3f)
+                isSelected -> Color.Blue.copy(alpha = 0.3f)
+                else -> MaterialTheme.colorScheme.surface
+            }
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+
+            pronunciation?.let {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun WordPairCard(
+    englishText: String,
+    japaneseText: String,
+    pronunciation: String? = null,
     isSelected: Boolean,
     isMatched: Boolean,
     onClick: () -> Unit
 ) {
-    val cardAlpha = when {
-        isMatched -> 0.5f  // Faded appearance for matched cards
-        else -> 1f
-    }
-
-    val backgroundColor = when {
-        isMatched -> Color.White
-        isSelected -> Color.White
-        else -> Color.White
-    }
-
-    val borderColor = when {
-        isMatched -> Color.LightGray.copy(alpha = 0.5f)
-        isSelected -> Color(0xFF2196F3)
-        else -> Color.LightGray
-    }
-
-    val textColor = when {
-        isMatched -> Color.LightGray
-        else -> Color.DarkGray
-    }
-
-    val pronunciationColor = when {
-        isMatched -> Color.LightGray
-        else -> Color.Gray
-    }
-
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
-            .clickable(enabled = !isMatched) { onClick() }
-            .alpha(cardAlpha),
-        contentAlignment = Alignment.Center
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                isMatched -> Color.Green.copy(alpha = 0.3f)
+                isSelected -> Color.Blue.copy(alpha = 0.3f)
+                else -> MaterialTheme.colorScheme.surface
+            }
+        )
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // English word
             Text(
-                text = text,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = textColor,
-                textAlign = TextAlign.Center
+                text = englishText,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
             )
 
-            if (pronunciation.isNotEmpty()) {
+            // Divider
+            Divider(
+                modifier = Modifier
+                    .height(24.dp)
+                    .width(1.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+            )
+
+            // Japanese word and pronunciation
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = pronunciation,
-                    fontSize = 14.sp,
-                    color = pronunciationColor,
-                    textAlign = TextAlign.Center
+                    text = japaneseText,
+                    style = MaterialTheme.typography.bodyLarge
                 )
+                pronunciation?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MatchingGameScreenWithPairs(viewModel: MatchingPairsViewModel) {
+    val englishWords by viewModel.englishWords.collectAsState()
+    val japaneseWords by viewModel.japaneseWords.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Game header, progress, etc. would go here
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            items(englishWords.size) { index ->
+                if (index < englishWords.size && index < japaneseWords.size) {
+                    val englishPair = englishWords[index]
+                    val japanesePair = japaneseWords[index]
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // English Card
+                        WordCard(
+                            text = englishPair.english,
+                            isSelected = englishPair.isSelected,
+                            isMatched = englishPair.isMatched,
+                            onClick = {
+                                viewModel.selectWord(true, englishPair)
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Japanese Card
+                        WordCard(
+                            text = japanesePair.japanese,
+                            pronunciation = japanesePair.pronunciation,
+                            isSelected = japanesePair.isSelected,
+                            isMatched = japanesePair.isMatched,
+                            onClick = {
+                                viewModel.selectWord(false, japanesePair)
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         }
     }
@@ -350,7 +457,7 @@ fun WordCard(
 fun MatchingPairsScreenPreview() {
     MaterialTheme {
         Surface {
-            MatchingPairsScreen()
+            MatchingPairsScreen(onComplete = {})
         }
     }
 }
