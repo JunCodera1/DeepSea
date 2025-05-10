@@ -39,7 +39,6 @@ import com.example.deepsea.ui.viewmodel.leaderboard.LeaderboardViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
 
-
 @Composable
 fun LeaderboardPage(currentUserId: Long = 4) {
     val tiers = LeagueTier.values()
@@ -57,11 +56,18 @@ fun LeaderboardPage(currentUserId: Long = 4) {
         viewModel.refreshAllData(currentUserId)
     }
 
+    // Update current league when pager page changes
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.setCurrentLeague(tiers[pagerState.currentPage])
+    }
+
     // Collect state from Flows
     val topLeaderboard by viewModel.topLeaderboardState.collectAsState()
     val allUsers by viewModel.allUsersState.collectAsState()
+    val filteredUsers by viewModel.filteredUsersState.collectAsState()
     val userRankMap by viewModel.userRankState.collectAsState()
     val userRank = remember(userRankMap) { userRankMap[currentUserId] }
+    val currentLeague by viewModel.currentLeague.collectAsState()
 
     // Loading states
     val isLoadingTop by viewModel.isLoadingTop.collectAsState()
@@ -113,9 +119,9 @@ fun LeaderboardPage(currentUserId: Long = 4) {
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth()
             ) { page ->
-                val currentLeague = tiers[page]
+                val leagueTier = tiers[page]
                 LeagueHeaderWithAnimation(
-                    leagueTier = currentLeague,
+                    leagueTier = leagueTier,
                     daysLeft = 7,
                     message = "The next Tournament begins soon"
                 )
@@ -156,18 +162,58 @@ fun LeaderboardPage(currentUserId: Long = 4) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // User's personal rank card
+            // User's personal rank card if user is in the current league
             userRank?.let { user ->
-                UserRankCard(
-                    rank = user.rank,
-                    username = user.username,
-                    points = user.totalXp,
-                    isCurrentUser = true,
-                    profilePicture = R.drawable.avatar_placeholder // Use default avatar for all users
-                )
+                val userXp = user.totalXp
+                val isUserInCurrentLeague = isUserInLeague(userXp, currentLeague)
+
+                if (isUserInCurrentLeague) {
+                    UserRankCard(
+                        rank = user.rank,
+                        username = user.username,
+                        points = userXp,
+                        isCurrentUser = true,
+                        profilePicture = R.drawable.avatar_placeholder
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Info",
+                                tint = Color(0xFFFFB300)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "You're currently in the ${getUserLeague(userXp).name} league with $userXp XP",
+                                color = Color(0xFF5D4037)
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            // League leaderboard card title
+            Text(
+                text = "${currentLeague.name} League Leaderboard",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = currentLeague.color,
+                modifier = Modifier.align(Alignment.Start)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Leaderboard List
             Card(
@@ -178,23 +224,28 @@ fun LeaderboardPage(currentUserId: Long = 4) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     when {
                         isLoadingTop && currentTab.value == LeaderboardTab.TOP -> {
-                            LoadingIndicator(tiers[pagerState.currentPage].color)
+                            LoadingIndicator(currentLeague.color)
                         }
                         isLoadingAll && currentTab.value == LeaderboardTab.ALL -> {
-                            LoadingIndicator(tiers[pagerState.currentPage].color)
+                            LoadingIndicator(currentLeague.color)
+                        }
+                        filteredUsers.isEmpty() -> {
+                            EmptyLeagueMessage(currentLeague)
                         }
                         else -> {
                             when (currentTab.value) {
                                 LeaderboardTab.TOP -> {
-                                    TopLeaderboardList(
-                                        leaderboard = topLeaderboard,
-                                        currentUserId = currentUserId
+                                    FilteredLeaderboardList(
+                                        filteredUsers = filteredUsers,
+                                        currentUserId = currentUserId,
+                                        isLeaderboardEntry = true
                                     )
                                 }
                                 LeaderboardTab.ALL -> {
-                                    AllUsersList(
-                                        users = allUsers,
-                                        currentUserId = currentUserId
+                                    FilteredLeaderboardList(
+                                        filteredUsers = filteredUsers,
+                                        currentUserId = currentUserId,
+                                        isLeaderboardEntry = false
                                     )
                                 }
                             }
@@ -204,7 +255,7 @@ fun LeaderboardPage(currentUserId: Long = 4) {
                     // Refresh button
                     SmallFloatingActionButton(
                         onClick = { viewModel.refreshAllData(currentUserId) },
-                        containerColor = tiers[pagerState.currentPage].color,
+                        containerColor = currentLeague.color,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(16.dp)
@@ -222,6 +273,30 @@ fun LeaderboardPage(currentUserId: Long = 4) {
 }
 
 @Composable
+fun EmptyLeagueMessage(leagueTier: LeagueTier) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = leagueTier.iconResId),
+            contentDescription = "Empty league",
+            modifier = Modifier.size(60.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "No users in ${leagueTier.name} league yet",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Gray
+        )
+    }
+}
+
+@Composable
 fun LoadingIndicator(color: Color) {
     Box(
         modifier = Modifier
@@ -234,47 +309,37 @@ fun LoadingIndicator(color: Color) {
 }
 
 @Composable
-fun TopLeaderboardList(
-    leaderboard: List<LeaderboardEntry>,
-    currentUserId: Long
+fun FilteredLeaderboardList(
+    filteredUsers: List<Any>,
+    currentUserId: Long,
+    isLeaderboardEntry: Boolean
 ) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(max = 500.dp)
     ) {
-        itemsIndexed(leaderboard) { index, entry ->
-            LeaderboardEntryItem(
-                rank = index + 1, // đánh số thứ hạng bắt đầu từ 1
-                username = entry.username,
-                points = entry.totalXp,
-                isCurrentUser = true,
-                profilePicture = R.drawable.avatar_placeholder
-            )
-        }
-    }
-
-}
-
-@Composable
-fun AllUsersList(
-    users: List<UserProfileData>,
-    currentUserId: Long
-) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(max = 500.dp)
-    ) {
-        items(users.indices.toList()) { index ->
-            val user = users[index]
-            LeaderboardEntryItem(
-                rank = index + 1,
-                username = user.username,
-                points = user.totalXp, // Use totalXp instead of experiencePoints
-                isCurrentUser = false, // We don't have user IDs to compare in the current model
-                profilePicture = R.drawable.avatar_placeholder // Use default avatar consistently
-            )
+        itemsIndexed(filteredUsers) { index, item ->
+            when {
+                isLeaderboardEntry && item is LeaderboardEntry -> {
+                    LeaderboardEntryItem(
+                        rank = index + 1,
+                        username = item.username,
+                        points = item.totalXp,
+                        isCurrentUser = item.username == currentUserId.toString(), // Basic check, improve as needed
+                        profilePicture = R.drawable.avatar_placeholder
+                    )
+                }
+                !isLeaderboardEntry && item is UserProfileData -> {
+                    LeaderboardEntryItem(
+                        rank = index + 1,
+                        username = item.username,
+                        points = item.totalXp,
+                        isCurrentUser = true,
+                        profilePicture = R.drawable.avatar_placeholder
+                    )
+                }
+            }
         }
     }
 }
@@ -384,6 +449,16 @@ fun LeagueHeaderWithAnimation(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // XP Range text
+            val xpRange = getXpRangeDisplay(leagueTier)
+            Text(
+                text = xpRange,
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             // Countdown text
             Text(
                 text = "$daysLeft days left",
@@ -444,14 +519,28 @@ fun UserRankCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Avatar
-            Image(
-                painter = painterResource(id = profilePicture),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-            )
+            // Avatar with league icon
+            Box {
+                Image(
+                    painter = painterResource(id = profilePicture),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                )
+
+                // League indicator
+                val leagueIcon = getLeagueIconForXp(points)
+                Image(
+                    painter = painterResource(id = leagueIcon),
+                    contentDescription = "League Icon",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.BottomEnd)
+                        .background(Color.White, CircleShape)
+                        .padding(2.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -512,14 +601,28 @@ fun LeaderboardEntryItem(
             modifier = Modifier.width(30.dp)
         )
 
-        // Avatar
-        Image(
-            painter = painterResource(id = profilePicture),
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
+        // Avatar with league indication
+        Box {
+            Image(
+                painter = painterResource(id = profilePicture),
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+            )
+
+            // Small league icon
+            val leagueIcon = getLeagueIconForXp(points)
+            Image(
+                painter = painterResource(id = leagueIcon),
+                contentDescription = "League Icon",
+                modifier = Modifier
+                    .size(16.dp)
+                    .align(Alignment.BottomEnd)
+                    .background(Color.White, CircleShape)
+                    .padding(1.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -538,17 +641,77 @@ fun LeaderboardEntryItem(
     }
 }
 
-enum class LeaderboardTab {
-    TOP, ALL
+// Helper functions
+fun getXpRangeDisplay(league: LeagueTier): String {
+    return when (league) {
+        LeagueTier.BRONZE -> "0 - 699 XP"
+        LeagueTier.SILVER -> "700 - 1,499 XP"
+        LeagueTier.GOLD -> "1,500 - 2,499 XP"
+        LeagueTier.PLATINUM -> "2,500 - 3,999 XP"
+        LeagueTier.DIAMOND -> "4,000 - 5,999 XP"
+        LeagueTier.MASTER -> "6,000 - 7,999 XP"
+        LeagueTier.GRANDMASTER -> "8,000 - 14,999 XP"
+        LeagueTier.CHALLENGE -> "15,000+ XP"
+    }
 }
 
-enum class LeagueTier(val color: Color, val iconResId: Int) {
+fun getLeagueIconForXp(xp: Int): Int {
+    return when (xp) {
+        in 0..699 -> R.drawable.bronze
+        in 700..1499 -> R.drawable.silver
+        in 1500..2499 -> R.drawable.gold
+        in 2500..3999 -> R.drawable.platinum
+        in 4000..5999 -> R.drawable.diamond
+        in 6000..7999 -> R.drawable.master
+        in 8000..14999 -> R.drawable.grandmaster
+        else -> R.drawable.challenger
+    }
+}
+
+enum class LeaderboardTab {
+    TOP,    // Shows top 100 players
+    ALL     // Shows all players
+}
+
+// Enum class for league tiers with their properties
+enum class LeagueTier(
+    val color: Color,
+    val iconResId: Int
+) {
     BRONZE(Color(0xFFCD7F32), R.drawable.bronze),
     SILVER(Color(0xFFC0C0C0), R.drawable.silver),
     GOLD(Color(0xFFFFD700), R.drawable.gold),
-    PLATINUM(Color(0xFF90E4C1), R.drawable.platinum),
-    DIAMOND(Color(0xFF4DC9FF), R.drawable.diamond),
-    MASTER(Color(0xFFFF57B9), R.drawable.master),
+    PLATINUM(Color(0xFF9DE1E2), R.drawable.platinum),
+    DIAMOND(Color(0xFF1E90FF), R.drawable.diamond),
+    MASTER(Color(0xFFAD5CFF), R.drawable.master),
     GRANDMASTER(Color(0xFFFF5252), R.drawable.grandmaster),
-    CHALLENGE(Color(0xFF4DC9FF), R.drawable.challenger)
+    CHALLENGE(Color(0xFFFFD54F), R.drawable.challenger)
+}
+
+// Helper function to check if a user is in the current league
+fun isUserInLeague(userXp: Int, league: LeagueTier): Boolean {
+    return when (league) {
+        LeagueTier.BRONZE -> userXp in 0..699
+        LeagueTier.SILVER -> userXp in 700..1499
+        LeagueTier.GOLD -> userXp in 1500..2499
+        LeagueTier.PLATINUM -> userXp in 2500..3999
+        LeagueTier.DIAMOND -> userXp in 4000..5999
+        LeagueTier.MASTER -> userXp in 6000..7999
+        LeagueTier.GRANDMASTER -> userXp in 8000..14999
+        LeagueTier.CHALLENGE -> userXp >= 15000
+    }
+}
+
+// Completing the getUserLeague function that was cut off
+fun getUserLeague(xp: Int): LeagueTier {
+    return when (xp) {
+        in 0..699 -> LeagueTier.BRONZE
+        in 700..1499 -> LeagueTier.SILVER
+        in 1500..2499 -> LeagueTier.GOLD
+        in 2500..3999 -> LeagueTier.PLATINUM
+        in 4000..5999 -> LeagueTier.DIAMOND
+        in 6000..7999 -> LeagueTier.MASTER
+        in 8000..14999 -> LeagueTier.GRANDMASTER
+        else -> LeagueTier.CHALLENGE
+    }
 }

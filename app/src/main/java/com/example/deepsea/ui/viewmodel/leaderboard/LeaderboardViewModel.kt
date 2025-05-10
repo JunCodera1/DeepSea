@@ -6,6 +6,7 @@ import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
 import com.example.deepsea.data.model.leaderboard.LeaderboardRankResponse
 import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.ui.screens.feature.leaderboard.LeagueTier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,8 +21,16 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
     private val _allUsersState = MutableStateFlow<List<UserProfileData>>(emptyList())
     val allUsersState: StateFlow<List<UserProfileData>> = _allUsersState.asStateFlow()
 
+    // New state for filtered users by league
+    private val _filteredUsersState = MutableStateFlow<List<Any>>(emptyList())
+    val filteredUsersState: StateFlow<List<Any>> = _filteredUsersState.asStateFlow()
+
     private val _userRankState = MutableStateFlow<Map<Long, LeaderboardRankResponse>>(emptyMap())
     val userRankState: StateFlow<Map<Long, LeaderboardRankResponse>> = _userRankState.asStateFlow()
+
+    // Current selected league
+    private val _currentLeague = MutableStateFlow(LeagueTier.DIAMOND)
+    val currentLeague: StateFlow<LeagueTier> = _currentLeague.asStateFlow()
 
     // Loading states
     private val _isLoadingTop = MutableStateFlow(false)
@@ -58,6 +67,8 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
                 _topLeaderboard.clear()
                 _topLeaderboard.addAll(response)
                 _topLeaderboardState.value = response
+                // Also update filtered users for the current league
+                filterUsersByLeague(_currentLeague.value)
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load top leaderboard: ${e.message}"
             } finally {
@@ -77,6 +88,8 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
                 _allUsers.clear()
                 _allUsers.addAll(response)
                 _allUsersState.value = response
+                // Also update filtered users for the current league
+                filterUsersByLeague(_currentLeague.value)
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load all users: ${e.message}"
             } finally {
@@ -100,6 +113,49 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
             } finally {
                 _isLoadingRank.value = false
             }
+        }
+    }
+
+    // Update the current league and filter users
+    fun setCurrentLeague(league: LeagueTier) {
+        _currentLeague.value = league
+        filterUsersByLeague(league)
+    }
+
+    // Filter users by league
+    private fun filterUsersByLeague(league: LeagueTier) {
+        viewModelScope.launch {
+            val xpRange = getXpRangeForLeague(league)
+
+            val filteredEntries = when {
+                _allUsers.isNotEmpty() -> {
+                    _allUsers.filter { user ->
+                        user.totalXp in xpRange
+                    }
+                }
+                _topLeaderboard.isNotEmpty() -> {
+                    _topLeaderboard.filter { entry ->
+                        entry.totalXp in xpRange
+                    }
+                }
+                else -> emptyList()
+            }
+
+            _filteredUsersState.value = filteredEntries
+        }
+    }
+
+    // Determine XP range for a league
+    private fun getXpRangeForLeague(league: LeagueTier): IntRange {
+        return when (league) {
+            LeagueTier.BRONZE -> 0..699
+            LeagueTier.SILVER -> 700..1499
+            LeagueTier.GOLD -> 1500..2499
+            LeagueTier.PLATINUM -> 2500..3999
+            LeagueTier.DIAMOND -> 4000..5999
+            LeagueTier.MASTER -> 6000..7999
+            LeagueTier.GRANDMASTER -> 8000..14999
+            LeagueTier.CHALLENGE -> 15000..Int.MAX_VALUE
         }
     }
 

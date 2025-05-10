@@ -70,16 +70,12 @@ fun ProfilePage(
     paddingValues: PaddingValues,
     onNavigateToSettings: () -> Unit
 ) {
-    val context = LocalContext.current
     val userId by sessionManager.userId.collectAsState(initial = null)
     val userProfile by viewModel.userProfileData
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val pathService: UserProfileService = RetrofitClient.userProfileService
     val profileId by sessionManager.profileId.collectAsState(initial = null)
     val factory = remember { PathSelectionViewModelFactory(pathService, sessionManager) }
     val pathViewModel: PathSelectionViewModel = viewModel(factory = factory)
-    // Khi profileId có giá trị, gọi fetchPaths một lần
     LaunchedEffect(profileId) {
         profileId?.let {
             pathViewModel.fetchPaths(it)
@@ -88,7 +84,6 @@ fun ProfilePage(
 
     val userPaths = pathViewModel.userPaths
 
-    // Chỉ gọi API khi userId thay đổi hoặc chưa từng load trước đó
     LaunchedEffect(userId) {
         if (userId != null) {
             viewModel.fetchUserProfile(userId!!)
