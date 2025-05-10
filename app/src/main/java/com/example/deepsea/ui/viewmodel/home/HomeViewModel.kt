@@ -1,5 +1,6 @@
 package com.example.deepsea.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -28,7 +29,6 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
     private val _uiState = MutableStateFlow<CourseUiState>(CourseUiState.Loading)
     val uiState: StateFlow<CourseUiState> = _uiState.asStateFlow()
-
     // Current user ID - in a real app, this would come from a user session or preferences
     private val currentUserId: Long = 1L
 
@@ -55,18 +55,37 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
     private val _dailyStreak = MutableStateFlow(0)
     val dailyStreak: StateFlow<Int> = _dailyStreak.asStateFlow()
 
-    init {
+    // Store context for use throughout the ViewModel
+    private var appContext: Context? = null
+
+    fun initialize(context: Context) {
+        appContext = context.applicationContext
         loadCourseData()
     }
 
+    // Overloaded version for backward compatibility
     fun loadCourseData() {
+        appContext?.let {
+            loadCourseData(it)
+        } ?: run {
+            _uiState.value = CourseUiState.Error("Context not initialized. Call initialize() first.")
+            Log.e("HomeViewModel", "Context not initialized. Call initialize() first.")
+        }
+    }
+
+    fun loadCourseData(context: Context) {
+        // Store context for future use
+        if (appContext == null) {
+            appContext = context.applicationContext
+        }
+
         viewModelScope.launch {
             _uiState.value = CourseUiState.Loading
             Log.d("HomeViewModel", "Starting to load course data")
 
             try {
                 // Get sections and units
-                val sectionsResult = courseRepository.getAllSections()
+                val sectionsResult = courseRepository.getAllSections(context)
 
                 if (sectionsResult.isSuccess) {
                     val sections = sectionsResult.getOrNull() ?: emptyList()

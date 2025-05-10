@@ -40,6 +40,11 @@ fun UnitsListScreen(
     onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit
 ) {
     val isLastSection = sectionIndex == totalSectionCount - 1
+    val sortedUnits = units.sortedBy {
+        // Trích xuất số từ tiêu đề, ví dụ "Unit 10" -> 10
+        "\\d+".toRegex().find(it.title)?.value?.toIntOrNull() ?: Int.MAX_VALUE
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = state,
@@ -47,19 +52,17 @@ fun UnitsListScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Generate items for each unit
-        units.forEachIndexed { unitIndex, unit ->
+        sortedUnits.forEachIndexed { unitIndex, unit ->
             item {
-                // Unit header with title and description
+                // Unit header
                 UnitHeader(
                     modifier = Modifier.fillMaxWidth(),
                     data = unit
                 )
 
-
-                // Space between header and content
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Unit content with stars and background image
+                // Unit content
                 UnitContent(
                     unitIndex = unitIndex,
                     starCount = starCountPerUnit,
@@ -72,6 +75,7 @@ fun UnitsListScreen(
         }
 
 
+
         // Add space at the bottom for better scrolling experience
         // Replace the old Button block with this new one
         if(!isLastSection)
@@ -80,13 +84,13 @@ fun UnitsListScreen(
             Spacer(modifier = Modifier.height(24.dp))
             // Title above button
             Text(
-                text = sections[sectionIndex].title,
+                text = sections[sectionIndex + 1].title,
                 fontWeight = FontWeight.Bold,
                 color = Color.Gray,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = sections[sectionIndex].description,
+                text = sections[sectionIndex + 1].description,
                 color = Color.Gray,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)

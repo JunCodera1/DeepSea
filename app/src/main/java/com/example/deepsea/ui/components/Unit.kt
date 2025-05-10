@@ -70,7 +70,7 @@ data class UnitData(
     val color: Color = FeatherGreen,
     val darkerColor: Color = FeatherGreenDark,
     val description: String = "Make introductions",
-    @DrawableRes val image: Int = R.drawable.cut
+    @DrawableRes val image: Int = R.drawable.ic_shopping_cart
 )
 
 /**

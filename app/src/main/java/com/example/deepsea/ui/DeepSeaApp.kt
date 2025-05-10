@@ -195,13 +195,22 @@ fun MainContainer(
 
     LaunchedEffect(userState, currentRoute) {
         Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
+
         if (userState is UserState.NotLoggedIn && isImportantRoute && currentRoute != "welcome") {
             Log.d("MainContainer", "User not logged in, navigating to welcome")
             deepSeaNavController.navController.navigate("welcome") {
                 popUpTo(0) { inclusive = true }
             }
+        } else if (userState is UserState.LoggedIn &&
+            (currentRoute == "login" || currentRoute == "signup" || currentRoute == "welcome")
+        ) {
+            Log.d("MainContainer", "User already logged in, navigating to home")
+            deepSeaNavController.navController.navigate("home") {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
+
 
     DeepSeaScaffold(
 //        floatingActionButton = {

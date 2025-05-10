@@ -1,10 +1,15 @@
 package com.example.deepsea.repository
 
+import android.content.Context
 import android.graphics.Color
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import com.example.deepsea.R
 import com.example.deepsea.data.api.CourseApiService
 import com.example.deepsea.data.dto.UserProgressDto
+import com.example.deepsea.data.dto.toSectionData
+import com.example.deepsea.data.dto.toUnitData
 import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.theme.*
@@ -140,7 +145,7 @@ class CourseRepository(private val courseApiService: CourseApiService) {
         }
     }
 
-    suspend fun getAllSections(): Result<List<SectionData>> {
+    suspend fun getAllSections(context: Context): Result<List<SectionData>> {
         return try {
             val sectionsResult = safeApiCall { courseApiService.getAllSections() }
 
@@ -157,30 +162,13 @@ class CourseRepository(private val courseApiService: CourseApiService) {
                     if (unitsResult.isSuccess) {
                         val unitDtos = unitsResult.getOrThrow()
                         val unitDataList = unitDtos.map { unitDto ->
-                            // Log the color values to assist with debugging
-                            Log.d("COLOR_DEBUG", "Unit ${unitDto.title}: color=${unitDto.color}, darkerColor=${unitDto.darkerColor}")
-
-                            UnitData(
-                                title = unitDto.title,
-                                description = unitDto.description,
-                                // Using the image field directly from the DTO (with a default drawable if null)
-                                image = unitDto.image ?: R.drawable.cut,
-                                // Directly use the color and darkerColor fields from the DTO
-                                color = convertHexToColor(unitDto.color),
-                                darkerColor = convertHexToColor(unitDto.darkerColor)
-                            )
+                            // Use the conversion extension function instead of direct mapping
+                            unitDto.toUnitData(context)
                         }
 
+                        // Use the conversion extension function instead of direct mapping
                         sectionDataList.add(
-                            SectionData(
-                                title = sectionDto.title,
-                                description = sectionDto.description,
-                                level = sectionDto.level ?: "A1",  // Provide a default value if null
-                                image = sectionDto.imageResId ?: R.drawable.cut,  // Provide default if null
-                                color = convertHexToColor(sectionDto.color),
-                                darkerColor = convertHexToColor(sectionDto.darkerColor),
-                                units = unitDataList
-                            )
+                            sectionDto.toSectionData(context, unitDataList)
                         )
                     } else {
                         // Handle failure for units
@@ -198,6 +186,13 @@ class CourseRepository(private val courseApiService: CourseApiService) {
             Result.failure(e)
         }
     }
+    @Composable
+    fun getDrawableResIdByName(name: String): Int {
+        val context = LocalContext.current
+        return context.resources.getIdentifier(name, "drawable", context.packageName)
+    }
+
+
 
     suspend fun getUserProgress(userId: Long): Result<UserProgressDto> {
         return safeApiCall { courseApiService.getUserProgress(userId) }
@@ -326,3 +321,4 @@ class CourseRepository(private val courseApiService: CourseApiService) {
         )
     }
 }
+
