@@ -1,6 +1,6 @@
 package com.example.deepsea.data.api
 
-import com.example.deepsea.data.model.course.UserPathDto
+import com.example.deepsea.data.model.course.path.UserPathDto
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.course.path.PathOptionRequest
 import com.example.deepsea.data.model.goal.DailyGoalRequest
@@ -48,7 +48,7 @@ interface UserProfileService {
         @Path("userId") profileId: Long?,
         @Body dailyGoal: DailyGoalRequest
     ): Response<Unit>
-
+//
     @GET("api/leaderboard/top")
     suspend fun getTopLeaderboard(): List<LeaderboardEntry>
 

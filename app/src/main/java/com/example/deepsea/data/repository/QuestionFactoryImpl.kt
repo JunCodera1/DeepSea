@@ -6,7 +6,6 @@ import com.example.deepsea.data.model.question.Question
 import com.example.deepsea.data.model.question.QuestionType
 import com.example.deepsea.data.model.question.QuizQuestion
 import com.example.deepsea.data.model.question.TranslationQuestion
-import com.example.deepsea.data.model.question.VocabularyOption
 import com.example.deepsea.data.model.question.VocabularyOptionUi
 
 class QuestionFactoryImpl : QuestionFactory {

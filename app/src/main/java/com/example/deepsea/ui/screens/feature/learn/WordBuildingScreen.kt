@@ -518,23 +518,6 @@ fun WordBuildingScreenPreview() {
         wordOptions = listOf("それは", "お", "茶", "です", "。", "緑", "飲み物", "コーヒー")
     )
 
-    // Mock ViewModel for preview
-    val mockViewModel = object {
-        val currentExercise = MutableStateFlow(mockExercise)
-        val userProgress = MutableStateFlow(0.3f)
-        val hearts = MutableStateFlow(2)
-        val isAudioPlaying = MutableStateFlow(false)
-        val selectedWords = MutableStateFlow(listOf("それは", "お"))
-        val isAnswerCorrect = MutableStateFlow<Boolean?>(null)
-
-        fun playSentenceAudio() {}
-        fun playSlowSentenceAudio() {}
-        fun addWord(word: String) {}
-        fun removeWord(index: Int) {}
-        fun clearSelection() {}
-        fun checkAnswer() {}
-    }
-
     MaterialTheme {
         Surface {
             Column(modifier = Modifier.fillMaxSize()) {

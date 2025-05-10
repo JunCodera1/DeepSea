@@ -34,4 +34,7 @@ object RetrofitClient {
     val vocabularyApiService: VocabularyApiService by lazy {
         retrofit.create(VocabularyApiService::class.java)
     }
+    val courseApiService: CourseApiService by lazy {
+        retrofit.create(CourseApiService::class.java)
+    }
 }

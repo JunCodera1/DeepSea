@@ -4,7 +4,6 @@ import com.example.deepsea.data.api.VocabularyApiService
 import com.example.deepsea.data.model.question.ImageSelectionQuestion
 import com.example.deepsea.data.model.question.QuestionType
 import com.example.deepsea.data.model.question.QuizQuestion
-import com.example.deepsea.data.model.question.VocabularyOptionUi
 import com.example.deepsea.ui.viewmodel.learn.VocabularyItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

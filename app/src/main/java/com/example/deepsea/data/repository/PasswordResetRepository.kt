@@ -1,13 +1,11 @@
 package com.example.deepsea.data.repository
 
-import com.example.deepsea.data.api.ApiService
 import com.example.deepsea.data.api.RetrofitClient.authApi
 import com.example.deepsea.data.model.forgotPassword.EmailRequest
 import com.example.deepsea.data.model.forgotPassword.PasswordResetResponse
 import com.example.deepsea.data.model.forgotPassword.ResetRequest
 import com.example.deepsea.data.model.forgotPassword.VerifyRequest
 import kotlinx.coroutines.Dispatchers
-import kotlin.collections.joinToString
 import kotlinx.coroutines.withContext
 
 class PasswordResetRepository {

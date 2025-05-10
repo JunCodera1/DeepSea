@@ -46,9 +46,15 @@ data class SectionData(
     val darkerColor: Color = color,
     val description: String = "",
     @DrawableRes val image: Int = R.drawable.cut,
-    val level: String = "A1",
+    val level: String = "A1", // Changed from nullable to non-nullable with default value
     val units: List<UnitData> = emptyList()
-)
+) {
+    init {
+        // Modified validation to check non-nullable level
+        require(level.isNotBlank()) { "Level must not be blank" }
+    }
+}
+
 /**
  * Data class representing a learning unit with its visual properties
  *
@@ -64,7 +70,6 @@ data class UnitData(
     val color: Color = FeatherGreen,
     val darkerColor: Color = FeatherGreenDark,
     val description: String = "Make introductions",
-
     @DrawableRes val image: Int = R.drawable.cut
 )
 

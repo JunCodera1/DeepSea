@@ -62,6 +62,12 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
+    implementation("com.cloudinary:cloudinary-android:3.0.2")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.navigation:navigation-fragment:2.7.7")
+    implementation("androidx.navigation:navigation-ui:2.7.7")
+
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
 // Retrofit with Scalar Converter

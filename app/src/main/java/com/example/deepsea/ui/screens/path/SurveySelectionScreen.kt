@@ -24,11 +24,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.R
 import com.example.deepsea.data.api.UserProfileService
-import com.example.deepsea.data.model.course.UserPathDto
+import com.example.deepsea.data.model.course.path.UserPathDto
 import com.example.deepsea.data.model.user.FriendSuggestion
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.course.path.PathOptionRequest
-import com.example.deepsea.data.model.goal.DailyGoalOption
 import com.example.deepsea.data.model.goal.DailyGoalRequest
 import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
 import com.example.deepsea.data.model.leaderboard.LeaderboardRankResponse
