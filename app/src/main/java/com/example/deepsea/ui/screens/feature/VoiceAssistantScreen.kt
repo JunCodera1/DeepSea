@@ -105,8 +105,8 @@ fun VoiceAssistantScreen() {
     var isListening by remember { mutableStateOf(false) }
     var isProcessing by remember { mutableStateOf(false) }
 
-    // Thay 'YOUR_API_KEY' bằng OpenAI API key của bạn
-    val apiKey = "YOUR_API_KEY"
+
+    val apiKey = "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"
     val endpoint = "https://api.openai.com/v1/chat/completions"
 
     // Khởi tạo TextToSpeech
