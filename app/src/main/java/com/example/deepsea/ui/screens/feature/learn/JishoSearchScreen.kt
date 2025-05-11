@@ -51,6 +51,7 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import kotlin.random.Random
 
 @Composable
 fun JapaneseCharacterLearningScreen() {
@@ -149,7 +150,6 @@ fun HiraganaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
                         onClick = onCharacterClick
                     )
                 }
-                // Fill empty spaces for rows with less than 5 characters
                 repeat(5 - row.size) {
                     Spacer(modifier = Modifier.width(60.dp))
                 }
@@ -199,7 +199,6 @@ fun KatakanaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
                         onClick = onCharacterClick
                     )
                 }
-                // Fill empty spaces for rows with less than 5 characters
                 repeat(5 - row.size) {
                     Spacer(modifier = Modifier.width(60.dp))
                 }
@@ -210,41 +209,144 @@ fun KatakanaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
 
 @Composable
 fun BasicKanjiGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
-    val basicKanji = listOf(
-        JapaneseCharacter("一", "ichi", "Kanji", listOf("one", "first"), listOf("一つ (hitotsu) - one thing", "一人 (hitori) - one person")),
-        JapaneseCharacter("二", "ni", "Kanji", listOf("two"), listOf("二つ (futatsu) - two things", "二人 (futari) - two people")),
-        JapaneseCharacter("三", "san", "Kanji", listOf("three"), listOf("三つ (mittsu) - three things", "三日 (mikka) - three days")),
-        JapaneseCharacter("四", "shi/yon", "Kanji", listOf("four"), listOf("四つ (yottsu) - four things", "四月 (shigatsu) - April")),
-        JapaneseCharacter("五", "go", "Kanji", listOf("five"), listOf("五つ (itsutsu) - five things", "五月 (gogatsu) - May")),
-        JapaneseCharacter("六", "roku", "Kanji", listOf("six"), listOf("六つ (muttsu) - six things", "六月 (rokugatsu) - June")),
-        JapaneseCharacter("七", "shichi/nana", "Kanji", listOf("seven"), listOf("七つ (nanatsu) - seven things", "七月 (shichigatsu) - July")),
-        JapaneseCharacter("八", "hachi", "Kanji", listOf("eight"), listOf("八つ (yattsu) - eight things", "八月 (hachigatsu) - August")),
-        JapaneseCharacter("九", "kyuu/ku", "Kanji", listOf("nine"), listOf("九つ (kokonotsu) - nine things", "九月 (kugatsu) - September")),
-        JapaneseCharacter("十", "juu", "Kanji", listOf("ten"), listOf("十日 (tooka) - ten days/10th day", "十月 (juugatsu) - October")),
-        JapaneseCharacter("百", "hyaku", "Kanji", listOf("hundred"), listOf("百円 (hyaku-en) - 100 yen", "二百 (nihyaku) - two hundred")),
-        JapaneseCharacter("千", "sen", "Kanji", listOf("thousand"), listOf("千円 (sen-en) - 1000 yen", "三千 (sanzen) - three thousand")),
-        JapaneseCharacter("万", "man", "Kanji", listOf("ten thousand"), listOf("一万 (ichiman) - 10,000", "十万 (juuman) - 100,000")),
-        JapaneseCharacter("日", "nichi/hi", "Kanji", listOf("day", "sun"), listOf("日本 (nihon) - Japan", "今日 (kyou) - today")),
-        JapaneseCharacter("月", "getsu/tsuki", "Kanji", listOf("month", "moon"), listOf("月曜日 (getsuyoubi) - Monday", "一月 (ichigatsu) - January")),
-        JapaneseCharacter("火", "ka/hi", "Kanji", listOf("fire"), listOf("火曜日 (kayoubi) - Tuesday", "火山 (kazan) - volcano")),
-        JapaneseCharacter("水", "sui/mizu", "Kanji", listOf("water"), listOf("水曜日 (suiyoubi) - Wednesday", "水泳 (suiei) - swimming")),
-        JapaneseCharacter("木", "moku/ki", "Kanji", listOf("tree", "wood"), listOf("木曜日 (mokuyoubi) - Thursday", "木材 (mokuzai) - lumber")),
-        JapaneseCharacter("金", "kin/kane", "Kanji", listOf("gold", "money"), listOf("金曜日 (kinyoubi) - Friday", "お金 (okane) - money")),
-        JapaneseCharacter("土", "do/tsuchi", "Kanji", listOf("earth", "soil"), listOf("土曜日 (doyoubi) - Saturday", "土地 (tochi) - land")),
-        JapaneseCharacter("人", "jin/hito", "Kanji", listOf("person"), listOf("日本人 (nihonjin) - Japanese person", "一人 (hitori) - one person")),
-        JapaneseCharacter("年", "nen/toshi", "Kanji", listOf("year"), listOf("今年 (kotoshi) - this year", "去年 (kyonen) - last year")),
-        JapaneseCharacter("大", "dai/ookii", "Kanji", listOf("big", "large"), listOf("大きい (ookii) - big", "大学 (daigaku) - university")),
-        JapaneseCharacter("小", "shou/chiisai", "Kanji", listOf("small"), listOf("小さい (chiisai) - small", "小学校 (shougakkou) - elementary school"))
-    )
+    var kanjiList by remember { mutableStateOf<List<JapaneseCharacter>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(basicKanji) { kanji ->
-            KanjiCard(kanji, onCharacterClick)
+    // Load kanji on first composition
+    fun loadKanji() {
+        isLoading = true
+        fetchRandomKanji { kanji ->
+            kanjiList = kanji
+            isLoading = false
         }
     }
+
+    // Initial load
+    remember { loadKanji() }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(
+            onClick = { loadKanji() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Text("Reload Random Kanji")
+        }
+
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Loading Kanji...")
+            }
+        } else if (kanjiList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No Kanji Found")
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(kanjiList) { kanji ->
+                    KanjiCard(kanji, onCharacterClick)
+                }
+            }
+        }
+    }
+}
+
+fun fetchRandomKanji(onResult: (List<JapaneseCharacter>) -> Unit) {
+    val client = OkHttpClient()
+    // Use a random JLPT level (N5 to N1) or common kanji tag
+    val tags = listOf("jlpt-n5", "jlpt-n4", "jlpt-n3", "jlpt-n2", "jlpt-n1")
+    val randomTag = tags[Random.nextInt(tags.size)]
+    val url = "https://jisho.org/api/v1/search/words?keyword=%23$randomTag"
+    val request = Request.Builder().url(url).build()
+
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Handler(Looper.getMainLooper()).post {
+                onResult(emptyList())
+            }
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            response.body?.string()?.let { body ->
+                try {
+                    val json = JSONObject(body)
+                    val data = json.getJSONArray("data")
+                    val kanjiList = mutableListOf<JapaneseCharacter>()
+
+                    // Shuffle indices and limit to 24 kanji
+                    val indices = (0 until minOf(data.length(), 100)).shuffled()
+                    val maxKanji = minOf(indices.size, 24)
+
+                    for (i in 0 until maxKanji) {
+                        val entry = data.getJSONObject(indices[i])
+                        val japanese = entry.getJSONArray("japanese")
+                        if (japanese.length() > 0) {
+                            val japaneseObj = japanese.getJSONObject(0)
+                            val word = if (japaneseObj.has("word")) japaneseObj.getString("word") else ""
+                            val reading = if (japaneseObj.has("reading")) japaneseObj.getString("reading") else ""
+
+                            // Filter for single kanji characters
+                            if (word.length == 1 && word.matches(Regex("\\p{InCJKUnifiedIdeographs}"))) {
+                                val senses = entry.getJSONArray("senses")
+                                val meanings = mutableListOf<String>()
+                                val examples = mutableListOf<String>()
+
+                                if (senses.length() > 0) {
+                                    val sense = senses.getJSONObject(0)
+                                    if (sense.has("english_definitions")) {
+                                        val defs = sense.getJSONArray("english_definitions")
+                                        for (j in 0 until defs.length()) {
+                                            meanings.add(defs.getString(j))
+                                        }
+                                    }
+                                }
+
+                                // Generate example if possible (simplified)
+                                if (reading.isNotEmpty()) {
+                                    examples.add("$word ($reading) - ${meanings.firstOrNull() ?: "unknown"}")
+                                }
+
+                                kanjiList.add(
+                                    JapaneseCharacter(
+                                        char = word,
+                                        romanization = reading,
+                                        type = "Kanji",
+                                        meanings = meanings,
+                                        examples = examples.takeIf { it.isNotEmpty() } ?: listOf("No examples available")
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    Handler(Looper.getMainLooper()).post {
+                        onResult(kanjiList)
+                    }
+                } catch (e: Exception) {
+                    Handler(Looper.getMainLooper()).post {
+                        onResult(emptyList())
+                    }
+                }
+            } ?: run {
+                Handler(Looper.getMainLooper()).post {
+                    onResult(emptyList())
+                }
+            }
+        }
+    })
 }
 
 @Composable
@@ -464,7 +566,6 @@ fun JishoResultCard(result: JishoResult) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Japanese word
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -486,7 +587,6 @@ fun JishoResultCard(result: JishoResult) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // English meanings
             Column {
                 result.meanings.forEachIndexed { index, meaning ->
                     Text(
@@ -529,10 +629,8 @@ fun searchJisho(word: String, onResult: (List<JishoResult>) -> Unit) {
                     val data = json.getJSONArray("data")
                     val results = mutableListOf<JishoResult>()
 
-                    for (i in 0 until minOf(data.length(), 10)) { // Limit to 10 results
+                    for (i in 0 until minOf(data.length(), 10)) {
                         val entry = data.getJSONObject(i)
-
-                        // Get Japanese word and reading
                         val japanese = entry.getJSONArray("japanese")
                         val japaneseWord = if (japanese.length() > 0) {
                             val japaneseObj = japanese.getJSONObject(0)
@@ -543,23 +641,18 @@ fun searchJisho(word: String, onResult: (List<JishoResult>) -> Unit) {
                             Pair("", "")
                         }
 
-                        // Get English meanings
                         val senses = entry.getJSONArray("senses")
                         val meanings = mutableListOf<String>()
                         val partsOfSpeech = mutableListOf<String>()
 
                         if (senses.length() > 0) {
                             val sense = senses.getJSONObject(0)
-
-                            // Collect parts of speech
                             if (sense.has("parts_of_speech")) {
                                 val pos = sense.getJSONArray("parts_of_speech")
                                 for (j in 0 until pos.length()) {
                                     partsOfSpeech.add(pos.getString(j))
                                 }
                             }
-
-                            // Collect English definitions
                             if (sense.has("english_definitions")) {
                                 val defs = sense.getJSONArray("english_definitions")
                                 for (j in 0 until defs.length()) {

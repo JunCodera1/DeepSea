@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,9 +8,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,6 +25,7 @@ import com.example.deepsea.R
 import com.example.deepsea.data.dto.KeyPhraseDto
 import com.example.deepsea.data.dto.TipDto
 import com.example.deepsea.data.dto.UnitGuideDto
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +34,28 @@ fun UnitGuideBookScreen(
     onBack: () -> Unit,
     onPlayAudio: (String) -> Unit
 ) {
+    // Initialize TextToSpeech
+    val context = LocalContext.current
+    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+    var isTtsInitialized by remember { mutableStateOf(false) }
+
+    // Set up TextToSpeech
+    DisposableEffect(Unit) {
+        textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.JAPAN // Set to Japanese for key phrases
+                isTtsInitialized = true
+            }
+        }
+
+        onDispose {
+            textToSpeech?.stop()
+            textToSpeech?.shutdown()
+            textToSpeech = null
+            isTtsInitialized = false
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -88,7 +118,15 @@ fun UnitGuideBookScreen(
 
             // Key Phrases List
             items(guideData.keyPhrases) { phrase ->
-                KeyPhraseItem(phrase = phrase, onPlayAudio = onPlayAudio)
+                KeyPhraseItem(
+                    phrase = phrase,
+                    onPlayAudio = onPlayAudio,
+                    onPlayTts = { text ->
+                        if (isTtsInitialized) {
+                            textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+                        }
+                    }
+                )
             }
 
             // Tips Section
@@ -123,7 +161,8 @@ fun UnitGuideBookScreen(
 @Composable
 fun KeyPhraseItem(
     phrase: KeyPhraseDto,
-    onPlayAudio: (String) -> Unit
+    onPlayAudio: (String) -> Unit,
+    onPlayTts: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -139,7 +178,13 @@ fun KeyPhraseItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = { phrase.audioUrl?.let { onPlayAudio(it) } }
+                onClick = {
+                    if (phrase.audioUrl != null) {
+                        onPlayAudio(phrase.audioUrl)
+                    } else if (phrase.originalText.isNotBlank()) {
+                        onPlayTts(phrase.originalText)
+                    }
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_audio),
