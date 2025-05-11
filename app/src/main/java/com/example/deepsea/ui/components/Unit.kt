@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
 import com.example.deepsea.text.PrimaryText
+import androidx.compose.foundation.clickable
 
 import com.example.deepsea.text.TitleText
 import com.example.deepsea.ui.screens.feature.home.orderToPercentage
@@ -66,6 +67,7 @@ data class SectionData(
  */
 @Immutable
 data class UnitData(
+    val id: Long = 0L,  // Added id property for navigation
     val title: String = "Unit 1",
     val color: Color = FeatherGreen,
     val darkerColor: Color = FeatherGreenDark,
@@ -200,10 +202,10 @@ fun SingleUnitScreen(
  * @param data UnitData containing title, colors, and description
  */
 @Composable
-@Preview
 fun UnitHeader(
     modifier: Modifier = Modifier,
-    data: UnitData = UnitData()
+    data: UnitData = UnitData(),
+    onGuideBookClicked: () -> Unit = {}
 ) {
     Row(
         modifier = modifier
@@ -227,9 +229,10 @@ fun UnitHeader(
             )
         }
 
-        // Notebook icon with 3D effect using nested boxes
+        // Notebook icon with 3D effect using nested boxes - now clickable
         Box(
             modifier = Modifier
+                .clickable { onGuideBookClicked() } // Make sure clickable is imported
                 .background(color = data.darkerColor, shape = RoundedCornerShape(10.dp))
                 .padding(horizontal = 1.5.dp)
                 .padding(top = 1.5.dp, bottom = 3.dp)

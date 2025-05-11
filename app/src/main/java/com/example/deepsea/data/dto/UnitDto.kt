@@ -13,29 +13,44 @@ data class UnitDto(
     val description: String,
     val color: String,
     val darkerColor: String,
-    val image: String?,               // This is the correct field name
+    val image: String?,
     val orderIndex: Int,
     val starsRequired: Int,
     val lessonCount: Int
 )
+
 fun UnitDto.toUnitData(context: Context): UnitData {
+    // Improved image resource resolution with debug logging
+    val imageResId = if (!image.isNullOrBlank()) {
+        val resId = context.resources.getIdentifier(image, "drawable", context.packageName)
+        if (resId == 0) {
+            Log.w("UnitDto", "Could not find drawable resource for: $image, unit: $title")
+            R.drawable.cut  // Fallback image
+        } else {
+            resId
+        }
+    } else {
+        Log.d("UnitDto", "No image provided for unit: $title, using default")
+        R.drawable.cut  // Default image for null values
+    }
+
     return UnitData(
+        id = this.id,
         title = this.title,
         description = this.description,
         color = convertHexToColor(color),
         darkerColor = convertHexToColor(darkerColor),
-        image = this.image?.let { imageName ->
-            context.resources.getIdentifier(imageName, "drawable", context.packageName)
-        } ?: R.drawable.cut
+        image = imageResId
     )
 }
 
 fun convertHexToColor(hex: String): Color {
     return try {
-        Color(android.graphics.Color.parseColor(hex))
+        // Handle both formats - with or without the # prefix
+        val normalizedHex = if (hex.startsWith("#")) hex else "#$hex"
+        Color(android.graphics.Color.parseColor(normalizedHex))
     } catch (e: IllegalArgumentException) {
         Log.e("COLOR_ERROR", "Invalid color code: $hex, using fallback", e)
         Color.Gray
     }
 }
-

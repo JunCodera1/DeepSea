@@ -37,11 +37,12 @@ fun UnitsListScreen(
     units: List<UnitData>,
     starCountPerUnit: Int,
     onJumpToSection: (sectionIndex: Int, unitIndex: Int) -> Unit,
-    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit
+    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit,
+    onGuideBookClicked: (unitId: Long) -> Unit
 ) {
     val isLastSection = sectionIndex == totalSectionCount - 1
     val sortedUnits = units.sortedBy {
-        // Trích xuất số từ tiêu đề, ví dụ "Unit 10" -> 10
+        // Extract number from title, e.g. "Unit 10" -> 10
         "\\d+".toRegex().find(it.title)?.value?.toIntOrNull() ?: Int.MAX_VALUE
     }
 
@@ -54,10 +55,14 @@ fun UnitsListScreen(
         // Generate items for each unit
         sortedUnits.forEachIndexed { unitIndex, unit ->
             item {
-                // Unit header
+                // Unit header with guidebook click handler
                 UnitHeader(
                     modifier = Modifier.fillMaxWidth(),
-                    data = unit
+                    data = unit,
+                    onGuideBookClicked = {
+                        // Pass the unit ID to the onGuideBookClicked callback
+                        onGuideBookClicked(unit.id)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -74,56 +79,50 @@ fun UnitsListScreen(
             }
         }
 
-
-
-        // Add space at the bottom for better scrolling experience
-        // Replace the old Button block with this new one
+        // Jump to next section button
         if(!isLastSection)
-        item {
-            Divider(color = Color.LightGray, thickness = 1.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-            // Title above button
-            Text(
-                text = sections[sectionIndex + 1].title,
-                fontWeight = FontWeight.Bold,
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = sections[sectionIndex + 1].description,
-                color = Color.Gray,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                fontWeight = FontWeight.Normal
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Duolingo-style "JUMP HERE?" button
-            Button(
-                onClick = { onJumpToSection(sectionIndex, 0)
-                          },
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFF3399FF)
-                ),
-                border = BorderStroke(2.dp, Color(0xFF3399FF)),
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(48.dp)
-            ) {
+            item {
+                Divider(color = Color.LightGray, thickness = 1.dp)
+                Spacer(modifier = Modifier.height(24.dp))
+                // Title above button
                 Text(
-                    text = "JUMP HERE?",
-                    fontWeight = FontWeight.Bold
+                    text = sections[sectionIndex + 1].title,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
+                Text(
+                    text = sections[sectionIndex + 1].description,
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    fontWeight = FontWeight.Normal
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Duolingo-style "JUMP HERE?" button
+                Button(
+                    onClick = { onJumpToSection(sectionIndex, 0) },
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color(0xFF3399FF)
+                    ),
+                    border = BorderStroke(2.dp, Color(0xFF3399FF)),
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(48.dp)
+                ) {
+                    Text(
+                        text = "JUMP HERE?",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Divider(color = Color.LightGray, thickness = 1.dp)
+                Spacer(modifier = Modifier.height(24.dp))
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            Divider(color = Color.LightGray, thickness = 1.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-
     }
 }

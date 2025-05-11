@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModelProvider
@@ -37,6 +38,7 @@ import androidx.navigation.navArgument
 import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.repository.UnitGuideRepository
 import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.DeepSeaScaffold
 import com.example.deepsea.ui.components.StreakScreen
@@ -51,12 +53,15 @@ import com.example.deepsea.ui.screens.auth.LoginPage
 import com.example.deepsea.ui.screens.auth.SignupPage
 import com.example.deepsea.ui.screens.feature.daily.DailyPage
 import com.example.deepsea.ui.screens.feature.game.GamePage
+import com.example.deepsea.ui.screens.feature.home.ErrorScreen
 import com.example.deepsea.ui.screens.feature.home.HomeScreen
 import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
 import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.screens.feature.leaderboard.LeaderboardPage
+import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
+import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
@@ -68,6 +73,9 @@ import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
 import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModel
 import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewModelFactory
+import com.example.deepsea.ui.viewmodel.learn.GuideUiState
+import com.example.deepsea.ui.viewmodel.learn.UnitGuideViewModel
+import com.example.deepsea.ui.viewmodel.learn.UnitGuideViewModelFactory
 import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
 import com.example.deepsea.ui.viewmodel.survey.SurveyViewModelFactory
 import com.example.deepsea.utils.LessonProgressTracker
@@ -335,6 +343,8 @@ fun MainContainer(
                     })
                 }
 
+
+
                 composable("quiz-image-screen") {
                     QuizImageScreen(
                         lessonId = 3,
@@ -358,6 +368,35 @@ fun MainContainer(
                         progressTracker.markLessonCompleted("word-building")
                         navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
                     })
+                }
+
+                // Unit Guide Screen
+                composable(
+                    route = "unit_guide/{unitId}",
+                    arguments = listOf(navArgument("unitId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val unitId = backStackEntry.arguments?.getLong("unitId") ?: 0L
+                    val viewModel: UnitGuideViewModel = viewModel(factory = UnitGuideViewModelFactory(
+                        UnitGuideRepository(RetrofitClient.unitGuideService)))
+
+                    // Load guide data when the screen is composed
+                    LaunchedEffect(unitId) {
+                        viewModel.loadUnitGuide(unitId)
+                    }
+
+                    // Collect state and render appropriately
+                    val guideState = viewModel.guideState.collectAsState().value
+
+                    when (guideState) {
+                        is GuideUiState.Loading -> LoadingIndicator(Color.Blue)
+                        is GuideUiState.Success -> UnitGuideBookScreen(
+                            guideData = guideState.data,
+                            onBack = { deepSeaNavController.navController.popBackStack() },
+                            onPlayAudio = { audioUrl -> viewModel.playAudio(audioUrl) }
+                        )
+                        is GuideUiState.Error -> ErrorScreen(message = guideState.message)
+                        else -> {} // Initial state, do nothing
+                    }
                 }
 
                 composable("home/profile/{userId}") { backStackEntry ->

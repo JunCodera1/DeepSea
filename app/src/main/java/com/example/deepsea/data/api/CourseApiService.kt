@@ -30,4 +30,5 @@ interface CourseApiService {
 
     @GET("api/progress/user/{userId}")
     suspend fun getUserProgress(@Path("userId") userId: Long): Response<UserProgressDto>
+
 }

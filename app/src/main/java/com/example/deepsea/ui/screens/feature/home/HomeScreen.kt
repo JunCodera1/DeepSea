@@ -33,6 +33,7 @@ import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.viewmodel.CourseUiState
 import com.example.deepsea.viewmodel.HomeViewModel
 import com.example.deepsea.viewmodel.HomeViewModelFactory
+import com.example.deepsea.viewmodel.NavigationEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,6 +84,16 @@ fun HomeScreen(
         when (uiState) {
             is CourseUiState.Success -> (uiState as CourseUiState.Success).sections.size
             else -> 0
+        }
+    }
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is NavigationEvent.ToGuideBook -> {
+                    navController.navigate("unit_guide/${event.unitId}")
+                }
+                // Handle other navigation events if needed
+            }
         }
     }
 
@@ -193,21 +204,26 @@ fun HomeScreen(
                                 }
                             },
                             section = currentSection,
-                            sections = sections
-                        ) { starCoordinate, isInteractive ->
-                            handleStarTap(
-                                coroutineScope = coroutineScope,
-                                starCoordinate = starCoordinate,
-                                isInteractive = isInteractive,
-                                rootHeight = rootHeight,
-                                lazyListState = lazyListState,
-                                onDialogStateChange = { shown, interactive, transition ->
-                                    isDialogShown = shown
-                                    isDialogInteractive = interactive
-                                    dialogTransition = transition
-                                }
-                            )
-                        }
+                            sections = sections,
+                            onGuideBookClicked = { unitId ->
+                                // Gọi đến ViewModel để xử lý việc chuyển đến màn hình guidebook
+                                viewModel.navigateToGuideBook(unitId)
+                            },
+                            onStarClicked = { starCoordinate, isInteractive ->
+                                handleStarTap(
+                                    coroutineScope = coroutineScope,
+                                    starCoordinate = starCoordinate,
+                                    isInteractive = isInteractive,
+                                    rootHeight = rootHeight,
+                                    lazyListState = lazyListState,
+                                    onDialogStateChange = { shown, interactive, transition ->
+                                        isDialogShown = shown
+                                        isDialogInteractive = interactive
+                                        dialogTransition = transition
+                                    }
+                                )
+                            }
+                        )
 
                         StarDialog(
                             isDialogShown = isDialogShown,

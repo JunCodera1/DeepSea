@@ -10,7 +10,9 @@ import com.example.deepsea.data.dto.UserProgressDto
 import com.example.deepsea.repository.CourseRepository
 import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.UnitData
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -57,6 +59,10 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
     // Store context for use throughout the ViewModel
     private var appContext: Context? = null
+
+    // Navigation events
+    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
+    val navigationEvent: SharedFlow<NavigationEvent> = _navigationEvent
 
     fun initialize(context: Context) {
         appContext = context.applicationContext
@@ -308,6 +314,18 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
         // Calculate percentage
         return completedCount.toFloat() / sectionUnits.size
     }
+
+    fun navigateToGuideBook(unitId: Long) {
+        viewModelScope.launch {
+            _navigationEvent.emit(NavigationEvent.ToGuideBook(unitId))
+        }
+    }
+}
+
+// Navigation events
+sealed class NavigationEvent {
+    data class ToGuideBook(val unitId: Long) : NavigationEvent()
+    // Add other navigation events as needed
 }
 
 // Factory class for creating HomeViewModel with dependencies
