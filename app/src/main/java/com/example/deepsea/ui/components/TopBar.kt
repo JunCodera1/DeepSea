@@ -66,8 +66,8 @@ fun TopBar(
     sectionData: SectionData,
     visibleUnitIndex: Int = 0,
     navController: NavController,
-    onExpandClick: () -> Unit = {}, // Callback cho sự kiện click
-    isExpanded: Boolean = false, // Trạng thái mở rộng
+    onExpandClick: () -> Unit = {}, // Callback for expand click
+    isExpanded: Boolean = false, // Expanded state
     sections: List<SectionData> = listOf(sectionData)
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -86,8 +86,9 @@ fun TopBar(
 
     val systemUiController = rememberSystemUiController()
     val showStreakDialog = remember { mutableStateOf(false) }
+    val showGemsDialog = remember { mutableStateOf(false) } // State for gems navigation
+    val showHeartsDialog = remember { mutableStateOf(false) } // State for hearts navigation
     var expanded by remember { mutableStateOf(false) }
-
 
     val currentUnit = units.getOrNull(visibleUnitIndex)
     val animatedColor by animateColorAsState(
@@ -98,10 +99,22 @@ fun TopBar(
 
     systemUiController.setStatusBarColor(animatedColor)
     systemUiController.setNavigationBarColor(Color.White)
-    LaunchedEffect(showStreakDialog.value) {
-        if (showStreakDialog.value) {
-            navController.navigate("home/streak")
-            showStreakDialog.value = false // reset nếu cần
+
+    // Handle navigation for streak, gems, and hearts
+    LaunchedEffect(showStreakDialog.value, showGemsDialog.value, showHeartsDialog.value) {
+        when {
+            showStreakDialog.value -> {
+                navController.navigate("home/streak")
+                showStreakDialog.value = false
+            }
+            showGemsDialog.value -> {
+                navController.navigate("home/gems")
+                showGemsDialog.value = false
+            }
+            showHeartsDialog.value -> {
+                navController.navigate("home/hearts")
+                showHeartsDialog.value = false
+            }
         }
     }
 
@@ -127,7 +140,7 @@ fun TopBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .wrapContentSize(Alignment.TopStart) // Giữ kích thước nhỏ
+                        .wrapContentSize(Alignment.TopStart)
                 ) {
                     BarIcon(
                         icon = R.drawable.flag_japan,
@@ -152,7 +165,6 @@ fun TopBar(
                                 }
                             },
                             onClick = {
-                                // Xử lý chọn
                                 expanded = false
                             }
                         )
@@ -175,20 +187,27 @@ fun TopBar(
                     }
                 }
 
-
-
                 BarIcon(
                     icon = R.drawable.ic_fire,
                     text = "1",
                     onClick = { showStreakDialog.value = true }
                 )
 
-                BarIcon(R.drawable.ic_gem, "505")
-                BarIcon(R.drawable.ic_heart, "5")
+                BarIcon(
+                    icon = R.drawable.ic_gem,
+                    text = "505",
+                    onClick = { showGemsDialog.value = true } // Navigate to gems screen
+                )
+
+                BarIcon(
+                    icon = R.drawable.ic_heart,
+                    text = "5",
+                    onClick = { showHeartsDialog.value = true } // Navigate to hearts screen
+                )
             }
 
             Box(
-                modifier = Modifier.clickable { onExpandClick() } // Thêm clickable
+                modifier = Modifier.clickable { onExpandClick() }
             ) {
                 Row(
                     modifier = Modifier
@@ -200,7 +219,6 @@ fun TopBar(
                     TitleText(text = sections[sectionIndex].title, color = Color.White, fontSize = 18.sp)
                 }
 
-                // Sử dụng mũi tên lên hoặc xuống tùy thuộc vào trạng thái mở rộng
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
                     tint = Color.White,

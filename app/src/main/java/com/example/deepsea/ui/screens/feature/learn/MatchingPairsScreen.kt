@@ -1,17 +1,13 @@
 package com.example.deepsea.ui.screens.feature.learn
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -46,16 +42,18 @@ fun MatchingPairsScreen(
     val hearts by viewModel.hearts.collectAsState()
     val showFeedback by viewModel.showFeedback.collectAsState()
     val isCorrectMatch by viewModel.isCorrectMatch.collectAsState()
+    val selectedEnglishWord by viewModel.selectedEnglishWord.collectAsState()
+    val selectedJapaneseWord by viewModel.selectedJapaneseWord.collectAsState()
 
-    // Simulate audio completion after a delay
+    // Simulate audio completion
     LaunchedEffect(isAudioPlaying) {
         if (isAudioPlaying) {
-            delay(1000) // Simulate audio duration
+            delay(1000)
             viewModel.setAudioPlayingState(false)
         }
     }
 
-    // Auto-dismiss feedback after a delay
+    // Auto-dismiss feedback
     LaunchedEffect(showFeedback) {
         if (showFeedback) {
             delay(1500)
@@ -63,9 +61,15 @@ fun MatchingPairsScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    // Trigger onComplete when all pairs are matched
+    LaunchedEffect(englishWords, japaneseWords) {
+        if (viewModel.isGameCompleted()) {
+            delay(500) // Brief delay to show final match
+            onComplete()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,7 +83,6 @@ fun MatchingPairsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Settings Icon
                 IconButton(
                     onClick = onNavigateToSettings,
                     modifier = Modifier
@@ -94,7 +97,6 @@ fun MatchingPairsScreen(
                     )
                 }
 
-                // Progress Bar
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -106,20 +108,16 @@ fun MatchingPairsScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxHeight()
-                            .fillMaxWidth(progress) // Use fraction instead of fixed width
+                            .fillMaxWidth(progress)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF76C043)) // Green color
+                            .background(Color(0xFF76C043))
                     )
                 }
 
-                // Hearts
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "❤️",
-                        fontSize = 24.sp
-                    )
+                    Text(text = "❤️", fontSize = 24.sp)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = hearts.toString(),
@@ -139,143 +137,104 @@ fun MatchingPairsScreen(
                 color = Color.DarkGray
             )
 
-
-            // Word Matching Grid - English side (left column)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
+            // Parallel Columns for English and Japanese
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Left column - English words
-                items(englishWords) { pair ->
-                    WordCard(
-                        text = pair.english,
-                        isSelected = pair.isSelected,
-                        isMatched = pair.isMatched,
-                        onClick = {
-                            viewModel.selectWord(true, pair)
-                        }
-                    )
+                // English Words Column
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(englishWords) { pair ->
+                        WordCard(
+                            text = pair.english,
+                            isSelected = pair.isSelected,
+                            isMatched = pair.isMatched,
+                            onClick = {
+                                viewModel.selectWord(true, pair)
+                            }
+                        )
+                    }
                 }
 
-                // Right column - Japanese words
-                items(japaneseWords) { pair ->
-                    WordCard(
-                        text = pair.japanese,
-                        pronunciation = pair.pronunciation,
-                        isSelected = pair.isSelected,
-                        isMatched = pair.isMatched,
-                        onClick = {
-                            viewModel.selectWord(false, pair)
-                        }
-                    )
+                // Japanese Words Column
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(japaneseWords) { pair ->
+                        WordCard(
+                            text = pair.japanese,
+                            pronunciation = pair.pronunciation,
+                            isSelected = pair.isSelected,
+                            isMatched = pair.isMatched,
+                            onClick = {
+                                viewModel.selectWord(false, pair)
+                            }
+                        )
+                    }
                 }
             }
 
-            // Continue button (showing when all pairs are matched)
-            if (viewModel.isGameCompleted()) {
-                Button(
-                    onClick = { viewModel.resetGame() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF76C043)
-                    ),
-                    shape = RoundedCornerShape(28.dp)
-                ) {
-                    Text(
-                        text = "CONTINUE",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            } else {
-                // Check button (visible only during gameplay)
-                Button(
-                    onClick = { onComplete },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(28.dp),
-                    enabled = false
-                ) {
-                    Text(
-                        text = "CHECK",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+            // Check Button
+            Button(
+                onClick = {
+                    viewModel.checkMatch()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(top = 16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF76C043)
+                ),
+                shape = RoundedCornerShape(28.dp),
+                enabled = selectedEnglishWord != null && selectedJapaneseWord != null
+            ) {
+                Text(
+                    text = "CHECK",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
 
-        // Overlay feedback when a match is attempted
+        // Feedback Overlay
         AnimatedVisibility(
             visible = showFeedback,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            if (isCorrectMatch) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF76C043))
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(if (isCorrectMatch) Color(0xFF76C043) else Color(0xFFFF5252))
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Correct",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Good job!",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFFF5252))
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Incorrect",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Try again!",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Icon(
+                        imageVector = if (isCorrectMatch) Icons.Default.Check else Icons.Default.Close,
+                        contentDescription = if (isCorrectMatch) "Correct" else "Incorrect",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isCorrectMatch) "Good job!" else "Try again!",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -289,15 +248,15 @@ fun WordCard(
     isSelected: Boolean,
     isMatched: Boolean,
     onClick: () -> Unit,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
-            .aspectRatio(1f) // Square cards
+            .fillMaxWidth()
+            .height(80.dp)
+            .alpha(if (isMatched) 0.5f else 1.0f) // Fade matched cards
             .clickable(onClick = onClick, enabled = !isMatched),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = when {
                 isMatched -> Color.Green.copy(alpha = 0.3f)
@@ -309,144 +268,23 @@ fun WordCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
             )
-
             pronunciation?.let {
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
                 )
-            }
-        }
-    }
-}
-
-
-@Composable
-fun WordPairCard(
-    englishText: String,
-    japaneseText: String,
-    pronunciation: String? = null,
-    isSelected: Boolean,
-    isMatched: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                isMatched -> Color.Green.copy(alpha = 0.3f)
-                isSelected -> Color.Blue.copy(alpha = 0.3f)
-                else -> MaterialTheme.colorScheme.surface
-            }
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // English word
-            Text(
-                text = englishText,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-
-            // Divider
-            Divider(
-                modifier = Modifier
-                    .height(24.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-            )
-
-            // Japanese word and pronunciation
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = japaneseText,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                pronunciation?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MatchingGameScreenWithPairs(viewModel: MatchingPairsViewModel) {
-    val englishWords by viewModel.englishWords.collectAsState()
-    val japaneseWords by viewModel.japaneseWords.collectAsState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Game header, progress, etc. would go here
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            items(englishWords.size) { index ->
-                if (index < englishWords.size && index < japaneseWords.size) {
-                    val englishPair = englishWords[index]
-                    val japanesePair = japaneseWords[index]
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // English Card
-                        WordCard(
-                            text = englishPair.english,
-                            isSelected = englishPair.isSelected,
-                            isMatched = englishPair.isMatched,
-                            onClick = {
-                                viewModel.selectWord(true, englishPair)
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // Japanese Card
-                        WordCard(
-                            text = japanesePair.japanese,
-                            pronunciation = japanesePair.pronunciation,
-                            isSelected = japanesePair.isSelected,
-                            isMatched = japanesePair.isMatched,
-                            onClick = {
-                                viewModel.selectWord(false, japanesePair)
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
             }
         }
     }

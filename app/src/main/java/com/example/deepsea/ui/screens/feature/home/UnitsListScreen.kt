@@ -1,20 +1,11 @@
 package com.example.deepsea.ui.screens.feature.home
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,12 +28,11 @@ fun UnitsListScreen(
     units: List<UnitData>,
     starCountPerUnit: Int,
     onJumpToSection: (sectionIndex: Int, unitIndex: Int) -> Unit,
-    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit,
+    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean, unitId: Long) -> Unit, // Updated signature
     onGuideBookClicked: (unitId: Long) -> Unit
 ) {
     val isLastSection = sectionIndex == totalSectionCount - 1
     val sortedUnits = units.sortedBy {
-        // Extract number from title, e.g. "Unit 10" -> 10
         "\\d+".toRegex().find(it.title)?.value?.toIntOrNull() ?: Int.MAX_VALUE
     }
 
@@ -52,39 +42,34 @@ fun UnitsListScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Generate items for each unit
-        sortedUnits.forEachIndexed { unitIndex, unit ->
-            item {
-                // Unit header with guidebook click handler
-                UnitHeader(
-                    modifier = Modifier.fillMaxWidth(),
-                    data = unit,
-                    onGuideBookClicked = {
-                        // Pass the unit ID to the onGuideBookClicked callback
-                        onGuideBookClicked(unit.id)
-                    }
-                )
+        items(sortedUnits.size) { index ->
+            val unit = sortedUnits[index]
+            UnitHeader(
+                modifier = Modifier.fillMaxWidth(),
+                data = unit,
+                onGuideBookClicked = {
+                    onGuideBookClicked(unit.id)
+                }
+            )
 
-                Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-                // Unit content
-                UnitContent(
-                    unitIndex = unitIndex,
-                    starCount = starCountPerUnit,
-                    unitImage = unit.image,
-                    colorMain = unit.color,
-                    colorDark = unit.darkerColor,
-                    onStarClicked = onStarClicked
-                )
-            }
+            UnitContent(
+                unitIndex = index,
+                starCount = starCountPerUnit,
+                unitImage = unit.image,
+                colorMain = unit.color,
+                colorDark = unit.darkerColor,
+                onStarClicked = { coordinateInRoot, isInteractive ->
+                    onStarClicked(coordinateInRoot, isInteractive, unit.id) // Pass unit.id
+                }
+            )
         }
 
-        // Jump to next section button
-        if(!isLastSection)
+        if (!isLastSection) {
             item {
                 Divider(color = Color.LightGray, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(24.dp))
-                // Title above button
                 Text(
                     text = sections[sectionIndex + 1].title,
                     fontWeight = FontWeight.Bold,
@@ -102,7 +87,6 @@ fun UnitsListScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Duolingo-style "JUMP HERE?" button
                 Button(
                     onClick = { onJumpToSection(sectionIndex, 0) },
                     shape = RoundedCornerShape(50),
@@ -124,5 +108,6 @@ fun UnitsListScreen(
                 Divider(color = Color.LightGray, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
     }
 }

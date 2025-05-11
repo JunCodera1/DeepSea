@@ -31,6 +31,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -124,6 +125,56 @@ fun HiraganaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
         listOf("わ" to "wa", "を" to "wo", "ん" to "n")
     )
 
+    // Define examples for each Hiragana character
+    val hiraganaExamples = mapOf(
+        "あ" to listOf("あさ (asa) - morning", "あめ (ame) - rain", "あい (ai) - love"),
+        "い" to listOf("いぬ (inu) - dog", "いち (ichi) - one", "いえ (ie) - house"),
+        "う" to listOf("うみ (umi) - sea", "うた (uta) - song", "うえ (ue) - above"),
+        "え" to listOf("えき (eki) - station", "えん (en) - yen", "えがく (egaku) - to draw"),
+        "お" to listOf("おちゃ (ocha) - tea", "おに (oni) - demon", "おく (oku) - to put"),
+        "か" to listOf("かさ (kasa) - umbrella", "かわ (kawa) - river", "かく (kaku) - to write"),
+        "き" to listOf("きく (kiku) - to listen", "きた (kita) - north", "きもの (kimono) - kimono"),
+        "く" to listOf("くち (kuchi) - mouth", "くも (kumo) - cloud", "くる (kuru) - to come"),
+        "け" to listOf("けさ (kesa) - this morning", "けん (ken) - sword", "ける (keru) - to kick"),
+        "こ" to listOf("こえ (koe) - voice", "こめ (kome) - rice", "こい (koi) - carp"),
+        "さ" to listOf("さかな (sakana) - fish", "さく (saku) - to bloom", "さる (saru) - monkey"),
+        "し" to listOf("しお (shio) - salt", "しろ (shiro) - white", "した (shita) - below"),
+        "す" to listOf("すし (sushi) - sushi", "すむ (sumu) - to live", "すき (suki) - to like"),
+        "せ" to listOf("せかい (sekai) - world", "せん (sen) - line", "せなか (senaka) - back"),
+        "そ" to listOf("そら (sora) - sky", "そと (soto) - outside", "そば (soba) - noodles"),
+        "た" to listOf("たべる (taberu) - to eat", "たかい (takai) - high", "たま (tama) - ball"),
+        "ち" to listOf("ちかい (chikai) - near", "ちず (chizu) - map", "ちち (chichi) - father"),
+        "つ" to listOf("つき (tsuki) - moon", "つめ (tsume) - nail", "つくる (tsukuru) - to make"),
+        "て" to listOf("て (te) - hand", "てん (ten) - point", "てる (teru) - to shine"),
+        "と" to listOf("とり (tori) - bird", "とぶ (tobu) - to fly", "とも (tomo) - friend"),
+        "な" to listOf("なつ (natsu) - summer", "なまえ (namae) - name", "なか (naka) - inside"),
+        "に" to listOf("にく (niku) - meat", "にほん (nihon) - Japan", "にわ (niwa) - garden"),
+        "ぬ" to listOf("ぬま (numa) - swamp", "ぬの (nuno) - cloth", "ぬく (nuku) - to warm"),
+        "ね" to listOf("ねこ (neko) - cat", "ねつ (nets傾向(netsu) - fever", "ねる (neru) - to sleep"),
+        "の" to listOf("のみもの (nomimono) - drink", "のり (nori) - seaweed", "のぼる (noboru) - to climb"),
+        "は" to listOf("はな (hana) - flower", "はし (hashi) - bridge", "はる (haru) - spring"),
+        "ひ" to listOf("ひかり (hikari) - light", "ひる (hiru) - noon", "ひく (hiku) - to pull"),
+        "ふ" to listOf("ふね (fune) - boat", "ふゆ (fuyu) - winter", "ふく (fuku) - clothes"),
+        "へ" to listOf("へや (heya) - room", "へい (hei) - wall", "へそ (heso) - navel"),
+        "ほ" to listOf("ほし (hoshi) - star", "ほん (hon) - book", "ほね (hone) - bone"),
+        "ま" to listOf("まち (machi) - town", "まど (mado) - window", "まう (mau) - to dance"),
+        "み" to listOf("みず (mizu) - water", "みる (miru) - to see", "みみ (mimi) - ear"),
+        "む" to listOf("むし (mushi) - insect", "むら (mura) - village", "むね (mune) - chest"),
+        "め" to listOf("め (me) - eye", "めし (meshi) - meal", "める (meru) - to email"),
+        "も" to listOf("もり (mori) - forest", "もの (mono) - thing", "もつ (motsu) - to hold"),
+        "や" to listOf("やま (yama) - mountain", "やさい (yasai) - vegetable", "やく (yaku) - to bake"),
+        "ゆ" to listOf("ゆき (yuki) - snow", "ゆめ (yume) - dream", "ゆう (yuu) - evening"),
+        "よ" to listOf("よる (yoru) - night", "よむ (yomu) - to read", "よこ (yoko) - side"),
+        "ら" to listOf("らく (raku) - comfort", "らし (rashi) - seems", "らん (ran) - orchid"),
+        "り" to listOf("りんご (ringo) - apple", "りく (riku) - land", "りょう (ryou) - quantity"),
+        "る" to listOf("るす (rusu) - absence", "るい (rui) - type", "るな (runa) - luna"),
+        "れ" to listOf("れいぞうこ (reizoko) - refrigerator", "れん (ren) - love", "れつ (retsu) - row"),
+        "ろ" to listOf("ろく (roku) - six", "ろん (ron) - argument", "ろぼ (robo) - robot"),
+        "わ" to listOf("わかい (wakai) - young", "わすれる (wasureru) - to forget", "わる (waru) - bad"),
+        "を" to listOf("を (wo) - object marker", "をんな (onna) - woman", "をう (ou) - to chase"),
+        "ん" to listOf("んまい (nmai) - delicious", "ん (n) - sound", "んだ (nda) - explanatory particle")
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -142,10 +193,7 @@ fun HiraganaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
                             char = char,
                             romanization = romanization,
                             type = "Hiragana",
-                            examples = listOf(
-                                "あさ (asa) - morning",
-                                "あき (aki) - autumn"
-                            ).filter { it.contains(char) }.takeIf { it.isNotEmpty() } ?: listOf("No examples available")
+                            examples = hiraganaExamples[char] ?: listOf("No examples available")
                         ),
                         onClick = onCharacterClick
                     )
@@ -173,6 +221,56 @@ fun KatakanaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
         listOf("ワ" to "wa", "ヲ" to "wo", "ン" to "n")
     )
 
+    // Define examples for each Katakana character
+    val katakanaExamples = mapOf(
+        "ア" to listOf("アメリカ (Amerika) - America", "アルバム (arubamu) - album", "アパート (apāto) - apartment"),
+        "イ" to listOf("インターネット (intānetto) - internet", "イメージ (imēji) - image", "イギリス (Igirisu) - England"),
+        "ウ" to listOf("ウェブ (webu) - web", "ウィスキー (uisukī) - whiskey", "ウイルス (uirusu) - virus"),
+        "エ" to listOf("エネルギー (enerugī) - energy", "エアコン (eakon) - air conditioner", "エレベーター (erebētā) - elevator"),
+        "オ" to listOf("オフィス (ofisu) - office", "オレンジ (orenji) - orange", "オーストラリア (Ōsutoraria) - Australia"),
+        "カ" to listOf("カメラ (kamera) - camera", "カレンダー (karendā) - calendar", "カレー (karē) - curry"),
+        "キ" to listOf("キッチン (kitchin) - kitchen", "キー (kī) - key", "キロ (kiro) - kilo"),
+        "ク" to listOf("クラス (kurasu) - class", "クラブ (kurabu) - club", "クリスマス (Kurisumasu) - Christmas"),
+        "ケ" to listOf("ケーキ (kēki) - cake", "ゲーム (gēmu) - game", "ケータイ (kētai) - mobile phone"),
+        "コ" to listOf("コーヒー (kōhī) - coffee", "コンピューター (konpyūtā) - computer", "コンサート (konsāto) - concert"),
+        "サ" to listOf("サラダ (sarada) - salad", "サービス (sābisu) - service", "サッカー (sakkā) - soccer"),
+        "シ" to listOf("シャワー (shawā) - shower", "シーズン (shīzun) - season", "シティ (shiti) - city"),
+        "ス" to listOf("スーパー (sūpā) - supermarket", "スポーツ (supōtsu) - sports", "スーツ (sūtsu) - suit"),
+        "セ" to listOf("セール (sēru) - sale", "センター (sentā) - center", "センチ (senchi) - centimeter"),
+        "ソ" to listOf("ソフトウェア (sofutouea) - software", "ソファー (sofā) - sofa", "ソース (sōsu) - sauce"),
+        "タ" to listOf("タクシー (takushī) - taxi", "タバコ (tabako) - cigarette", "タレント (tarento) - talent"),
+        "チ" to listOf("チーム (chīmu) - team", "チケット (chiketto) - ticket", "チーズ (chīzu) - cheese"),
+        "ツ" to listOf("ツアー (tsuā) - tour", "ツイッター (tsuittā) - Twitter", "ツール (tsūru) - tool"),
+        "テ" to listOf("テレビ (terebi) - television", "テスト (tesuto) - test", "テーブル (tēburu) - table"),
+        "ト" to listOf("トイレ (toire) - toilet", "トマト (tomato) - tomato", "トラック (torakku) - truck"),
+        "ナ" to listOf("ナイフ (naifu) - knife", "ナンバー (nanbā) - number", "ナース (nāsu) - nurse"),
+        "ニ" to listOf("ニュース (nyūsu) - news", "ニック (nikku) - nickname", "ニット (nitto) - knit"),
+        "ヌ" to listOf("ヌードル (nūdoru) - noodle", "ヌーベル (nūberu) - novel", "ヌーディスト (nūdisuto) - nudist"),
+        "ネ" to listOf("ネット (netto) - net", "ネットワーク (nettowāku) - network", "ネックレス (nekkuresu) - necklace"),
+        "ノ" to listOf("ノート (nōto) - note", "ノック (nokku) - knock", "ノーベル (nōberu) - Nobel"),
+        "ハ" to listOf("ハンバーガー (hanbāgā) - hamburger", "ハンドバッグ (handobaggu) - handbag", "ハワイ (Hawai) - Hawaii"),
+        "ヒ" to listOf("ヒーロー (hīrō) - hero", "ヒット (hitto) - hit", "ヒップ (hippu) - hip"),
+        "フ" to listOf("フットボール (futtobōru) - football", "フルーツ (furūtsu) - fruit", "ファン (fan) - fan"),
+        "ヘ" to listOf("ヘア (hea) - hair", "ヘリコプター (herikoputā) - helicopter", "ヘッド (heddo) - head"),
+        "ホ" to listOf("ホテル (hoteru) - hotel", "ホーム (hōmu) - home", "ホラー (horā) - horror"),
+        "マ" to listOf("マシン (mashin) - machine", "マスク (masuku) - mask", "マラソン (marason) - marathon"),
+        "ミ" to listOf("ミルク (miruku) - milk", "ミサイル (misairu) - missile", "ミニ (mini) - mini"),
+        "ム" to listOf("ムービー (mūbī) - movie", "ミュージック (myūjikku) - music", "ムード (mūdo) - mood"),
+        "メ" to listOf("メール (mēru) - mail", "メニュー (menyū) - menu", "メートル (mētoru) - meter"),
+        "モ" to listOf("モデル (moderu) - model", "モニター (monitā) - monitor", "モード (mōdo) - mode"),
+        "ヤ" to listOf("ヤード (yādo) - yard", "ヤング (yangu) - young", "ヤンキー (yankī) - yankee"),
+        "ユ" to listOf("ユーザー (yūzā) - user", "ユーモア (yūmoa) - humor", "ユーロ (yūro) - euro"),
+        "ヨ" to listOf("ヨガ (yoga) - yoga", "ヨット (yotto) - yacht", "ヨーロッパ (Yōroppa) - Europe"),
+        "ラ" to listOf("ラジオ (rajio) - radio", "ランチ (ranchi) - lunch", "ランプ (ranpu) - lamp"),
+        "リ" to listOf("リーダー (rīdā) - leader", "リスト (risuto) - list", "リモコン (rimokon) - remote control"),
+        "ル" to listOf("ルール (rūru) - rule", "ルート (rūto) - route", "ルーム (rūmu) - room"),
+        "レ" to listOf("レコード (rekōdo) - record", "レストラン (resutoran) - restaurant", "レンタル (rentaru) - rental"),
+        "ロ" to listOf("ロボット (robotto) - robot", "ロック (rokku) - rock", "ロマン (roman) - romance"),
+        "ワ" to listOf("ワイン (wain) - wine", "ワイシャツ (waishatsu) - white shirt", "ワーク (wāku) - work"),
+        "ヲ" to listOf("ヲタク (otaku) - otaku", "ヲルフ (worufu) - wolf", "ヲーカー (wōkā) - walker"),
+        "ン" to listOf("オンライン (onrain) - online", "エンジン (enjin) - engine", "テンション (tenshon) - tension")
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -191,10 +289,7 @@ fun KatakanaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
                             char = char,
                             romanization = romanization,
                             type = "Katakana",
-                            examples = listOf(
-                                "カメラ (kamera) - camera",
-                                "コーヒー (kōhī) - coffee"
-                            ).filter { it.contains(char) }.takeIf { it.isNotEmpty() } ?: listOf("No examples available")
+                            examples = katakanaExamples[char] ?: listOf("No examples available")
                         ),
                         onClick = onCharacterClick
                     )
@@ -221,8 +316,10 @@ fun BasicKanjiGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
         }
     }
 
-    // Initial load
-    remember { loadKanji() }
+    // Initial load using LaunchedEffect
+    LaunchedEffect(Unit) {
+        loadKanji()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),

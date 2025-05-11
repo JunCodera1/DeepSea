@@ -10,16 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,11 +29,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * HomeScreen là màn hình chính của ứng dụng DeepSea
- * Hiển thị danh sách các đơn vị học tập với các ngôi sao tương tác
- * Hỗ trợ vuốt ngang để chuyển giữa các section
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -53,10 +39,7 @@ fun HomeScreen(
         )
     )
 ) {
-    // Get context for ViewModel initialization
     val context = LocalContext.current
-
-    // Initialize ViewModel with context
     LaunchedEffect(Unit) {
         viewModel.initialize(context)
     }
@@ -68,18 +51,16 @@ fun HomeScreen(
     val coroutineScope = rememberCoroutineScope()
     val starCountPerUnit = 5
 
-    // Trạng thái dialog
     var isDialogShown by remember { mutableStateOf(false) }
     var isDialogInteractive by remember { mutableStateOf(false) }
     var dialogTransition by remember { mutableFloatStateOf(0f) }
     var rootHeight by remember { mutableFloatStateOf(0f) }
+    var selectedUnitId by remember { mutableStateOf<Long?>(null) }
 
-    // Trạng thái mở rộng header (hiển thị màn hình chi tiết)
     var isHeaderExpanded by remember { mutableStateOf(false) }
     val unitListStates = remember { mutableMapOf<Int, LazyListState>() }
     val visibleUnitIndices = remember { mutableStateMapOf<Int, Int>() }
 
-    // Quản lý trạng thái pager
     val pagerState = rememberPagerState {
         when (uiState) {
             is CourseUiState.Success -> (uiState as CourseUiState.Success).sections.size
@@ -92,7 +73,6 @@ fun HomeScreen(
                 is NavigationEvent.ToGuideBook -> {
                     navController.navigate("unit_guide/${event.unitId}")
                 }
-                // Handle other navigation events if needed
             }
         }
     }
@@ -114,7 +94,6 @@ fun HomeScreen(
             val sections = successState.sections
             val units = successState.units
 
-            // Khởi tạo LazyListState cho từng section nếu chưa có
             LaunchedEffect(units.size) {
                 units.indices.forEach { index ->
                     if (!unitListStates.containsKey(index)) {
@@ -123,7 +102,6 @@ fun HomeScreen(
                 }
             }
 
-            // Hiển thị giao diện tương ứng với trạng thái
             if (isHeaderExpanded) {
                 val currentSection = sections.getOrNull(currentSectionIndex) ?: sections.first()
 
@@ -206,32 +184,36 @@ fun HomeScreen(
                             section = currentSection,
                             sections = sections,
                             onGuideBookClicked = { unitId ->
-                                // Gọi đến ViewModel để xử lý việc chuyển đến màn hình guidebook
                                 viewModel.navigateToGuideBook(unitId)
                             },
-                            onStarClicked = { starCoordinate, isInteractive ->
+                            onStarClicked = { starCoordinate, isInteractive, unitId ->
                                 handleStarTap(
                                     coroutineScope = coroutineScope,
                                     starCoordinate = starCoordinate,
                                     isInteractive = isInteractive,
                                     rootHeight = rootHeight,
                                     lazyListState = lazyListState,
+                                    unitId = unitId,
                                     onDialogStateChange = { shown, interactive, transition ->
                                         isDialogShown = shown
                                         isDialogInteractive = interactive
                                         dialogTransition = transition
+                                        selectedUnitId = unitId
                                     }
                                 )
                             }
                         )
 
-                        StarDialog(
-                            isDialogShown = isDialogShown,
-                            isDialogInteractive = isDialogInteractive,
-                            dialogTransition = dialogTransition,
-                            navController = navController,
-                            xpAmount = 15
-                        )
+                        if (isDialogShown && selectedUnitId != null) {
+                            StarDialog(
+                                isDialogShown = isDialogShown,
+                                isDialogInteractive = isDialogInteractive,
+                                dialogTransition = dialogTransition,
+                                navController = navController,
+                                xpAmount = 15,
+                                unitId = selectedUnitId!!
+                            )
+                        }
                     }
                 }
             }
@@ -239,26 +221,23 @@ fun HomeScreen(
     }
 }
 
-// Các hàm hỗ trợ giữ nguyên
 private fun handleStarTap(
     coroutineScope: CoroutineScope,
     starCoordinate: Float,
     isInteractive: Boolean,
     rootHeight: Float,
     lazyListState: LazyListState,
+    unitId: Long, // Added unitId parameter
     onDialogStateChange: (shown: Boolean, interactive: Boolean, transition: Float) -> Unit
 ) {
     val midCoordinate = rootHeight / 2
 
     coroutineScope.launch {
-        // Ẩn dialog trong khi scroll
         onDialogStateChange(false, isInteractive, 0f)
 
-        // Tính toán và thực hiện scroll animation
         val scrollBy = (starCoordinate - midCoordinate).coerceAtLeast(0f)
         lazyListState.animateScrollBy(scrollBy)
 
-        // Cập nhật vị trí dialog sau khi scroll hoàn tất
         val finalDialogPosition = starCoordinate - scrollBy
         onDialogStateChange(true, isInteractive, finalDialogPosition)
     }

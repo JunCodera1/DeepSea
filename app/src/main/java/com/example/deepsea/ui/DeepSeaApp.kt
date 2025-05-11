@@ -9,27 +9,20 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -54,6 +47,8 @@ import com.example.deepsea.ui.screens.auth.SignupPage
 import com.example.deepsea.ui.screens.feature.daily.DailyPage
 import com.example.deepsea.ui.screens.feature.game.GamePage
 import com.example.deepsea.ui.screens.feature.home.ErrorScreen
+import com.example.deepsea.ui.screens.feature.home.GemsScreen
+import com.example.deepsea.ui.screens.feature.home.HeartsScreen
 import com.example.deepsea.ui.screens.feature.home.HomeScreen
 import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
@@ -79,10 +74,9 @@ import com.example.deepsea.ui.viewmodel.learn.UnitGuideViewModel
 import com.example.deepsea.ui.viewmodel.learn.UnitGuideViewModelFactory
 import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
 import com.example.deepsea.ui.viewmodel.survey.SurveyViewModelFactory
-import com.example.deepsea.utils.LessonProgressTracker
+import com.example.deepsea.utils.LearningSessionManager
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
-import kotlin.random.Random
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -122,16 +116,13 @@ fun DeepSeaApp() {
                         LoginPage(
                             navController = deepSeaNavController,
                             onLoginSuccess = {
-                                // Navigate to home screen after successful login
                                 Log.d("DeepSeaApp", "Login success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
-                                    // Clear back stack to prevent going back to login screen
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
                                 }
                             },
                             authViewModel = authViewModel,
                             onSignInClick = { email, password ->
-                                // Fixed: Directly call login instead of returning another lambda
                                 Log.d("DeepSeaApp", "Attempting login with email: $email")
                                 authViewModel.login(email, password, deepSeaNavController.navController)
                             }
@@ -151,20 +142,16 @@ fun DeepSeaApp() {
                         SignupPage(
                             navController = deepSeaNavController,
                             onSignUpClick = { username, email, password, avatar, name ->
-                                // Updated to handle avatar
                                 Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
                                 authViewModel.signup(username, email, password, avatar, name)
                             },
                             onSignInClick = {
-                                // Navigate to login page
                                 deepSeaNavController.navController.navigate("${MainDestinations.LOGIN_ROUTE}/0")
                             },
                             authViewModel = authViewModel,
                             onRegisterSuccess = {
-                                // Navigate to home screen after successful registration
                                 Log.d("DeepSeaApp", "Registration success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
-                                    // Clear back stack to prevent going back to signup screen
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
                                 }
                             }
@@ -187,24 +174,19 @@ fun MainContainer(
     val navBackStackEntry by deepSeaNavController.navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isImportantRoute: Boolean = currentRoute != "login" &&
-                                currentRoute != "signup" &&
-                                currentRoute != "forgot-password" &&
-                                currentRoute != "welcome" &&
-                                currentRoute != "language-selection" &&
-                                currentRoute != "survey-selection" &&
-                                currentRoute != "daily-goal-selection" &&
-                                currentRoute != "path_selection" &&
-                                currentRoute != "home/streak" &&
-                                currentRoute != "listening-screen" &&
-                                currentRoute != "word-building-screen" &&
-                                currentRoute != "matching-pair-screen"
-    val progressTracker = remember { LessonProgressTracker() }
-    var allLessonsCompleted by remember { mutableStateOf(false) }
+            currentRoute != "signup" &&
+            currentRoute != "forgot-password" &&
+            currentRoute != "welcome" &&
+            currentRoute != "language-selection" &&
+            currentRoute != "survey-selection" &&
+            currentRoute != "daily-goal-selection" &&
+            currentRoute != "path_selection" &&
+            currentRoute != "home/streak" &&
+            currentRoute?.startsWith("learning_session") != true
     val userState by authViewModel.userState.collectAsState()
 
     LaunchedEffect(userState, currentRoute) {
         Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
-
         if (userState is UserState.NotLoggedIn && isImportantRoute && currentRoute != "welcome") {
             Log.d("MainContainer", "User not logged in, navigating to welcome")
             deepSeaNavController.navController.navigate("welcome") {
@@ -220,26 +202,7 @@ fun MainContainer(
         }
     }
 
-
     DeepSeaScaffold(
-//        floatingActionButton = {
-//            Box { // This provides the alignment scope
-//                if (isImportantRoute)
-//                    DeepSeaFAButton(
-//                        modifier = Modifier.align(Alignment.TopCenter),
-//                        containerColor = Color(0xFFB2DFDB),
-//                        onItemClick = { title ->
-//                            when (title) {
-//                                "Explore" -> deepSeaNavController.navController.navigate("explore_route")
-//                                "Favorites" -> deepSeaNavController.navController.navigate("favorites_route")
-//                                "Settings" -> deepSeaNavController.navController.navigate("settings_route")
-//                                "Help" -> deepSeaNavController.navController.navigate("help_route")
-//                                "Voice Assistant" -> deepSeaNavController.navController.navigate("home/voice_assistant")
-//                            }
-//                        }
-//                    )
-//            }
-//        },
         bottomBar = {
             if (isImportantRoute)
                 DeepSeaBottomBar(
@@ -261,7 +224,6 @@ fun MainContainer(
                     )
                 }
 
-
                 // Selection for learn Routes
                 composable("path_selection") {
                     val context = LocalContext.current
@@ -273,31 +235,16 @@ fun MainContainer(
                         pathService = userProfileService
                     )
                 }
-                composable("random_lesson_selector") {
-                    LaunchedEffect(Unit) {
-                        // Reset progress when starting a new session
-                        progressTracker.reset()
-                        allLessonsCompleted = false
-
-                        // Choose a random lesson to start with
-                        val randomLesson = getRandomLessonRoute()
-                        deepSeaNavController.navController.navigate(randomLesson)
-                    }
-
-                    // Just a loading screen while navigating
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Loading lesson...")
-                    }
-                }
                 composable("daily-goal-selection") {
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context)
-                    DailyGoalSelectionPage(navController = deepSeaNavController.navController,
-                        sessionManager= sessionManager)
+                    DailyGoalSelectionPage(
+                        navController = deepSeaNavController.navController,
+                        sessionManager = sessionManager
+                    )
                 }
                 composable("survey-selection") {
                     val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)
-
                     val surveySelectionViewModel: SurveySelectionViewModel = viewModel(
                         factory = SurveyViewModelFactory(userProfileRepository)
                     )
@@ -313,7 +260,6 @@ fun MainContainer(
                     val context = LocalContext.current
                     val sessionManager = SessionManager(context)
                     val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)
-
                     val languageSelectionViewModel: LanguageSelectionViewModel = viewModel(
                         factory = LanguageSelectionViewModelFactory(userProfileRepository)
                     )
@@ -337,38 +283,20 @@ fun MainContainer(
                     LeaderboardPage()
                 }
 
-                composable("listening-screen") {
-                    LanguageListeningScreen(onComplete = {
-                        progressTracker.markLessonCompleted("listening")
-                        navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
-                    })
-                }
-
-
-
-                composable("quiz-image-screen") {
-                    QuizImageScreen(
-                        lessonId = 3,
-                        onBack = { deepSeaNavController.navController.navigate("home") },
+                // Learning Session Route
+                composable(
+                    route = "learning_session/{lessonId}",
+                    arguments = listOf(navArgument("lessonId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val lessonId = backStackEntry.arguments?.getLong("lessonId") ?: 0L
+                    LearningSessionManager(
+                        lessonId = lessonId,
                         onComplete = {
-                            progressTracker.markLessonCompleted("quiz")
-                            navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
-                        },
+                            deepSeaNavController.navController.navigate("home") {
+                                popUpTo("home") { inclusive = false }
+                            }
+                        }
                     )
-                }
-
-                composable("matching-pair-screen") {
-                    MatchingPairsScreen(onComplete = {
-                        progressTracker.markLessonCompleted("matching")
-                        navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
-                    })
-                }
-
-                composable("word-building-screen") {
-                    WordBuildingScreen(onComplete = {
-                        progressTracker.markLessonCompleted("word-building")
-                        navigateToNextLessonOrFinish(deepSeaNavController.navController, progressTracker)
-                    })
                 }
 
                 // Unit Guide Screen
@@ -379,31 +307,27 @@ fun MainContainer(
                     val unitId = backStackEntry.arguments?.getLong("unitId") ?: 0L
                     val viewModel: UnitGuideViewModel = viewModel(factory = UnitGuideViewModelFactory(
                         UnitGuideRepository(RetrofitClient.unitGuideService)))
-
-                    // Load guide data when the screen is composed
                     LaunchedEffect(unitId) {
                         viewModel.loadUnitGuide(unitId)
                     }
-
-                    // Collect state and render appropriately
                     val guideState = viewModel.guideState.collectAsState().value
-
                     when (guideState) {
-                        is GuideUiState.Loading -> LoadingIndicator(Color.Blue)
+                        is GuideUiState.Loading -> LoadingIndicator(Color.Red)
                         is GuideUiState.Success -> UnitGuideBookScreen(
                             guideData = guideState.data,
                             onBack = { deepSeaNavController.navController.popBackStack() },
                             onPlayAudio = { audioUrl -> viewModel.playAudio(audioUrl) }
                         )
                         is GuideUiState.Error -> ErrorScreen(message = guideState.message)
-                        else -> {} // Initial state, do nothing
+                        else -> {}
                     }
                 }
 
                 composable("home/profile/{userId}") { backStackEntry ->
                     val context = LocalContext.current
-                    val sessionManager = SessionManager(context) // Khởi tạo sessionManager
-                    ProfilePage(sessionManager = sessionManager,
+                    val sessionManager = SessionManager(context)
+                    ProfilePage(
+                        sessionManager = sessionManager,
                         paddingValues = padding,
                         onNavigateToSettings = {
                             deepSeaNavController.navController.navigate("settings")
@@ -419,6 +343,12 @@ fun MainContainer(
                         }
                     )
                 }
+                composable("home/gems") {
+                    GemsScreen(navController = deepSeaNavController.navController)
+                }
+                composable("home/hearts") {
+                    HeartsScreen(navController = deepSeaNavController.navController)
+                }
 
                 composable("home/review") {
                     ReviewScreen()
@@ -427,6 +357,7 @@ fun MainContainer(
                 composable("home/game") {
                     GamePage()
                 }
+
                 composable("settings") {
                     SettingsPage(
                         onBackPressed = { deepSeaNavController.navController.popBackStack() },
@@ -441,18 +372,20 @@ fun MainContainer(
                         paddingValues = padding
                     )
                 }
+
                 composable("home/voice_assistant") {
                     VoiceAssistantScreen()
                 }
+
                 composable("search-screen") {
                     JapaneseCharacterLearningScreen()
                 }
+
                 // Auth Routes
                 composable("signup") {
                     SignupPage(
                         navController = deepSeaNavController,
                         onSignUpClick = { username, email, password, avatar, name ->
-                            // Updated to handle avatar
                             Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
                             authViewModel.signup(username, email, password, avatar)
                         },
@@ -468,6 +401,7 @@ fun MainContainer(
                         }
                     )
                 }
+
                 composable("login") {
                     LoginPage(
                         navController = deepSeaNavController,
@@ -481,10 +415,12 @@ fun MainContainer(
                         }
                     )
                 }
+
                 composable("forgot-password") {
                     ForgotPasswordPage(deepSeaNavController.navController)
                 }
-            })
+            }
+        )
     }
 }
 
@@ -496,28 +432,3 @@ fun <T> nonSpatialExpressiveSpring() = spring<T>(
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 val LocalNavAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
-
-// Helper function to get a random lesson route
-private fun getRandomLessonRoute(): String {
-    val lessonRoutes = listOf(
-        "listening-screen",
-        "quiz-image-screen",
-        "matching-pair-screen",
-        "word-building-screen"
-    )
-    return lessonRoutes[Random.nextInt(lessonRoutes.size)]
-}
-
-// Helper function to navigate to the next random lesson or finish if all are completed
-private fun navigateToNextLessonOrFinish(
-    navController: NavController,
-    progressTracker: LessonProgressTracker
-) {
-    if (progressTracker.areAllLessonsCompleted()) {
-        // All lessons completed, go to completion screen
-        navController.navigate("lessons-completed")
-    } else {
-        // Find a random lesson that hasn't been completed yet
-        navController.navigate(getRandomLessonRoute())
-    }
-}

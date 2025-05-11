@@ -182,7 +182,8 @@ fun StarDialog(
     isDialogInteractive: Boolean,
     dialogTransition: Float,
     navController: NavController,
-    xpAmount: Int
+    xpAmount: Int,
+    unitId: Long // Add unitId parameter to pass to learning session
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -216,14 +217,15 @@ fun StarDialog(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Dialog title
-            TitleText(
+            Text(
                 text = "Make introductions",
                 color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.5f),
-                fontSize = 19.sp
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold
             )
 
             // Dialog description
-            PrimaryText(
+            Text(
                 text = "Complete all levels above to unlock this",
                 color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
             )
@@ -244,11 +246,13 @@ fun StarDialog(
                 }
             }
 
-            // Action button - This will now start a random lesson
+            // Action button - Navigate to learning session
             Button(
                 onClick = {
-                    // Navigate to random lesson screen
-                    navController.navigate("random_lesson_selector")
+                    if (isDialogInteractive) {
+                        // Navigate to learning session with unitId as lessonId
+                        navController.navigate("learning_session/$unitId")
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
@@ -257,12 +261,14 @@ fun StarDialog(
                     else
                         Color.DarkGray.copy(0.15f)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = isDialogInteractive // Disable button if not interactive
             ) {
-                TitleText(
+                Text(
                     text = if (isDialogInteractive) "Start +$xpAmount XP" else "LOCKED",
                     color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
