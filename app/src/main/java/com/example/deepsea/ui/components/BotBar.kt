@@ -74,6 +74,14 @@ enum class HomeSections(
         Color(0xFF10805E),
         Color(0xFF38A78F)
     ),
+    KANJI(
+        R.string.home_kanji,
+        "search-screen",
+        R.drawable.ic_kanji,
+        Color(0xFF10805E),
+        Color(0xFF38A78F)
+    )
+    ,
     REVIEW(
         R.string.home_review,
         "home/review",

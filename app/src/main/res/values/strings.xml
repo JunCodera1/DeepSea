@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">DeepSea</string>
     <string name="home">Home</string>
+    <string name="home_kanji">Kanji</string>
     <string name="home_review">Review</string>
     <string name="home_learn">Learn</string>
     <string name="home_rank">Rank</string>

@@ -61,6 +61,7 @@ import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.screens.feature.leaderboard.LeaderboardPage
 import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
+import com.example.deepsea.ui.screens.feature.learn.JapaneseCharacterLearningScreen
 import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
@@ -442,6 +443,9 @@ fun MainContainer(
                 }
                 composable("home/voice_assistant") {
                     VoiceAssistantScreen()
+                }
+                composable("search-screen") {
+                    JapaneseCharacterLearningScreen()
                 }
                 // Auth Routes
                 composable("signup") {

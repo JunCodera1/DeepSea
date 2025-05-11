@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.deepsea.data.api.CloudinaryUploadService
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.auth.LoginRequest
 import com.example.deepsea.data.model.auth.RegisterRequest
@@ -21,13 +22,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
+    private val cloudinaryUploadService = CloudinaryUploadService()
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
@@ -40,6 +38,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _userState = MutableStateFlow<UserState>(UserState.NotLoggedIn)
     val userState: StateFlow<UserState> = _userState.asStateFlow()
+
+    private val _avatarUploadState = MutableStateFlow<AvatarUploadState>(AvatarUploadState.Idle)
+    val avatarUploadState: StateFlow<AvatarUploadState> = _avatarUploadState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -127,19 +128,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-    fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
+    fun signup(name: String, username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
             try {
                 val avatarUrl = if (avatar != null) {
-                    uploadAvatarAndGetUrl(avatar)
+                    uploadAvatarToCloudinary(avatar)
                 } else {
                     null
                 }
 
                 val registerRequest = RegisterRequest(
-                    name= name,
+                    name = name,
                     username = username,
                     password = password,
                     email = email,
@@ -149,7 +149,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = RetrofitClient.authApi.register(registerRequest)
 
                 if (response.isSuccessful && response.body() != null) {
-                    _registerState.value = RegisterState.Success(response.body()!!.message + "fwiejfwejfwfhudhaiojasidsaidcvn")
+                    _registerState.value = RegisterState.Success(response.body()!!.message)
                 } else {
                     _registerState.value = RegisterState.Error("Registration failed: ${response.message()}")
                 }
@@ -159,22 +159,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun uploadAvatarAndGetUrl(uri: Uri): String? {
+    private suspend fun uploadAvatarToCloudinary(uri: Uri): String? {
         return try {
-            val contentResolver = getApplication<Application>().contentResolver
-            val file = File(getRealPathFromURI(getApplication(), uri) ?: return null)
+            _avatarUploadState.value = AvatarUploadState.Loading
 
-            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val context = getApplication<Application>().applicationContext
+            val uploadedUrl = cloudinaryUploadService.uploadImage(context, uri)
 
-            val imagePart = MultipartBody.Part.createFormData("avatar", file.name, requestFile)
-
-            val response = RetrofitClient.authApi.uploadAvatar(imagePart)
-            if (response.isSuccessful && response.body() != null) {
-                return response.body()!!.url
-            }
-            null
+            _avatarUploadState.value = AvatarUploadState.Success(uploadedUrl)
+            uploadedUrl
         } catch (e: Exception) {
             Log.e("AuthViewModel", "Avatar upload failed: ${e.message}")
+            _avatarUploadState.value = AvatarUploadState.Error("Failed to upload avatar: ${e.message}")
             null
         }
     }
@@ -188,7 +184,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         cursor?.close()
         return path
     }
-
 
     fun loadDashboard() {
         viewModelScope.launch {
@@ -227,4 +222,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun resetLoginState() {
         _loginState.value = LoginState.Idle
     }
+
+    fun resetRegisterState() {
+        _registerState.value = RegisterState.Idle
+    }
+}
+
+sealed class AvatarUploadState {
+    object Idle : AvatarUploadState()
+    object Loading : AvatarUploadState()
+    data class Success(val url: String) : AvatarUploadState()
+    data class Error(val message: String) : AvatarUploadState()
 }
