@@ -44,4 +44,8 @@ object RetrofitClient {
     val sessionApiService: SessionApiService by lazy {
         retrofit.create(SessionApiService::class.java)
     }
+
+    val learningApiService: LearningApiService by lazy {
+        retrofit.create(LearningApiService::class.java)
+    }
 }

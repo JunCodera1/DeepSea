@@ -2,145 +2,111 @@ package com.example.deepsea.ui.screens.feature.learn
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.model.exercise.WordPair
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-data class WordPair(
-    val english: String,
-    val japanese: String,
-    val pronunciation: String,
-    val isSelected: Boolean = false,
-    val isMatched: Boolean = false
-)
+import kotlinx.coroutines.delay
 
 class MatchingPairsViewModel : ViewModel() {
     private val _englishWords = MutableStateFlow<List<WordPair>>(emptyList())
-    val englishWords: StateFlow<List<WordPair>> = _englishWords
+    val englishWords: StateFlow<List<WordPair>> = _englishWords.asStateFlow()
 
     private val _japaneseWords = MutableStateFlow<List<WordPair>>(emptyList())
-    val japaneseWords: StateFlow<List<WordPair>> = _japaneseWords
+    val japaneseWords: StateFlow<List<WordPair>> = _japaneseWords.asStateFlow()
 
     private val _isAudioPlaying = MutableStateFlow(false)
-    val isAudioPlaying: StateFlow<Boolean> = _isAudioPlaying
+    val isAudioPlaying: StateFlow<Boolean> = _isAudioPlaying.asStateFlow()
 
     private val _progress = MutableStateFlow(0f)
-    val progress: StateFlow<Float> = _progress
+    val progress: StateFlow<Float> = _progress.asStateFlow()
 
     private val _hearts = MutableStateFlow(3)
-    val hearts: StateFlow<Int> = _hearts
+    val hearts: StateFlow<Int> = _hearts.asStateFlow()
 
     private val _showFeedback = MutableStateFlow(false)
-    val showFeedback: StateFlow<Boolean> = _showFeedback
+    val showFeedback: StateFlow<Boolean> = _showFeedback.asStateFlow()
 
     private val _isCorrectMatch = MutableStateFlow(false)
-    val isCorrectMatch: StateFlow<Boolean> = _isCorrectMatch
+    val isCorrectMatch: StateFlow<Boolean> = _isCorrectMatch.asStateFlow()
 
     private val _selectedEnglishWord = MutableStateFlow<WordPair?>(null)
-    val selectedEnglishWord: StateFlow<WordPair?> = _selectedEnglishWord
+    val selectedEnglishWord: StateFlow<WordPair?> = _selectedEnglishWord.asStateFlow()
 
     private val _selectedJapaneseWord = MutableStateFlow<WordPair?>(null)
-    val selectedJapaneseWord: StateFlow<WordPair?> = _selectedJapaneseWord
+    val selectedJapaneseWord: StateFlow<WordPair?> = _selectedJapaneseWord.asStateFlow()
 
     init {
-        // Initialize with sample word pairs
-        val initialPairs = listOf(
-            WordPair("Hello", "こんにちは", "Konnichiwa"),
-            WordPair("Thank you", "ありがとう", "Arigatou"),
-            WordPair("Goodbye", "じゃあね", "Jaa ne"),
-            WordPair("Please", "お願い", "Onegai")
-        )
-        _englishWords.value = initialPairs.shuffled()
-        _japaneseWords.value = initialPairs.shuffled()
-        updateProgress()
+        fetchWordPairs(sectionId = 1, unitId = 1) // Example: Fetch for Section 1, Unit 1
     }
 
-    fun selectWord(isEnglish: Boolean, pair: WordPair) {
+    private fun fetchWordPairs(sectionId: Long, unitId: Long) {
         viewModelScope.launch {
-            if (isEnglish) {
-                if (_selectedEnglishWord.value == pair) {
-                    _selectedEnglishWord.value = null
-                    _englishWords.value = _englishWords.value.map {
-                        if (it == pair) it.copy(isSelected = false) else it
-                    }
-                } else {
-                    _selectedEnglishWord.value = pair
-                    _englishWords.value = _englishWords.value.map {
-                        if (it == pair) it.copy(isSelected = true) else it.copy(isSelected = false)
-                    }
-                }
-            } else {
-                if (_selectedJapaneseWord.value == pair) {
-                    _selectedJapaneseWord.value = null
-                    _japaneseWords.value = _japaneseWords.value.map {
-                        if (it == pair) it.copy(isSelected = false) else it
-                    }
-                } else {
-                    _selectedJapaneseWord.value = pair
-                    _japaneseWords.value = _japaneseWords.value.map {
-                        if (it == pair) it.copy(isSelected = true) else it.copy(isSelected = false)
-                    }
-                }
+            try {
+                val wordPairs = RetrofitClient.learningApiService.getMatchingPairs(sectionId, unitId)
+                _englishWords.value = wordPairs
+                _japaneseWords.value = wordPairs.shuffled() // Shuffle Japanese words for display
+                _progress.value = 0f // Reset progress
+            } catch (e: Exception) {
+                // Handle network errors (e.g., show error message)
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun selectWord(isEnglish: Boolean, wordPair: WordPair) {
+        if (wordPair.isMatched) return
+
+        if (isEnglish) {
+            _selectedEnglishWord.value = wordPair
+            _englishWords.value = _englishWords.value.map {
+                it.copy(isSelected = it.id == wordPair.id)
+            }
+        } else {
+            _selectedJapaneseWord.value = wordPair
+            _japaneseWords.value = _japaneseWords.value.map {
+                it.copy(isSelected = it.id == wordPair.id)
             }
         }
     }
 
     fun checkMatch() {
-        val englishWord = _selectedEnglishWord.value
-        val japaneseWord = _selectedJapaneseWord.value
+        val english = _selectedEnglishWord.value
+        val japanese = _selectedJapaneseWord.value
 
-        if (englishWord != null && japaneseWord != null) {
-            val isCorrect = englishWord.english == japaneseWord.english // Check if they belong to the same pair
-            _showFeedback.value = true
+        if (english != null && japanese != null) {
+            val isCorrect = english.id == japanese.id
             _isCorrectMatch.value = isCorrect
+            _showFeedback.value = true
 
             if (isCorrect) {
                 _englishWords.value = _englishWords.value.map {
-                    if (it == englishWord) it.copy(isMatched = true, isSelected = false) else it
+                    if (it.id == english.id) it.copy(isMatched = true, isSelected = false) else it
                 }
                 _japaneseWords.value = _japaneseWords.value.map {
-                    if (it == japaneseWord) it.copy(isMatched = true, isSelected = false) else it
+                    if (it.id == japanese.id) it.copy(isMatched = true, isSelected = false) else it
                 }
-                _selectedEnglishWord.value = null
-                _selectedJapaneseWord.value = null
-                updateProgress()
+                _progress.value = _englishWords.value.count { it.isMatched }.toFloat() / _englishWords.value.size
             } else {
                 _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
-                _englishWords.value = _englishWords.value.map { it.copy(isSelected = false) }
-                _japaneseWords.value = _japaneseWords.value.map { it.copy(isSelected = false) }
-                _selectedEnglishWord.value = null
-                _selectedJapaneseWord.value = null
             }
-        }
-    }
 
-    fun dismissFeedback() {
-        _showFeedback.value = false
+            _selectedEnglishWord.value = null
+            _selectedJapaneseWord.value = null
+        }
     }
 
     fun setAudioPlayingState(isPlaying: Boolean) {
         _isAudioPlaying.value = isPlaying
     }
 
-    fun isGameCompleted(): Boolean {
-        return _englishWords.value.all { it.isMatched } && _japaneseWords.value.all { it.isMatched }
-    }
-
-    fun resetGame() {
-        val initialPairs = _englishWords.value.map { it.copy(isSelected = false, isMatched = false) }
-        _englishWords.value = initialPairs.shuffled()
-        _japaneseWords.value = initialPairs.shuffled()
-        _selectedEnglishWord.value = null
-        _selectedJapaneseWord.value = null
-        _progress.value = 0f
-        _hearts.value = 3
+    fun dismissFeedback() {
         _showFeedback.value = false
     }
 
-    private fun updateProgress() {
-        val matchedCount = _englishWords.value.count { it.isMatched }
-        _progress.value = if (_englishWords.value.isNotEmpty()) {
-            matchedCount.toFloat() / _englishWords.value.size
-        } else 0f
+    fun isGameCompleted(): Boolean {
+        return _englishWords.value.all { it.isMatched }
     }
 }

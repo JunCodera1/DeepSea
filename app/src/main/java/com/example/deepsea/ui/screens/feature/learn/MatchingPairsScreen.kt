@@ -62,9 +62,9 @@ fun MatchingPairsScreen(
     }
 
     // Trigger onComplete when all pairs are matched
-    LaunchedEffect(englishWords, japaneseWords) {
+    LaunchedEffect(englishWords) {
         if (viewModel.isGameCompleted()) {
-            delay(500) // Brief delay to show final match
+            delay(500)
             onComplete()
         }
     }
@@ -75,7 +75,7 @@ fun MatchingPairsScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Top Bar with Settings and Progress
+            // Top Bar with Settings and Progress (unchanged)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,9 +182,7 @@ fun MatchingPairsScreen(
 
             // Check Button
             Button(
-                onClick = {
-                    viewModel.checkMatch()
-                },
+                onClick = { viewModel.checkMatch() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -204,7 +202,7 @@ fun MatchingPairsScreen(
             }
         }
 
-        // Feedback Overlay
+        // Feedback Overlay (unchanged)
         AnimatedVisibility(
             visible = showFeedback,
             enter = fadeIn(),
