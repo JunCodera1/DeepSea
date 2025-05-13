@@ -2,6 +2,7 @@ package com.example.deepsea.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,6 +42,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,9 +51,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.deepsea.R
 import com.example.deepsea.data.model.user.UserProfileData
-import com.example.deepsea.ui.profile.StatisticItem
+import com.example.deepsea.ui.screens.feature.profile.StatisticItem
 import com.example.deepsea.ui.screens.feature.daily.LanguageProgress
 import com.example.deepsea.ui.screens.feature.game.Player
 import com.example.deepsea.ui.screens.feature.daily.getLanguageLevel
@@ -135,73 +141,92 @@ fun InviteFriendsCard() {
 @Composable
 fun UserBasicInfoCard(userProfile: UserProfileData?) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar/Initial
+            // Avatar with Coil image loading
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(80.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF673AB7)),
+                    .background(Color.LightGray),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = userProfile?.name?.firstOrNull()?.uppercase() ?: "",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                // Load avatar from URL using Coil
+                val painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(userProfile?.avatarUrl ?: "")
+                        .error(R.drawable.cut) // Replace with your default avatar drawable
+                        .placeholder(R.drawable.cut) // Replace with your placeholder drawable
+                        .build()
+                )
+
+                Image(
+                    painter = painter,
+                    contentDescription = "Profile Avatar",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // User info
-            Column {
-                Text(
-                    text = userProfile?.name ?: "",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "@${userProfile?.username}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Joined ${userProfile?.joinDate}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
+            // Username
+            Text(
+                text = userProfile?.username ?: "Username",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Join date
+            Text(
+                text = "Joined ${userProfile?.joinDate ?: ""}",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Stats row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // XP
+                StatisticItem(
+                    value = "${userProfile?.totalXp ?: 0}",
+                    label = "XP",
+                    backgroundColor = Color(0xFFE3F2FD),
+                    textColor = Color(0xFF1976D2)
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                // Day streak
+                StatisticItem(
+                    value = "${userProfile?.dayStreak ?: 0}",
+                    label = "Day streak",
+                    backgroundColor = Color(0xFFFFF3E0),
+                    textColor = Color(0xFFFF9800)
+                )
 
-                // Friends count
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Divider(
-                        modifier = Modifier
-                            .width(30.dp)
-                            .height(4.dp),
-                        color = Color(0xFF4DB6FF)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${userProfile?.followers} Friends",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
+                // League
+                StatisticItem(
+                    value = userProfile?.currentLeague?.firstOrNull()?.toString() ?: "B",
+                    label = "League",
+                    backgroundColor = Color(0xFFE8F5E9),
+                    textColor = Color(0xFF4CAF50)
+                )
             }
         }
     }
 }
+
 
 
 @Composable

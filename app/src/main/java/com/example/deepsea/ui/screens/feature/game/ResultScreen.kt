@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.ui.components.StatItem
+import com.example.deepsea.ui.viewmodel.game.GameViewModel
 
 @Composable
 fun ResultScreen(
@@ -45,7 +46,7 @@ fun ResultScreen(
     totalQuestions: Int,
     onPlayAgain: () -> Unit,
     onClaimReward: () -> Unit
-) {
+){
     val primaryColor = Color(0xFF0078D7)
     val accentColor = Color(0xFFFF9500)
 

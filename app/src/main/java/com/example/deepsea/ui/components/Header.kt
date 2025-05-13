@@ -25,22 +25,23 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ProfileHeader(onNavigateToSettings: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "Profile",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 16.dp)
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
         )
 
         IconButton(onClick = onNavigateToSettings) {
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = "Settings",
-                tint = Color(0xFF4DB6FF)
+                tint = Color.Gray
             )
         }
     }

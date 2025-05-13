@@ -6,6 +6,7 @@ data class WordPair(
     val english: String,
     val japanese: String,
     val pronunciation: String,
+    val level: String,
     var isSelected: Boolean = false, // Added for UI state
     var isMatched: Boolean = false   // Added for UI state
 )

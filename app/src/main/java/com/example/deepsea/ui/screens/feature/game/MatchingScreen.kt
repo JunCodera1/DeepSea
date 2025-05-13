@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.deepsea.ui.viewmodel.game.GameViewModel
 import kotlinx.coroutines.delay
 
 @Composable
@@ -78,6 +80,10 @@ fun MatchingScreen(
             text = matchingMessage,
             fontSize = 18.sp,
             textAlign = TextAlign.Center
+        )
+        Text(
+            text = "Finding opponent for ${currentPlayer.name}...",
+            style = MaterialTheme.typography.titleLarge
         )
 
         Spacer(modifier = Modifier.height(16.dp))

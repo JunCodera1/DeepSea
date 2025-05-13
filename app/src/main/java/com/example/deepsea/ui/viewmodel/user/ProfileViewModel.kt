@@ -1,4 +1,4 @@
-package com.example.deepsea.ui.profile
+package com.example.deepsea.ui.viewmodel.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -9,7 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.deepsea.data.api.CloudinaryUploadService
+import com.example.deepsea.utils.CloudinaryUploadService
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.auth.LoginRequest
 import com.example.deepsea.data.model.auth.RegisterRequest

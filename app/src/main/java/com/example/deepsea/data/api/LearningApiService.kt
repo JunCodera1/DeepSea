@@ -1,8 +1,7 @@
 package com.example.deepsea.data.api
 
+import com.example.deepsea.data.model.exercise.HearingExercise
 import com.example.deepsea.data.model.exercise.WordPair
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -12,4 +11,10 @@ interface LearningApiService {
         @Path("sectionId") sectionId: Long,
         @Path("unitId") unitId: Long
     ): List<WordPair>
+
+    @GET("api/language-learning/sections/{sectionId}/units/{unitId}/exercise")
+    suspend fun getRandomExercise(
+        @Path("sectionId") sectionId: Long,
+        @Path("unitId") unitId: Long
+    ): HearingExercise
 }

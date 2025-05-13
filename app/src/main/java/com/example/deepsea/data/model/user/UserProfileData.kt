@@ -12,6 +12,7 @@ data class UserProfileData(
     val joinDate: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")),
     val courses: Set<LanguageOption> = emptySet(),
     val selectedSurveys: Set<SurveyOption> = emptySet(),
+    val avatarUrl: String? = null, // Added avatar URL field
     val followers: Int,
     val following: Int,
     val dayStreak: Int,

@@ -11,7 +11,6 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -40,7 +39,7 @@ import com.example.deepsea.ui.components.composableWithCompositionLocal
 import com.example.deepsea.ui.navigation.MainDestinations
 import com.example.deepsea.ui.navigation.rememberDeepSeaNavController
 import com.example.deepsea.ui.navigation.rememberDeepSeaScaffoldState
-import com.example.deepsea.ui.profile.ProfilePage
+import com.example.deepsea.ui.screens.feature.profile.ProfilePage
 import com.example.deepsea.ui.screens.auth.ForgotPasswordPage
 import com.example.deepsea.ui.screens.auth.LoginPage
 import com.example.deepsea.ui.screens.auth.SignupPage
@@ -50,10 +49,6 @@ import com.example.deepsea.ui.screens.feature.home.ErrorScreen
 import com.example.deepsea.ui.screens.feature.home.GemsScreen
 import com.example.deepsea.ui.screens.feature.home.HeartsScreen
 import com.example.deepsea.ui.screens.feature.home.HomeScreen
-import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
-import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
-import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
-import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.screens.feature.leaderboard.LeaderboardPage
 import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
 import com.example.deepsea.ui.screens.feature.learn.JapaneseCharacterLearningScreen

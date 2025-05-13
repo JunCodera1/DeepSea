@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -50,7 +51,7 @@ fun LearningSessionManager(
         composable("learning_screen") {
             LearningScreenWrapper(
                 sessionState = sessionState,
-                lessonId = lessonId, // Pass lessonId to LearningScreenWrapper
+                lessonId = lessonId,
                 onNextScreen = {
                     val nextIndex = sessionState.currentScreenIndex + 1
                     if (nextIndex < sessionState.totalScreens) {
@@ -96,6 +97,10 @@ fun LearningScreenWrapper(
     onNextScreen: () -> Unit,
     onBack: () -> Unit
 ) {
+    // Map lessonId to sectionId and unitId
+    val sectionId = ((lessonId - 1) / 5) + 1
+    val unitId = lessonId
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -118,12 +123,18 @@ fun LearningScreenWrapper(
         when (sessionState.screens.getOrNull(sessionState.currentScreenIndex)) {
             ScreenType.MATCHING_PAIRS -> MatchingPairsScreen(onComplete = onNextScreen)
             ScreenType.QUIZ_IMAGE -> QuizImageScreen(
-                lessonId = lessonId, // Use lessonId parameter
+                lessonId = lessonId,
                 onBack = onBack,
                 onComplete = onNextScreen
             )
             ScreenType.WORD_BUILDING -> WordBuildingScreen(onComplete = onNextScreen)
-            ScreenType.LANGUAGE_LISTENING -> LanguageListeningScreen(onComplete = onNextScreen)
+            ScreenType.LANGUAGE_LISTENING -> LanguageListeningScreen(
+                sectionId = sectionId,
+                unitId = unitId,
+                viewModel = viewModel(),
+                onNavigateToSettings = { /* Navigate to settings screen or no-op */ },
+                onComplete = onNextScreen
+            )
             null -> Text("Session Complete", fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
     }
@@ -140,7 +151,6 @@ private suspend fun saveSessionProgress(lessonId: Long, sessionState: SessionSta
     try {
         RetrofitClient.sessionApiService.saveSession(sessionData)
     } catch (e: Exception) {
-        // Handle error (e.g., log it or show a toast)
         println("Failed to save session: ${e.message}")
     }
 }

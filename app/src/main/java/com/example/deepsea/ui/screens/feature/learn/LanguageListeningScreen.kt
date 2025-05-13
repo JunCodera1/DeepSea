@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -43,9 +44,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun LanguageListeningScreen(
+    sectionId: Long,
+    unitId: Long,
     viewModel: LanguageListeningViewModel = viewModel(),
     onNavigateToSettings: () -> Unit = {},
-    onComplete: () -> Unit
+    onComplete: () -> Unit = {}
 ) {
     val hearingExercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
@@ -54,8 +57,9 @@ fun LanguageListeningScreen(
     val isSpellingPlaying by viewModel.isSpellingPlaying.collectAsState()
     val selectedOption by viewModel.selectedOption.collectAsState()
     val isAnswerCorrect by viewModel.isAnswerCorrect.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    val scope = rememberCoroutineScope()
     var showFeedback by remember { mutableStateOf(false) }
 
     // Show feedback when answer is checked
@@ -67,108 +71,149 @@ fun LanguageListeningScreen(
         }
     }
 
-    Column(
+    // Retry fetching exercise on error
+    val retryFetchExercise = { viewModel.fetchRandomExercise(sectionId, unitId) }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Top Bar with Settings and Progress
-        TopBar(
-            progress = userProgress,
-            hearts = hearts,
-            onSettingsClick = onNavigateToSettings
-        )
-
-        // Main Instruction
-        Text(
-            text = "Tap what you hear",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 24.dp)
-        )
-
-        // Audio Buttons
-        AudioControls(
-            isAudioPlaying = isAudioPlaying,
-            onPlayNormal = { viewModel.playAudio() },
-            onPlaySlow = { viewModel.playSlowAudio() },
-            onPlayExerciseAudio = { viewModel.playExerciseAudio() }
-        )
-
-        Divider(modifier = Modifier.padding(vertical = 16.dp))
-
-        // Feedback animation when answer is checked
-        AnimatedVisibility(
-            visible = showFeedback,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isAnswerCorrect == true) {
-                    FeedbackMessage(
-                        message = "Great job!",
-                        icon = Icons.Default.Check,
-                        color = Color.Green
+        when {
+            isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            errorMessage != null -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = errorMessage ?: "Unknown error",
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
                     )
-                } else if (isAnswerCorrect == false) {
-                    FeedbackMessage(
-                        message = "Try again!",
-                        icon = Icons.Default.Close,
-                        color = Color.Red
+                    Button(onClick = retryFetchExercise) {
+                        Text("Retry")
+                    }
+                }
+            }
+            hearingExercise == null -> {
+                Text(
+                    text = "No exercise available",
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp)
+                )
+            }
+            else -> {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Top Bar with Settings and Progress
+                    TopBar(
+                        progress = userProgress,
+                        hearts = hearts,
+                        onSettingsClick = onNavigateToSettings
                     )
+
+                    // Main Instruction
+                    Text(
+                        text = "Tap what you hear",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 24.dp)
+                    )
+
+                    // Audio Buttons
+                    AudioControls(
+                        isAudioPlaying = isAudioPlaying,
+                        onPlayNormal = { viewModel.playAudio() },
+                        onPlaySlow = { viewModel.playSlowAudio() },
+                        onPlayExerciseAudio = { viewModel.playExerciseAudio() }
+                    )
+
+                    Divider(modifier = Modifier.padding(vertical = 16.dp))
+
+                    // Feedback animation when answer is checked
+                    AnimatedVisibility(
+                        visible = showFeedback,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isAnswerCorrect == true) {
+                                FeedbackMessage(
+                                    message = "Great job!",
+                                    icon = Icons.Default.Check,
+                                    color = Color.Green
+                                )
+                            } else if (isAnswerCorrect == false) {
+                                FeedbackMessage(
+                                    message = "Try again!",
+                                    icon = Icons.Default.Close,
+                                    color = Color.Red
+                                )
+                            }
+                        }
+                    }
+
+                    // Answer Options
+                    if (!showFeedback) {
+                        AnswerOptions(
+                            options = hearingExercise?.options ?: emptyList(),
+                            correctAnswer = hearingExercise?.correctAnswer ?: "",
+                            selectedOption = selectedOption,
+                            isSpellingPlaying = isSpellingPlaying,
+                            onOptionClick = { viewModel.checkAnswer(it) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Skip Listening Option
+                    TextButton(
+                        onClick = { /* Skip listening functionality */ },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = "CAN'T LISTEN NOW",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    // Check Button
+                    Button(
+                        onClick = { viewModel.checkExercise() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedOption != null) MaterialTheme.colorScheme.primary else Color.LightGray,
+                            contentColor = if (selectedOption != null) Color.White else Color.Gray
+                        ),
+                        enabled = selectedOption != null
+                    ) {
+                        Text(
+                            text = "CHECK",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
-
-        // Answer Options
-        if (!showFeedback) {
-            AnswerOptions(
-                options = hearingExercise.options,
-                correctAnswer = hearingExercise.correctAnswer,
-                selectedOption = selectedOption,
-                isSpellingPlaying = isSpellingPlaying,
-                onOptionClick = { viewModel.checkAnswer(it) }
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Skip Listening Option
-        TextButton(
-            onClick = { /* Skip listening functionality */ },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text(
-                text = "CAN'T LISTEN NOW",
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
-        }
-
-        // Check Button
-        Button(
-            onClick = { viewModel.checkExercise() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedOption != null) MaterialTheme.colorScheme.primary else Color.LightGray,
-                contentColor = if (selectedOption != null) Color.White else Color.Gray
-            ),
-            enabled = selectedOption != null
-        ) {
-            Text(
-                text = "CHECK",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
     }
 }
 
@@ -212,7 +257,7 @@ fun TopBar(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(progress) // Use fraction instead of fixed width
+                    .fillMaxWidth(progress)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.Green)
             )
@@ -250,7 +295,6 @@ fun AudioControls(
             .padding(vertical = 24.dp),
         horizontalArrangement = Arrangement.Center
     ) {
-        // Main Audio Button
         AudioButton(
             size = 100.dp,
             isPlaying = isAudioPlaying,
@@ -258,10 +302,7 @@ fun AudioControls(
             iconSize = 36.sp,
             onClick = onPlayExerciseAudio
         )
-
         Spacer(modifier = Modifier.width(16.dp))
-
-        // Regular Speed Audio Button
         AudioButton(
             size = 70.dp,
             isPlaying = isAudioPlaying,
@@ -269,10 +310,7 @@ fun AudioControls(
             iconSize = 24.sp,
             onClick = onPlayNormal
         )
-
         Spacer(modifier = Modifier.width(16.dp))
-
-        // Slow Audio Button
         AudioButton(
             size = 70.dp,
             isPlaying = isAudioPlaying,
@@ -316,7 +354,6 @@ fun AudioButton(
             fontSize = iconSize,
             color = Color.White
         )
-
         if (isPlaying) {
             Box(
                 modifier = Modifier
@@ -403,21 +440,18 @@ fun AnswerOption(
             }
         )
 
-        // Spelling animation effect
         if (isPlayingSpelling) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .background(Color.Blue.copy(alpha = 0.05f))
             )
-
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Sound wave animation effect
                 SpellingAnimationDots()
             }
         }
@@ -475,9 +509,7 @@ fun FeedbackMessage(
             tint = color,
             modifier = Modifier.size(32.dp)
         )
-
         Spacer(modifier = Modifier.width(8.dp))
-
         Text(
             text = message,
             fontSize = 24.sp,
@@ -487,70 +519,38 @@ fun FeedbackMessage(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun LanguageListeningScreenPreview() {
-    // Create a mock ViewModel for preview
-    val mockViewModel = object {
-        val currentExercise = MutableStateFlow(
-            HearingExercise(
-                id = "1",
-                audio = "audio_url",
-                correctAnswer = "ください",
-                options = listOf("ください", "おちゃ", "ごはん", "と")
-            )
-        )
-        val userProgress = MutableStateFlow(0.4f)
-        val hearts = MutableStateFlow(3)
-        val isAudioPlaying = MutableStateFlow(false)
-        val isSpellingPlaying = MutableStateFlow(false)
-        val selectedOption = MutableStateFlow<String?>(null)
-        val isAnswerCorrect = MutableStateFlow<Boolean?>(null)
-
-        fun playAudio() {}
-        fun playSlowAudio() {}
-        fun playExerciseAudio() {}
-        fun checkAnswer(option: String) {}
-        fun checkExercise() {}
-    }
-
-    // Material theme wrapper
-    MaterialTheme {
-        Surface {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Top Bar Preview
-                TopBar(progress = 0.4f, hearts = 3, onSettingsClick = {})
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Audio Controls Preview
-                AudioControls(
-                    isAudioPlaying = false,
-                    onPlayNormal = {},
-                    onPlaySlow = {},
-                    onPlayExerciseAudio = {}
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Answer Options Preview
-                AnswerOptions(
-                    options = listOf("ください", "おちゃ", "ごはん", "と"),
-                    correctAnswer = "ください",
-                    selectedOption = "おちゃ",
-                    isSpellingPlaying = false,
-                    onOptionClick = {}
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Feedback Message Preview
-                FeedbackMessage(
-                    message = "Great job!",
-                    icon = Icons.Default.Check,
-                    color = Color.Green
-                )
-            }
-        }
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun LanguageListeningScreenPreview() {
+//    // Mock ViewModel for preview
+//    val mockViewModel = object : LanguageListeningViewModel(null) {
+//        override val currentExercise = MutableStateFlow(
+//            HearingExercise(
+//                id = "1",
+//                audio = "audio_url",
+//                correctAnswer = "ください",
+//                options = listOf("ください", "おちゃ", "ごはん", "と")
+//            )
+//        )
+//        override val userProgress = MutableStateFlow(0.4f)
+//        override val hearts = MutableStateFlow(3)
+//        override val isAudioPlaying = MutableStateFlow(false)
+//        override val isSpellingPlaying = MutableStateFlow(false)
+//        override val selectedOption = MutableStateFlow<String?>(null)
+//        override val isAnswerCorrect = MutableStateFlow<Boolean?>(null)
+//        override val isLoading = MutableStateFlow(false)
+//        override val errorMessage = MutableStateFlow<String?>(null)
+//    }
+//
+//    MaterialTheme {
+//        Surface {
+//            LanguageListeningScreen(
+//                sectionId = 1L,
+//                unitId = 1L,
+//                viewModel = mockViewModel,
+//                onNavigateToSettings = {},
+//                onComplete = {}
+//            )
+//        }
+//    }
+//}

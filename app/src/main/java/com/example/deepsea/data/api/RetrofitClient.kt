@@ -48,4 +48,8 @@ object RetrofitClient {
     val learningApiService: LearningApiService by lazy {
         retrofit.create(LearningApiService::class.java)
     }
+
+    val gameApiService: GameApiService by lazy {
+        retrofit.create(GameApiService::class.java)
+    }
 }

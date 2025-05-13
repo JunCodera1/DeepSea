@@ -67,6 +67,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.navigation:navigation-fragment:2.7.7")
     implementation("androidx.navigation:navigation-ui:2.7.7")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")

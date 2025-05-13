@@ -1,7 +1,6 @@
 package com.example.deepsea.ui.viewmodel.learn
 
 import android.app.Application
-import android.media.MediaPlayer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -15,19 +14,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.Locale
 import java.util.UUID
 
 class LanguageListeningViewModel(application: Application) : AndroidViewModel(application) {
-    private val _currentExercise = MutableStateFlow(
-        HearingExercise(
-            id = "1",
-            audio = "audio_url",
-            correctAnswer = "ください",
-            options = listOf("ください", "おちゃ", "ごはん", "と")
-        )
-    )
-    val currentExercise: StateFlow<HearingExercise> = _currentExercise.asStateFlow()
+    private val _currentExercise = MutableStateFlow<HearingExercise?>(null)
+    val currentExercise: StateFlow<HearingExercise?> = _currentExercise.asStateFlow()
 
     private val _userProgress = MutableStateFlow(0.2f) // 20% progress
     val userProgress: StateFlow<Float> = _userProgress.asStateFlow()
@@ -47,8 +40,13 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
     private val _isAnswerCorrect = MutableStateFlow<Boolean?>(null)
     val isAnswerCorrect: StateFlow<Boolean?> = _isAnswerCorrect.asStateFlow()
 
-    private var mediaPlayer: MediaPlayer? = null
-    private val apiService = RetrofitClient.authApi
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val apiService = RetrofitClient.learningApiService
     private val audioPlaybackManager = AudioPlaybackManager(application.applicationContext)
 
     // Text-to-Speech variables
@@ -58,8 +56,8 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
     private val slowSpeechRate = 0.7f // Slower speed for turtle mode
 
     init {
-        loadExercise()
         initTextToSpeech()
+        fetchRandomExercise(sectionId = 1, unitId = 1) // Start with Section 1, Unit 1
     }
 
     /**
@@ -68,7 +66,6 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
     private fun initTextToSpeech() {
         textToSpeech = TextToSpeech(getApplication()) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // For Japanese language, use Locale.JAPANESE
                 val result = textToSpeech?.setLanguage(Locale.JAPANESE)
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e("TTS", "Japanese language not supported, falling back to default")
@@ -88,24 +85,20 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
     private fun setupTTSListener() {
         textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String) {
-                if (utteranceId.startsWith("spelling_")) {
-                    viewModelScope.launch {
+                viewModelScope.launch {
+                    if (utteranceId.startsWith("spelling_")) {
                         _isSpellingPlaying.value = true
-                    }
-                } else {
-                    viewModelScope.launch {
+                    } else {
                         _isAudioPlaying.value = true
                     }
                 }
             }
 
             override fun onDone(utteranceId: String) {
-                if (utteranceId.startsWith("spelling_")) {
-                    viewModelScope.launch {
+                viewModelScope.launch {
+                    if (utteranceId.startsWith("spelling_")) {
                         _isSpellingPlaying.value = false
-                    }
-                } else {
-                    viewModelScope.launch {
+                    } else {
                         _isAudioPlaying.value = false
                     }
                 }
@@ -113,14 +106,12 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
 
             @Deprecated("Deprecated in Java")
             override fun onError(utteranceId: String) {
-                // Handle errors
                 viewModelScope.launch {
                     _isAudioPlaying.value = false
                     _isSpellingPlaying.value = false
                 }
             }
 
-            // Add this for newer Android versions
             override fun onError(utteranceId: String, errorCode: Int) {
                 super.onError(utteranceId, errorCode)
                 viewModelScope.launch {
@@ -131,19 +122,26 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
         })
     }
 
-    fun loadExercise() {
+    /**
+     * Fetch a random exercise for the given section and unit
+     */
+    fun fetchRandomExercise(sectionId: Long, unitId: Long) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
             try {
-                val response = apiService.getExercise()
-                if (response.isSuccessful && response.body() != null) {
-                    _currentExercise.value = response.body()!!
-                    _selectedOption.value = null
-                    _isAnswerCorrect.value = null
-                }
+                val exercise = apiService.getRandomExercise(sectionId, unitId)
+                _currentExercise.value = exercise
+                _selectedOption.value = null
+                _isAnswerCorrect.value = null
+            } catch (e: IOException) {
+                _errorMessage.value = "Network error. Please check your connection."
+                Log.e("ViewModel", "Network error: ${e.message}")
             } catch (e: Exception) {
-                // Handle network errors
+                _errorMessage.value = "Failed to load exercise. Please try again."
                 Log.e("ViewModel", "Error loading exercise: ${e.message}")
-                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -156,7 +154,7 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
             textToSpeech?.setSpeechRate(speechRate)
             val utteranceId = UUID.randomUUID().toString()
             textToSpeech?.speak(
-                _currentExercise.value.correctAnswer,
+                _currentExercise.value?.correctAnswer,
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 utteranceId
@@ -172,7 +170,7 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
             textToSpeech?.setSpeechRate(slowSpeechRate)
             val utteranceId = UUID.randomUUID().toString()
             textToSpeech?.speak(
-                _currentExercise.value.correctAnswer,
+                _currentExercise.value?.correctAnswer,
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 utteranceId
@@ -184,10 +182,11 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
      * Play audio from the exercise's audio URL
      */
     fun playExerciseAudio() {
+        val audioUrl = _currentExercise.value?.audio ?: return
         viewModelScope.launch {
             _isAudioPlaying.value = true
             try {
-                audioPlaybackManager.playAudioFromUrl(_currentExercise.value.audio)
+                audioPlaybackManager.playAudioFromUrl(audioUrl)
             } catch (e: Exception) {
                 Log.e("ViewModel", "Error playing audio: ${e.message}")
                 // Fallback to TTS if audio URL fails
@@ -199,61 +198,38 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
     }
 
     /**
-     * Play word pronunciation character by character
+     * Play word pronunciation using TTS (fallback since no API for spelling)
      */
     fun playWordSpelling(word: String) {
-        viewModelScope.launch {
-            _isSpellingPlaying.value = true
-
-            try {
-                // Try to get audio from API
-                val response = apiService.getWordAudio(word)
-                if (response.isSuccessful && response.body() != null) {
-                    val audioResponse = response.body()!!
-
-                    // Get spelling information
-                    val spellingResponse = apiService.getSpelling(word)
-                    if (spellingResponse.isSuccessful && spellingResponse.body() != null) {
-                        val spelling = spellingResponse.body()!!
-
-                        // Play each character
-                        for (audioUrl in spelling.audioUrls) {
-                            audioPlaybackManager.playAudioFromUrl(audioUrl)
-                            delay(800) // Wait between syllables
-                        }
-
-                        // Play the whole word
-                        delay(500)
-                        audioPlaybackManager.playAudioFromUrl(audioResponse.audioUrl)
+        if (ttsInitialized && !_isSpellingPlaying.value) {
+            viewModelScope.launch {
+                _isSpellingPlaying.value = true
+                try {
+                    textToSpeech?.setSpeechRate(speechRate)
+                    val utteranceId = "spelling_${UUID.randomUUID()}"
+                    // Split word into characters for Japanese (optional for better pronunciation)
+                    word.forEach { char ->
+                        textToSpeech?.speak(
+                            char.toString(),
+                            TextToSpeech.QUEUE_ADD,
+                            null,
+                            utteranceId
+                        )
+                        delay(800) // Pause between characters
                     }
-                } else {
-                    // Fallback to TTS for spelling if API fails
-                    playWordWithTTS(word)
+                    // Play whole word
+                    textToSpeech?.speak(
+                        word,
+                        TextToSpeech.QUEUE_ADD,
+                        null,
+                        utteranceId
+                    )
+                } catch (e: Exception) {
+                    Log.e("ViewModel", "Error playing spelling: ${e.message}")
+                } finally {
+                    // TTS listener handles _isSpellingPlaying update
                 }
-            } catch (e: Exception) {
-                Log.e("ViewModel", "Error playing spelling: ${e.message}")
-                e.printStackTrace()
-                // Fallback to TTS
-                playWordWithTTS(word)
-            } finally {
-                _isSpellingPlaying.value = false
             }
-        }
-    }
-
-    /**
-     * Fallback method to play word using TTS
-     */
-    private fun playWordWithTTS(word: String) {
-        if (ttsInitialized) {
-            textToSpeech?.setSpeechRate(speechRate)
-            val utteranceId = "spelling_${UUID.randomUUID()}"
-            textToSpeech?.speak(
-                word,
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                utteranceId
-            )
         }
     }
 
@@ -262,8 +238,6 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
      */
     fun checkAnswer(answer: String) {
         _selectedOption.value = answer
-
-        // Play the selected word pronunciation
         playWordSpelling(answer)
     }
 
@@ -271,13 +245,12 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
      * Check if the selected answer is correct and update progress
      */
     fun checkExercise() {
-        val currentAnswer = _selectedOption.value
-        if (currentAnswer == currentExercise.value.correctAnswer) {
+        val currentExercise = _currentExercise.value ?: return
+        val currentAnswer = _selectedOption.value ?: return
+        if (currentAnswer == currentExercise.correctAnswer) {
             // Correct answer
             _isAnswerCorrect.value = true
-            _userProgress.value += 0.1f // Increase progress
-
-            // Add a delay before loading next exercise
+            _userProgress.value = (_userProgress.value + 0.1f).coerceAtMost(1f)
             viewModelScope.launch {
                 delay(1500) // Show success feedback for 1.5 seconds
                 loadNextExercise()
@@ -285,17 +258,20 @@ class LanguageListeningViewModel(application: Application) : AndroidViewModel(ap
         } else {
             // Wrong answer
             _isAnswerCorrect.value = false
-            _hearts.value -= 1
+            _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
         }
     }
 
     /**
-     * Load the next exercise
+     * Load the next exercise (same section and unit for simplicity)
      */
     private fun loadNextExercise() {
         _selectedOption.value = null
         _isAnswerCorrect.value = null
-        loadExercise()
+        // Fetch another exercise from the same section/unit (adjust as needed)
+        val currentSectionId = 1L // Placeholder; track actual sectionId
+        val currentUnitId = 1L   // Placeholder; track actual unitId
+        fetchRandomExercise(currentSectionId, currentUnitId)
     }
 
     override fun onCleared() {

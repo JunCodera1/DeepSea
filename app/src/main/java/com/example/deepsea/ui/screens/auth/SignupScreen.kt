@@ -1,6 +1,7 @@
 package com.example.deepsea.ui.screens.auth
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -23,11 +24,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -47,10 +52,12 @@ import com.example.deepsea.ui.components.SignupTextField
 import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
+import com.example.deepsea.ui.viewmodel.auth.AvatarUploadState
+import com.example.deepsea.utils.RegisterState
 
 @Composable
 fun SignupPage(
-    onSignUpClick: (name: String, username: String, email: String, password: String, avatar: Uri?) -> Unit,
+    onSignUpClick: (name: String, username: String, email: String, password: String, avatar: Uri?) -> Unit = { _, _, _, _, _ -> },
     onSignInClick: () -> Unit = {},
     navController: DeepSeaNavController,
     authViewModel: AuthViewModel,
@@ -67,6 +74,11 @@ fun SignupPage(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
+    var isButtonEnabled by remember { mutableStateOf(true) }
+
+    // Get states from view model
+    val registerState by authViewModel.registerState.collectAsState()
+    val avatarUploadState by authViewModel.avatarUploadState.collectAsState()
 
     // Image picker launcher
     val imagePicker = rememberLauncherForActivityResult(
@@ -75,14 +87,36 @@ fun SignupPage(
         avatarUri = uri
     }
 
-//    val registerState by authViewModel.registerState.collectAsState()
-//
-//    LaunchedEffect(registerState) {
-//        if (registerState is RegisterState.Success) {
-//            onRegisterSuccess()
-//            authViewModel.resetRegisterState()
-//        }
-//    }
+    // Handle registration state changes
+    LaunchedEffect(registerState) {
+        when (registerState) {
+            is RegisterState.Success -> {
+                Toast.makeText(context, "Registration successful!", Toast.LENGTH_LONG).show()
+                onRegisterSuccess()
+                authViewModel.resetRegisterState()
+            }
+            is RegisterState.Error -> {
+                Toast.makeText(context, (registerState as RegisterState.Error).message, Toast.LENGTH_LONG).show()
+                isButtonEnabled = true
+            }
+            is RegisterState.Loading -> {
+                isButtonEnabled = false
+            }
+            else -> {
+                isButtonEnabled = true
+            }
+        }
+    }
+
+    // Handle avatar upload state changes
+    LaunchedEffect(avatarUploadState) {
+        when (avatarUploadState) {
+            is AvatarUploadState.Error -> {
+                Toast.makeText(context, (avatarUploadState as AvatarUploadState.Error).message, Toast.LENGTH_LONG).show()
+            }
+            else -> {}
+        }
+    }
 
     DeepSeaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -109,7 +143,7 @@ fun SignupPage(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Avatar selection
+                // Avatar selection with upload status
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -119,34 +153,43 @@ fun SignupPage(
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         .clickable { imagePicker.launch("image/*") }
                 ) {
-                    if (avatarUri != null) {
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                ImageRequest.Builder(context)
-                                    .data(avatarUri)
-                                    .crossfade(true)
-                                    .build()
-                            ),
-                            contentDescription = "Selected avatar",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Add avatar",
-                                tint = MaterialTheme.colorScheme.primary,
+                    when {
+                        avatarUploadState is AvatarUploadState.Loading -> {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(40.dp)
                             )
-                            Text(
-                                text = "Add Avatar",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
+                        }
+                        avatarUri != null -> {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    ImageRequest.Builder(context)
+                                        .data(avatarUri)
+                                        .crossfade(true)
+                                        .build()
+                                ),
+                                contentDescription = "Selected avatar",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
+                        }
+                        else -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Add avatar",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Text(
+                                    text = "Add Avatar",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -165,8 +208,8 @@ fun SignupPage(
                 SignupTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeHolder = "Phone or Email",
-                    label = "Phone or Email",
+                    placeHolder = "Email",
+                    label = "Email",
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -200,15 +243,48 @@ fun SignupPage(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Form validation checks
+                val isFormValid = name.isNotEmpty() &&
+                        email.isNotEmpty() &&
+                        email.contains("@") &&
+                        username.isNotEmpty() &&
+                        password.isNotEmpty() &&
+                        password == confirmPassword
+
+                // Error message for password mismatch
+                if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
+                    Text(
+                        text = "Passwords do not match",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 Button(
                     onClick = {
-                        onSignUpClick(name,username, email, password, avatarUri)
+                        if (isFormValid) {
+                            isButtonEnabled = false
+                            authViewModel.signup(name, username, email, password, avatarUri)
+                        } else {
+                            Toast.makeText(context, "Please fill all fields correctly", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(50.dp),
+                    enabled = isButtonEnabled && isFormValid
                 ) {
-                    Text(text = "SIGN UP")
+                    if (registerState is RegisterState.Loading || avatarUploadState is AvatarUploadState.Loading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(text = "SIGN UP")
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

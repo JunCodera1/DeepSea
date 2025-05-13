@@ -76,7 +76,7 @@ fun JapaneseCharacterLearningScreen() {
         TabRow(selectedTabIndex = selectedTabIndex) {
             tabs.forEachIndexed { index, title ->
                 Tab(
-                    text = { Text(title) },
+                    text = { Text(text = title, fontSize = 12.sp) },
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index }
                 )

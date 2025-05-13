@@ -2,31 +2,12 @@ package com.example.deepsea.ui.screens.feature.game
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.ui.components.PlayerScoreCard
+import com.example.deepsea.ui.viewmodel.game.GameViewModel
 import kotlinx.coroutines.delay
 
 @Composable
@@ -46,20 +28,22 @@ fun GamePlayScreen(
     opponentScore: Int,
     currentQuestionIndex: Int,
     totalQuestions: Int,
-    onAnswerSelected: (Boolean) -> Unit
+    onAnswerSelected: (Int) -> Unit // Changed from Boolean to Int
 ) {
     val primaryColor = Color(0xFF0078D7)
     val accentColor = Color(0xFFFF9500)
 
     var timeRemaining by remember { mutableStateOf(15) }
     var selectedAnswerIndex by remember { mutableStateOf<Int?>(null) }
-    var isAnswerCorrect by remember { mutableStateOf(false) }
+    var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) }
     var isAnswerSubmitted by remember { mutableStateOf(false) }
+    var shouldProceed by remember { mutableStateOf(false) }
 
     // Timer effect
     LaunchedEffect(key1 = currentQuestionIndex) {
         selectedAnswerIndex = null
         isAnswerSubmitted = false
+        isAnswerCorrect = null
         timeRemaining = 15
 
         while (timeRemaining > 0 && !isAnswerSubmitted) {
@@ -68,7 +52,9 @@ fun GamePlayScreen(
         }
 
         if (!isAnswerSubmitted) {
-            onAnswerSelected(false)
+            isAnswerSubmitted = true
+            isAnswerCorrect = false
+            shouldProceed = true
         }
     }
 
@@ -218,9 +204,7 @@ fun GamePlayScreen(
         }
 
         Spacer(modifier = Modifier.weight(1f))
-        var isAnswerCorrect by remember { mutableStateOf(false) }
-        var isAnswerSubmitted by remember { mutableStateOf(false) }
-        var shouldProceed by remember { mutableStateOf(false) }
+
         // Submit button
         Button(
             onClick = {
@@ -240,16 +224,18 @@ fun GamePlayScreen(
             )
         ) {
             Text(
-                text = if (!isAnswerSubmitted) "SUBMIT ANSWER" else
-                    if (isAnswerCorrect) "CORRECT!" else "INCORRECT!",
+                text = if (!isAnswerSubmitted) "SUBMIT ANSWER"
+                else if (isAnswerCorrect == true) "CORRECT!"
+                else "INCORRECT!",
                 fontWeight = FontWeight.Bold
             )
         }
+
         if (shouldProceed) {
             LaunchedEffect(Unit) {
                 delay(1500)
-                onAnswerSelected(isAnswerCorrect)
-                shouldProceed = false // reset
+                onAnswerSelected(selectedAnswerIndex ?: -1) // Pass selected answer index
+                shouldProceed = false
             }
         }
     }
