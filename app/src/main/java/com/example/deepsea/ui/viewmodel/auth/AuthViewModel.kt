@@ -127,6 +127,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun resetRegisterState() {
+        _registerState.value = RegisterState.Idle
+    }
 
     fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
         viewModelScope.launch {
@@ -149,7 +152,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = RetrofitClient.authApi.register(registerRequest)
 
                 if (response.isSuccessful && response.body() != null) {
-                    _registerState.value = RegisterState.Success(response.body()!!.message + "fwiejfwejfwfhudhaiojasidsaidcvn")
+                    _registerState.value = RegisterState.Success(response.body()!!.message + "Vjp Bro")
                 } else {
                     _registerState.value = RegisterState.Error("Registration failed: ${response.message()}")
                 }

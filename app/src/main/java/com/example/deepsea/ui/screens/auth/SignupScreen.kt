@@ -28,6 +28,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +49,7 @@ import com.example.deepsea.ui.components.SignupTextField
 import com.example.deepsea.ui.navigation.DeepSeaNavController
 import com.example.deepsea.ui.theme.DeepSeaTheme
 import com.example.deepsea.ui.viewmodel.auth.AuthViewModel
+import com.example.deepsea.utils.RegisterState
 
 @Composable
 fun SignupPage(
@@ -75,14 +78,17 @@ fun SignupPage(
         avatarUri = uri
     }
 
-//    val registerState by authViewModel.registerState.collectAsState()
-//
-//    LaunchedEffect(registerState) {
-//        if (registerState is RegisterState.Success) {
-//            onRegisterSuccess()
-//            authViewModel.resetRegisterState()
-//        }
-//    }
+    val registerState by authViewModel.registerState.collectAsState()
+
+    LaunchedEffect(registerState) {
+        if (registerState is RegisterState.Success) {
+            navController.navController.navigate("login") {
+                popUpTo("signup") { inclusive = true }
+            }
+            authViewModel.resetRegisterState()
+        }
+    }
+
 
     DeepSeaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
