@@ -41,6 +41,25 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _userState = MutableStateFlow<UserState>(UserState.NotLoggedIn)
     val userState: StateFlow<UserState> = _userState.asStateFlow()
 
+    // Validation regexes
+    private val EMAIL_REGEX = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+    private val USERNAME_REGEX = Regex("^(?![.])(?!.*[.]{2})[a-zA-Z0-9._]{5,50}$")
+    private val PASSWORD_REGEX = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{6,}$")
+    private val NAME_REGEX = Regex("^[\\p{L} .'-]{2,50}$")
+
+
+    // Error states for form validation
+    private val _nameError = MutableStateFlow<String?>(null)
+    val nameError: StateFlow<String?> = _nameError
+    private val _emailError = MutableStateFlow<String?>(null)
+    val emailError: StateFlow<String?> = _emailError
+    private val _usernameError = MutableStateFlow<String?>(null)
+    val usernameError: StateFlow<String?> = _usernameError
+    private val _passwordError = MutableStateFlow<String?>(null)
+    val passwordError: StateFlow<String?> = _passwordError
+    private val _confirmPasswordError = MutableStateFlow<String?>(null)
+    val confirmPasswordError: StateFlow<String?> = _confirmPasswordError
+
     init {
         viewModelScope.launch {
             val token = sessionManager.authToken.first()
@@ -52,6 +71,65 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 loadDashboard()
             }
         }
+    }
+
+    // Validation method
+    private fun validateSignupForm(name: String, username: String, email: String, password: String, confirmPassword: String): Boolean {
+        var isValid = true
+
+        // Reset all errors
+        _nameError.value = null
+        _emailError.value = null
+        _usernameError.value = null
+        _passwordError.value = null
+        _confirmPasswordError.value = null
+
+        // Validate name
+        if (name.isBlank()) {
+            _nameError.value = "Name is required"
+            isValid = false
+        } else if (!NAME_REGEX.matches(name)) {
+            _nameError.value = "Name must contain only letters and spaces (minimum 2 characters)"
+            isValid = false
+        }
+
+        // Validate email
+        if (email.isBlank()) {
+            _emailError.value = "Email is required"
+            isValid = false
+        } else if (!EMAIL_REGEX.matches(email)) {
+            _emailError.value = "Please enter a valid email address"
+            isValid = false
+        }
+
+        // Validate username
+        if (username.isBlank()) {
+            _usernameError.value = "Username is required"
+            isValid = false
+        } else if (!USERNAME_REGEX.matches(username)) {
+            _usernameError.value = "Username must be 3-20 characters (letters, numbers, underscores only)"
+            isValid = false
+        }
+
+        // Validate password
+        if (password.isBlank()) {
+            _passwordError.value = "Password is required"
+            isValid = false
+        } else if (!PASSWORD_REGEX.matches(password)) {
+            _passwordError.value = "Password must be at least 8 characters with uppercase, lowercase, and numbers"
+            isValid = false
+        }
+
+        // Validate confirm password
+        if (confirmPassword.isBlank()) {
+            _confirmPasswordError.value = "Please confirm your password"
+            isValid = false
+        } else if (password != confirmPassword) {
+            _confirmPasswordError.value = "Passwords don't match"
+            isValid = false
+        }
+
+        return isValid
     }
 
     fun login(email: String, password: String, navController: NavController) {
@@ -131,8 +209,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _registerState.value = RegisterState.Idle
     }
 
-    fun signup(name:String , username: String, email: String, password: String, avatar: Uri? = null) {
+    fun signup(name: String, username: String, email: String, password: String, confirmPassword: String, avatar: Uri? = null) {
         viewModelScope.launch {
+            // Validate form first
+            if (!validateSignupForm(name, username, email, password, confirmPassword)) {
+                _registerState.value = RegisterState.Error("Please correct the form errors")
+                return@launch
+            }
+
             _registerState.value = RegisterState.Loading
             try {
                 val avatarUrl = if (avatar != null) {
@@ -142,7 +226,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 val registerRequest = RegisterRequest(
-                    name= name,
+                    name = name,
                     username = username,
                     password = password,
                     email = email,

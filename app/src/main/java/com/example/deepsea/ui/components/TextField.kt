@@ -90,22 +90,40 @@ fun SignupTextField(
     isPassword: Boolean = false,
     modifier: Modifier = Modifier,
     padding: Dp = 0.dp,
-    color: Color = MaterialTheme.colorScheme.primary
+    color: Color = MaterialTheme.colorScheme.primary,
+    errorMessage: String? = null
 ) {
-    OutlinedTextField(
-        value = value,
-        shape = RoundedCornerShape(16.dp),
-        onValueChange = onValueChange,
-        placeholder = { Text(placeHolder) },
-        label = label?.let { { Text(it) } },
-        singleLine = true,
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = if (isPassword) KeyboardOptions(keyboardType = KeyboardType.Password)
-        else KeyboardOptions.Default,
-        colors = TextFieldDefaults.colors(color),
-        modifier = modifier
-            .padding(padding)
-            .fillMaxWidth()
-    )
-}
+    androidx.compose.foundation.layout.Column {
+        OutlinedTextField(
+            value = value,
+            shape = RoundedCornerShape(16.dp),
+            onValueChange = onValueChange,
+            placeholder = { Text(placeHolder) },
+            label = label?.let { { Text(it) } },
+            singleLine = true,
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+            keyboardOptions = if (isPassword) KeyboardOptions(keyboardType = KeyboardType.Password)
+            else KeyboardOptions.Default,
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = if (errorMessage != null) MaterialTheme.colorScheme.error else color,
+                unfocusedIndicatorColor = if (errorMessage != null) MaterialTheme.colorScheme.error else color,
+                errorIndicatorColor = MaterialTheme.colorScheme.error,
+                errorLabelColor = MaterialTheme.colorScheme.error,
+                errorCursorColor = MaterialTheme.colorScheme.error
+            ),
+            isError = errorMessage != null,
+            modifier = modifier
+                .padding(padding)
+                .fillMaxWidth()
+        )
 
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+    }
+}

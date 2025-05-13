@@ -71,6 +71,13 @@ fun SignupPage(
     var confirmPassword by remember { mutableStateOf("") }
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Collect error states
+    val nameError by authViewModel.nameError.collectAsState()
+    val emailError by authViewModel.emailError.collectAsState()
+    val usernameError by authViewModel.usernameError.collectAsState()
+    val passwordError by authViewModel.passwordError.collectAsState()
+    val confirmPasswordError by authViewModel.confirmPasswordError.collectAsState()
+
     // Image picker launcher
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -88,7 +95,6 @@ fun SignupPage(
             authViewModel.resetRegisterState()
         }
     }
-
 
     DeepSeaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -164,6 +170,7 @@ fun SignupPage(
                     onValueChange = { name = it },
                     placeHolder = "Full Name",
                     label = "Full Name",
+                    errorMessage = nameError
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -173,6 +180,7 @@ fun SignupPage(
                     onValueChange = { email = it },
                     placeHolder = "Phone or Email",
                     label = "Phone or Email",
+                    errorMessage = emailError
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -182,6 +190,7 @@ fun SignupPage(
                     onValueChange = { username = it },
                     placeHolder = "Username",
                     label = "Username",
+                    errorMessage = usernameError
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -191,7 +200,8 @@ fun SignupPage(
                     onValueChange = { password = it },
                     placeHolder = "Password",
                     label = "Password",
-                    isPassword = true
+                    isPassword = true,
+                    errorMessage = passwordError
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -201,14 +211,15 @@ fun SignupPage(
                     onValueChange = { confirmPassword = it },
                     placeHolder = "Confirm Password",
                     label = "Confirm Password",
-                    isPassword = true
+                    isPassword = true,
+                    errorMessage = confirmPasswordError
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
                     onClick = {
-                        onSignUpClick(name,username, email, password, avatarUri)
+                        authViewModel.signup(name, username, email, password, confirmPassword, avatarUri)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
