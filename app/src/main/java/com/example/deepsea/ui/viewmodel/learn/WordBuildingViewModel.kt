@@ -8,7 +8,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.WordBuildingService
 import com.example.deepsea.data.model.exercise.TranslationExercise
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,7 +51,13 @@ class WordBuildingViewModel(
 
     init {
         initTextToSpeech()
-        loadExercise()
+    }
+
+    fun resetState() {
+        _selectedWords.value = emptyList()
+        _isAnswerCorrect.value = null
+        _currentExercise.value = null
+        _errorMessage.value = null
     }
 
     private fun initTextToSpeech() {
@@ -65,6 +70,7 @@ class WordBuildingViewModel(
                 }
                 ttsInitialized = true
                 setupTTSListener()
+                loadExercise() // Load exercise after TTS is initialized
             } else {
                 Log.e("TTS", "Initialization failed")
                 _errorMessage.value = "Failed to initialize TTS"
@@ -106,14 +112,17 @@ class WordBuildingViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             try {
+                Log.d("ViewModel", "Attempting to load exercise from API")
                 val response = apiService.getTranslationExercise()
                 _currentExercise.value = response
                 _selectedWords.value = emptyList()
                 _isAnswerCorrect.value = null
+                Log.d("ViewModel", "Successfully loaded exercise: ${response.sourceText}")
             } catch (e: Exception) {
                 Log.e("ViewModel", "Error loading exercise: ${e.message}")
                 _errorMessage.value = "Failed to load exercise: ${e.message}"
                 _currentExercise.value = createFallbackExercise()
+                Log.d("ViewModel", "Fallback exercise loaded: ${createFallbackExercise().sourceText}")
             } finally {
                 _isLoading.value = false
             }
@@ -199,19 +208,9 @@ class WordBuildingViewModel(
 
         if (isCorrect) {
             _userProgress.value = (_userProgress.value + 0.1f).coerceAtMost(1f)
-            viewModelScope.launch {
-                delay(1500)
-                loadNextExercise()
-            }
         } else {
             _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
         }
-    }
-
-    private fun loadNextExercise() {
-        _selectedWords.value = emptyList()
-        _isAnswerCorrect.value = null
-        loadExercise()
     }
 
     override fun onCleared() {

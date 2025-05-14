@@ -1,5 +1,6 @@
 package com.example.deepsea.utils
 
+import android.app.Application
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,9 +21,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -29,8 +33,12 @@ import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.api.SessionData
 import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
+import com.example.deepsea.ui.screens.feature.learn.MatchingPairsViewModel
 import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
+import com.example.deepsea.ui.viewmodel.learn.LearningViewModel
+import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
+import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModelFactory
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -43,43 +51,91 @@ fun LearningSessionManager(
     val navController = rememberNavController()
     var sessionState by remember { mutableStateOf(SessionState()) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current.applicationContext as Application
 
+    // Initialize sessionState with 5-10 screens
     LaunchedEffect(Unit) {
-        val screenCount = Random.nextInt(10, 20) // Random between 10 and 19
+        val screenCount = Random.nextInt(3, 5) // 5-10 screens per unit
         val screens = generateRandomScreens(screenCount)
         sessionState = sessionState.copy(
             totalScreens = screenCount,
             screens = screens,
-            currentScreenIndex = 0
+            currentScreenIndex = 0,
+            progress = 0f
         )
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = "learning_screen",
-        modifier = modifier
-    ) {
-        composable("learning_screen") {
-            LearningScreenWrapper(
-                sessionState = sessionState,
-                lessonId = lessonId,
-                onNextScreen = {
-                    val nextIndex = sessionState.currentScreenIndex + 1
-                    if (nextIndex < sessionState.totalScreens) {
-                        sessionState = sessionState.copy(currentScreenIndex = nextIndex)
-                        navController.navigate("learning_screen")
-                    } else {
-                        coroutineScope.launch {
-                            saveSessionProgress(lessonId, sessionState)
-                            onComplete()
+    // Only render NavHost when screens are populated
+    if (sessionState.screens.isNotEmpty()) {
+        NavHost(
+            navController = navController,
+            startDestination = "learning_screen/0",
+            modifier = modifier
+        ) {
+            sessionState.screens.forEachIndexed { index, screenType ->
+                composable("learning_screen/$index") {
+                    val viewModel = when (screenType) {
+                        ScreenType.WORD_BUILDING -> {
+                            viewModel<WordBuildingViewModel>(
+                                factory = WordBuildingViewModelFactory(
+                                    RetrofitClient.wordBuildingService,
+                                    context
+                                )
+                            )
                         }
+                        ScreenType.QUIZ_IMAGE -> viewModel<LearningViewModel>(
+                            factory = LearningViewModel.Factory(lessonId, context)
+                        )
+                        ScreenType.MATCHING_PAIRS -> viewModel<MatchingPairsViewModel>()
+                        else -> null // Handle LANGUAGE_LISTENING if needed
                     }
-                },
-                onBack = { navController.popBackStack() }
-            )
+                    LearningScreenWrapper(
+                        sessionState = sessionState,
+                        lessonId = lessonId,
+                        screenType = screenType,
+                        viewModel = viewModel,
+                        onUpdateProgress = { newProgress ->
+                            val screenProgress = 1f / sessionState.totalScreens
+                            val totalProgress = (sessionState.currentScreenIndex * screenProgress) + (newProgress * screenProgress)
+                            sessionState = sessionState.copy(progress = totalProgress.coerceIn(0f, 1f))
+                        },
+                        onNextScreen = {
+                            val nextIndex = sessionState.currentScreenIndex + 1
+                            if (nextIndex < sessionState.totalScreens) {
+                                sessionState = sessionState.copy(currentScreenIndex = nextIndex)
+                                navController.navigate("learning_screen/$nextIndex") {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = false
+                                    }
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                coroutineScope.launch {
+                                    saveSessionProgress(lessonId, sessionState)
+                                    onComplete()
+                                }
+                            }
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        ) {
+            androidx.compose.material3.CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Loading session...", fontSize = 16.sp)
         }
     }
 }
+
 
 data class SessionState(
     val totalScreens: Int = 0,
@@ -105,10 +161,12 @@ fun generateRandomScreens(count: Int): List<ScreenType> {
 fun LearningScreenWrapper(
     sessionState: SessionState,
     lessonId: Long,
+    screenType: ScreenType,
+    viewModel: Any?,
+    onUpdateProgress: (Float) -> Unit,
     onNextScreen: () -> Unit,
     onBack: () -> Unit
 ) {
-    // Map lessonId to sectionId and unitId
     val sectionId = ((lessonId - 1) / 5) + 1
     val unitId = lessonId
 
@@ -118,9 +176,7 @@ fun LearningScreenWrapper(
             .padding(16.dp)
     ) {
         LinearProgressIndicator(
-            progress = if (sessionState.totalScreens > 0) {
-                (sessionState.currentScreenIndex + 1).toFloat() / sessionState.totalScreens
-            } else 0f,
+            progress = sessionState.progress,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(12.dp)
@@ -131,21 +187,58 @@ fun LearningScreenWrapper(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when (sessionState.screens.getOrNull(sessionState.currentScreenIndex)) {
-            ScreenType.MATCHING_PAIRS -> MatchingPairsScreen(onComplete = onNextScreen)
-            ScreenType.QUIZ_IMAGE -> QuizImageScreen(
-                lessonId = lessonId,
-                onBack = onBack,
-                onComplete = onNextScreen
-            )
-            ScreenType.WORD_BUILDING -> WordBuildingScreen(onComplete = onNextScreen)
+        when (screenType) {
+            ScreenType.MATCHING_PAIRS -> {
+                val matchingViewModel = viewModel as MatchingPairsViewModel
+                MatchingPairsScreen(
+                    viewModel = matchingViewModel,
+                    onNavigateToSettings = onBack,
+                    onComplete = {
+                        onUpdateProgress(1f)
+                        onNextScreen()
+                    }
+                )
+                LaunchedEffect(matchingViewModel.progress.collectAsState().value) {
+                    onUpdateProgress(matchingViewModel.progress.value)
+                }
+            }
+            ScreenType.QUIZ_IMAGE -> {
+                val learningViewModel = viewModel as LearningViewModel
+                QuizImageScreen(
+                    lessonId = lessonId,
+                    onBack = onBack,
+                    onComplete = {
+                        onUpdateProgress(1f)
+                        onNextScreen()
+                    }
+                )
+                LaunchedEffect(learningViewModel.progress.collectAsState().value) {
+                    onUpdateProgress(learningViewModel.progress.value)
+                }
+            }
+            ScreenType.WORD_BUILDING -> {
+                val wordBuildingViewModel = viewModel as WordBuildingViewModel
+                WordBuildingScreen(
+                    viewModel = wordBuildingViewModel,  // Pass the existing viewModel instance
+                    onNavigateToSettings = onBack,
+                    onComplete = {
+                        onUpdateProgress(1f)
+                        onNextScreen()
+                    }
+                )
+                LaunchedEffect(wordBuildingViewModel.userProgress.collectAsState().value) {
+                    onUpdateProgress(wordBuildingViewModel.userProgress.value)
+                }
+            }
             ScreenType.LANGUAGE_LISTENING -> LanguageListeningScreen(
                 sectionId = sectionId,
                 unitId = unitId,
-                onNavigateToSettings = { /* Navigate to settings screen or no-op */ },
-                onComplete = onNextScreen
+                onNavigateToSettings = onBack,
+                onComplete = {
+                    onUpdateProgress(1f)
+                    onNextScreen()
+                }
             )
-            null -> Text("Session Complete", fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

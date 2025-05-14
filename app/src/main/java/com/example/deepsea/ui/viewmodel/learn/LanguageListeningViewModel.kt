@@ -3,6 +3,7 @@ package com.example.deepsea.ui.viewmodel.learn
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.HearingService
 import com.example.deepsea.data.model.exercise.HearingExercise
@@ -19,10 +20,10 @@ class LanguageListeningViewModel(
     private val _currentExercise = MutableStateFlow<HearingExercise?>(null)
     val currentExercise: StateFlow<HearingExercise?> = _currentExercise
 
-    private val _userProgress = MutableStateFlow(0.4f) // Placeholder
+    private val _userProgress = MutableStateFlow(0f)
     val userProgress: StateFlow<Float> = _userProgress
 
-    private val _hearts = MutableStateFlow(3) // Placeholder
+    private val _hearts = MutableStateFlow(3)
     val hearts: StateFlow<Int> = _hearts
 
     private val _isTtsPlaying = MutableStateFlow(false)
@@ -42,10 +43,14 @@ class LanguageListeningViewModel(
 
     private var tts: TextToSpeech? = null
 
+    init {
+        initializeTts()
+    }
+
     fun initializeTts() {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                tts?.language = Locale.JAPAN // Adjust based on language
+                tts?.language = Locale.JAPAN
             } else {
                 _errorMessage.value = "Failed to initialize TTS"
             }
@@ -63,6 +68,7 @@ class LanguageListeningViewModel(
                     correctAnswer = exerciseDto.correctAnswer,
                     options = exerciseDto.options
                 )
+                _userProgress.value = 0f
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load exercise: ${e.message}"
             } finally {
@@ -92,15 +98,15 @@ class LanguageListeningViewModel(
         val correctAnswer = _currentExercise.value?.correctAnswer
         if (selected != null && correctAnswer != null) {
             _isAnswerCorrect.value = selected == correctAnswer
-            if (_isAnswerCorrect.value == false) {
+            if (_isAnswerCorrect.value == true) {
+                _userProgress.value = 1f // Since only 1 exercise, progress is 100% on correct answer
+            } else {
                 _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
             }
         }
     }
 
     fun onExerciseCompleted() {
-        // Update progress (placeholder logic)
-        _userProgress.value = (_userProgress.value + 0.1f).coerceAtMost(1f)
         _selectedOption.value = null
         _isAnswerCorrect.value = null
     }
@@ -109,5 +115,19 @@ class LanguageListeningViewModel(
         tts?.stop()
         tts?.shutdown()
         super.onCleared()
+    }
+
+    // Factory to create instances of LanguageListeningViewModel
+    class Factory(
+        private val apiService: HearingService,
+        private val context: Context
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(LanguageListeningViewModel::class.java)) {
+                return LanguageListeningViewModel(apiService, context) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 }

@@ -218,7 +218,7 @@ fun LanguageListeningScreen(
                         } else {
                             Text(
                                 text = "Loading options...",
-                                fontSize = 16.sp,
+                                    fontSize = 16.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp),

@@ -52,15 +52,15 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
 fun WordBuildingScreen(
+    viewModel: WordBuildingViewModel = viewModel(
+        factory = WordBuildingViewModelFactory(
+            RetrofitClient.wordBuildingService,
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    ),
     onNavigateToSettings: () -> Unit = {},
     onComplete: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-
-    val viewModel: WordBuildingViewModel = viewModel(
-        factory = WordBuildingViewModelFactory(RetrofitClient.wordBuildingService, context.applicationContext as android.app.Application)
-    )
-
     val exercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
     val hearts by viewModel.hearts.collectAsState()
@@ -72,6 +72,12 @@ fun WordBuildingScreen(
 
     var showFeedback by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        // Load exercise when the screen is first displayed
+        viewModel.resetState()
+        viewModel.loadExercise()
+    }
+
     LaunchedEffect(isAnswerCorrect) {
         if (isAnswerCorrect != null) {
             showFeedback = true
@@ -79,11 +85,11 @@ fun WordBuildingScreen(
             showFeedback = false
             if (isAnswerCorrect == true) {
                 println("✅ Word building complete. Moving to next screen.")
-                onComplete()
+                delay(500) // Short delay before navigating
+                onComplete() // Navigate to next screen
             }
         }
     }
-
 
     Box(
         modifier = Modifier
