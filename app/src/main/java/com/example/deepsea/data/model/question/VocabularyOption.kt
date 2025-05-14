@@ -1,10 +1,17 @@
 package com.example.deepsea.data.model.question
 
-import androidx.annotation.DrawableRes
-
-data class  VocabularyOption(
+data class VocabularyOption(
     val id: Long,
-    @DrawableRes val image: Int,
-    val languageContent: Map<String, LanguageContent>
-)
+    val image: Int,
+    val languageContent: Map<String, LanguageText>
+) {
+    // Hàm tiện ích để lấy nội dung theo ngôn ngữ
+    fun getTextForLanguage(language: String): String {
+        return languageContent[language]?.text ?: ""
+    }
+
+    fun getPronunciationForLanguage(language: String): String {
+        return languageContent[language]?.pronunciation ?: ""
+    }
+}
 

@@ -1,6 +1,6 @@
 package com.example.deepsea.data.model.user
 
-data class JwtResponse(
+data class LoginResponse(
     val token: String,
     val id: Long,
     val profile_id: Long,

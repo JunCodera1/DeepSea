@@ -110,5 +110,9 @@ val BlueLight = Color(0xFF5EBFF7)
 val BluePrimary = Color(0xFF1CB0F6)
 val GreenLight = Color(0xFF7BE05A)
 val Green = Color(0xFF58CC02)
+val DeepSeaBlue = Color(0xFF005377)    // Màu xanh biển sâu
+val SuccessGreen = Color(0xFF4CAF50)   // Màu xanh lá thành công
+val HeartRed = Color(0xFFE53935)       // Màu đỏ trái tim
 
 const val AlphaNearOpaque = 0.95f
+

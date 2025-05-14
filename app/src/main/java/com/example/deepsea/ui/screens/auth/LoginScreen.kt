@@ -45,7 +45,7 @@ import androidx.activity.ComponentActivity as ActivityComponentActivity
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun LoginPage(
-    navController: DeepSeaNavController,
+    deepseaNavController: DeepSeaNavController,
     onSignInClick: (email: String, password: String) -> Unit,
     onLoginSuccess: () -> Unit,
     authViewModel: AuthViewModel
@@ -53,7 +53,8 @@ fun LoginPage(
     // Lấy scope của transition
     LocalSharedTransitionScope.current ?: error("No SharedTransitionScope found")
     LocalNavAnimatedVisibilityScope.current ?: error("No NavAnimatedVisibilityScope found")
-
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
     val backgroundPainter = painterResource(id = R.drawable.background_login)
     val loginState by authViewModel.loginState.collectAsState()
@@ -76,19 +77,41 @@ fun LoginPage(
     val callbackManager = remember { CallbackManager.Factory.create() }
 
     // Xử lý kết quả đăng nhập từ Google
+    // Xử lý kết quả đăng nhập từ Google
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        Log.d("WelcomePage", "Google sign-in result received: ${result.resultCode}")
         if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
                 account?.idToken?.let { token ->
-                    // Gọi viewModel để xử lý đăng nhập với Google
-                    authViewModel.signInWithGoogle(token)
+                    Log.d("WelcomePage", "Google ID token obtained: ${token.take(10)}...")
+                    authViewModel.signInWithGoogle(token, deepseaNavController.navController)
+                } ?: run {
+                    Log.e("WelcomePage", "Google sign-in failed: ID token is null")
+                    showError = true
+                    errorMessage = "Google sign-in failed: Couldn't get ID token"
                 }
             } catch (e: ApiException) {
-                Log.e("LoginPage", "Google sign-in failed: ${e.message}")
+                Log.e("WelcomePage", "Google sign-in failed: ${e.statusCode} - ${e.message}")
+                showError = true
+                errorMessage = "Google sign-in failed: ${e.statusMessage}"
+            }
+        } else {
+            Log.e("WelcomePage", "Google sign-in canceled or failed: ${result.resultCode}")
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                task.getResult(ApiException::class.java)
+            } catch (e: ApiException) {
+                Log.e("WelcomePage", "ApiException status: ${e.statusCode} - ${e.message}")
+                showError = true
+                errorMessage = if (e.statusCode == 12501) {
+                    "Google sign-in was canceled by user"
+                } else {
+                    "Google sign-in failed: ${e.statusMessage}"
+                }
             }
         }
     }
@@ -110,7 +133,7 @@ fun LoginPage(
                 override fun onSuccess(result: LoginResult) {
                     result.accessToken.token?.let { token ->
                         // Gọi viewModel để xử lý đăng nhập với Facebook
-                        authViewModel.signInWithFacebook(token)
+                        authViewModel.signInWithFacebook(token, navController = deepseaNavController.navController)
                     }
                 }
 
@@ -176,7 +199,7 @@ fun LoginPage(
             TextButton(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
-                    navController.navController.navigate("forgot-password")
+                    deepseaNavController.navController.navigate("forgot-password")
                 }
             ) {
                 Text("Forgot password?")
@@ -226,7 +249,7 @@ fun LoginPage(
 
             TextButton(
                 onClick = {
-                    navController.navController.navigate("signup")
+                    deepseaNavController.navController.navigate("signup")
                 }
             ) {
                 Text("Don't have account? Sign Up.")

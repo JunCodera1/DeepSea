@@ -7,5 +7,5 @@ data class ImageSelectionQuestion(
     val pronunciation: String,
     val languageOption: String,
     val options: List<VocabularyOptionUi>,
-    val correctAnswerId: Long
+    val correctAnswer: VocabularyOption
 ) : Question

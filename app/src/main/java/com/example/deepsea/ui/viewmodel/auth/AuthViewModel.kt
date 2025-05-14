@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.deepsea.utils.CloudinaryUploadService
 import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.model.auth.GoogleTokenRequest
 import com.example.deepsea.data.model.auth.LoginRequest
 import com.example.deepsea.data.model.auth.RegisterRequest
 import com.example.deepsea.utils.DashboardState
@@ -101,29 +102,71 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Google login
-    fun signInWithGoogle(idToken: String) {
+    fun signInWithGoogle(idToken: String, navController: NavController) {
         viewModelScope.launch {
             try {
                 _loginState.value = LoginState.Loading
+                Log.d("AuthViewModel", "Processing Google sign-in with token: ${idToken.take(10)}...")
+
                 // Gọi API đăng nhập với Google
-                // authRepository.signInWithGoogle(idToken)
-                _loginState.value = LoginState.Success
+                val response = RetrofitClient.authApi.loginWithGoogle(GoogleTokenRequest(idToken))
+
+                if (response.isSuccessful && response.body() != null) {
+                    val jwtResponse = response.body()!!
+                    Log.d("AuthViewModel", "Google login response: $jwtResponse")
+
+                    sessionManager.saveAuthToken(
+                        token = jwtResponse.token,
+                        username = jwtResponse.username,
+                        userId = jwtResponse.id,
+                        email = jwtResponse.email,
+                        profileId = jwtResponse.profile_id
+                    )
+
+                    _userState.value = UserState.LoggedIn(jwtResponse.username, jwtResponse.email)
+                    _loginState.value = LoginState.Success
+
+                    if (jwtResponse.firstLogin == true) {
+                        navController.navigate("language-selection") {
+                            popUpTo("welcome") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("home") {
+                            popUpTo("welcome") { inclusive = true }
+                        }
+                    }
+
+                    Log.d("AuthViewModel", "Google login successful, navigating...")
+                } else {
+                    val errorMsg = "Google sign in failed: ${response.message()}"
+                    Log.e("AuthViewModel", errorMsg)
+                    _loginState.value = LoginState.Error(errorMsg)
+                }
             } catch (e: Exception) {
-                _loginState.value = LoginState.Error(e.message ?: "Google sign in failed")
+                val errorMsg = "Google sign in error: ${e.message}"
+                Log.e("AuthViewModel", errorMsg, e)
+                _loginState.value = LoginState.Error(errorMsg)
             }
         }
     }
 
     // Facebook login
-    fun signInWithFacebook(token: String) {
+    fun signInWithFacebook(token: String, navController: NavController) {
         viewModelScope.launch {
             try {
                 _loginState.value = LoginState.Loading
+                Log.d("AuthViewModel", "Processing Facebook sign-in...")
+
                 // Gọi API đăng nhập với Facebook
-                // authRepository.signInWithFacebook(token)
-                _loginState.value = LoginState.Success
+                // TODO: Implement actual Facebook login API call
+                // val response = RetrofitClient.authApi.loginWithFacebook(FacebookTokenRequest(token))
+
+                // Temporary placeholder response handling - replace with actual API call
+                _loginState.value = LoginState.Error("Facebook login not implemented yet")
             } catch (e: Exception) {
-                _loginState.value = LoginState.Error(e.message ?: "Facebook sign in failed")
+                val errorMsg = "Facebook sign in failed: ${e.message}"
+                Log.e("AuthViewModel", errorMsg, e)
+                _loginState.value = LoginState.Error(errorMsg)
             }
         }
     }

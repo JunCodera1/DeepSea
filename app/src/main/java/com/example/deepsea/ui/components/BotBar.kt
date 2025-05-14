@@ -76,7 +76,7 @@ enum class HomeSections(
     ),
     KANJI(
         R.string.home_kanji,
-        "search-screen",
+        "alphabet-screen",
         R.drawable.ic_kanji,
         Color(0xFF10805E),
         Color(0xFF38A78F)

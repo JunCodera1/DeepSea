@@ -52,4 +52,8 @@ object RetrofitClient {
     val gameApiService: GameApiService by lazy {
         retrofit.create(GameApiService::class.java)
     }
+
+    val hearingService: HearingService by lazy {
+        retrofit.create(HearingService::class.java)
+    }
 }

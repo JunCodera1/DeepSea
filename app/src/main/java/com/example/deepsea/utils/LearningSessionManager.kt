@@ -131,7 +131,6 @@ fun LearningScreenWrapper(
             ScreenType.LANGUAGE_LISTENING -> LanguageListeningScreen(
                 sectionId = sectionId,
                 unitId = unitId,
-                viewModel = viewModel(),
                 onNavigateToSettings = { /* Navigate to settings screen or no-op */ },
                 onComplete = onNextScreen
             )

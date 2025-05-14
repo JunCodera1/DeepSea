@@ -1,29 +1,62 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deepsea.R
+import com.example.deepsea.ui.theme.DeepSeaBlue
+import com.example.deepsea.ui.theme.HeartRed
+import com.example.deepsea.ui.theme.SuccessGreen
 import com.example.deepsea.ui.viewmodel.learn.LearningViewModel
 import com.example.deepsea.ui.viewmodel.learn.VocabularyItem
 import kotlinx.coroutines.delay
@@ -34,68 +67,208 @@ fun QuizImageScreen(
     onBack: () -> Unit,
     onComplete: () -> Unit
 ) {
-    // Create ViewModel using Factory without Hilt
     val learningViewModel: LearningViewModel = viewModel(
         factory = LearningViewModel.Factory(lessonId)
     )
 
+    val isLoading by learningViewModel.isLoading.collectAsState()
     val currentWord by learningViewModel.currentWord.collectAsState()
     val options by learningViewModel.options.collectAsState()
-    val selectedOption = remember { mutableStateOf<String?>(null) }
     val heartCount by learningViewModel.hearts.collectAsState()
     val progressPercent by learningViewModel.progress.collectAsState()
-
     val isAnswerCorrect by learningViewModel.isAnswerCorrect.collectAsState()
-    // Check for game completion
-    LaunchedEffect(isAnswerCorrect) {
-        if (isAnswerCorrect == true) {
-            delay(1000)
-            learningViewModel.loadNextWord()
-            selectedOption.value = null
-            learningViewModel.resetAnswerState()
+
+    var selectedOption by remember { mutableStateOf<String?>(null) }
+    var showFeedback by remember { mutableStateOf(false) }
+
+    // Check if the game is over
+    val isGameOver = heartCount <= 0
+
+    // Check for lesson completion
+    val isLessonComplete = progressPercent >= 1.0f
+
+    LaunchedEffect(isGameOver, isLessonComplete) {
+        if (isGameOver) {
+            // Handle game over
+            delay(1500)
+            onBack()
+        } else if (isLessonComplete) {
+            // Handle lesson completion
+            delay(1500)
+            onComplete()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    // Load next word when first launched
+    LaunchedEffect(Unit) {
+        if (currentWord == null && !isLoading) {
+            learningViewModel.loadNextWord()
+        }
+    }
+
+    // Surface for consistent theming
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        // Top Bar
-        TopBar(
-            heartCount = heartCount,
-            progressPercent = progressPercent,
-            onBackClick = onBack
-        )
+        if (isLoading) {
+            LoadingScreen()
+            return@Surface
+        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        // Check for feedback handling
+        LaunchedEffect(isAnswerCorrect) {
+            if (isAnswerCorrect != null) {
+                showFeedback = true
+                delay(2000) // Show feedback for 2 seconds
+                showFeedback = false
 
-        // Word to Learn
-        WordToLearnSection(currentWord = currentWord)
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Options Grid
-        OptionsGrid(
-            options = options,
-            selectedOption = selectedOption.value,
-            onOptionSelected = { option ->
-                selectedOption.value = option
-            }
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Check Button
-        CheckButton(
-            isEnabled = selectedOption.value != null,
-            onClick = {
-                onComplete
-                selectedOption.value?.let {
-                    learningViewModel.checkAnswer(it)
+                if (isAnswerCorrect == true) {
+                    learningViewModel.loadNextWord()
+                    selectedOption = null
+                    learningViewModel.resetAnswerState()
+                } else {
+                    // Only reset answer state for wrong answers
+                    learningViewModel.resetAnswerState()
                 }
             }
-        )
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Main content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Top Bar
+                TopBar(
+                    heartCount = heartCount,
+                    progressPercent = progressPercent,
+                    onBackClick = onBack
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Title
+                Text(
+                    text = "Select the correct image",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Word To Learn Section
+                currentWord?.let { word ->
+                    WordToLearnSection(currentWord = word)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Options Grid (only show if we have options)
+                if (options.isNotEmpty()) {
+                    OptionsGrid(
+                        options = options,
+                        selectedOption = selectedOption,
+                        onOptionSelected = { option ->
+                            if (isAnswerCorrect == null) {
+                                selectedOption = option
+                            }
+                        },
+                        isEnabled = isAnswerCorrect == null
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Check Button
+                CheckButton(
+                    isEnabled = selectedOption != null && isAnswerCorrect == null,
+                    onClick = {
+                        selectedOption?.let {
+                            learningViewModel.checkAnswer(it)
+                        }
+                    }
+                )
+            }
+
+            // Feedback overlay
+            AnimatedVisibility(
+                visible = showFeedback,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0x80000000)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .padding(16.dp)
+                            .shadow(8.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                painter = painterResource(
+                                    id = if (isAnswerCorrect == true) R.drawable.ic_check_circle
+                                    else R.drawable.ic_mistakes
+                                ),
+                                contentDescription = if (isAnswerCorrect == true) "Correct" else "Incorrect",
+                                tint = if (isAnswerCorrect == true) SuccessGreen else HeartRed,
+                                modifier = Modifier.size(64.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = if (isAnswerCorrect == true) "Correct!" else "Try Again!",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isAnswerCorrect == true) SuccessGreen else HeartRed
+                            )
+
+                            if (isAnswerCorrect == false && currentWord != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "The correct answer is: ${currentWord!!.english}",
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(
+                color = DeepSeaBlue,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Loading quiz...",
+                fontSize = 18.sp,
+                color = Color.Gray
+            )
+        }
     }
 }
 
@@ -110,39 +283,46 @@ fun TopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBackClick) {
+        // Back Button
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.size(40.dp)
+        ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Go Back",
+                painter = painterResource(id = R.drawable.ic_settings),
+                contentDescription = "Settings",
                 tint = Color.Gray
             )
         }
 
+        // Progress Bar
         LinearProgressIndicator(
             progress = progressPercent,
             modifier = Modifier
                 .weight(1f)
+                .padding(horizontal = 12.dp)
                 .height(12.dp)
                 .clip(RoundedCornerShape(8.dp)),
-            color = Color(0xFF58CC02),
+            color = SuccessGreen,
             trackColor = Color.LightGray
         )
 
+        // Hearts Counter
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_heart),
                 contentDescription = "Hearts",
-                tint = Color.Red,
-                modifier = Modifier.size(24.dp)
+                tint = HeartRed,
+                modifier = Modifier.size(32.dp)
             )
             Text(
                 text = heartCount.toString(),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color.Red,
+                fontSize = 24.sp,
+                color = HeartRed,
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
@@ -151,43 +331,49 @@ fun TopBar(
 
 @Composable
 fun WordToLearnSection(currentWord: VocabularyItem) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
     ) {
         // Audio Button
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF1CB0F6))
-                .clickable { /* Play audio functionality would go here */ }
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+        Card(
+            shape = CircleShape,
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF26A6E0)),
+            modifier = Modifier.size(80.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_audio),
-                contentDescription = "Play Audio",
-                tint = Color.White,
-                modifier = Modifier.size(36.dp)
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.VolumeUp,
+                    contentDescription = "Play Audio",
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-        // Word in Romaji
-        Text(
-            text = currentWord.romaji,
-            fontSize = 16.sp,
-            color = Color.Gray
-        )
+        // Word Information
+        Column {
+            // Romaji (phonetic spelling)
+            Text(
+                text = currentWord.romaji,
+                fontSize = 18.sp,
+                color = Color.Gray
+            )
 
-        // Word in Japanese
-        Text(
-            text = currentWord.native,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
+            // Japanese word
+            Text(
+                text = currentWord.native,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -195,93 +381,100 @@ fun WordToLearnSection(currentWord: VocabularyItem) {
 fun OptionsGrid(
     options: List<VocabularyItem>,
     selectedOption: String?,
-    onOptionSelected: (String) -> Unit
+    onOptionSelected: (String) -> Unit,
+    isEnabled: Boolean
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OptionItem(
-                item = options.getOrNull(0),
-                isSelected = selectedOption == options.getOrNull(0)?.english,
-                onOptionSelected = onOptionSelected,
-                modifier = Modifier.weight(1f)
-            )
+    // Ensure we have valid options to display
+    if (options.size < 2) return
 
-            OptionItem(
-                item = options.getOrNull(1),
-                isSelected = selectedOption == options.getOrNull(1)?.english,
-                onOptionSelected = onOptionSelected,
-                modifier = Modifier.weight(1f)
-            )
-        }
+    // Group options into rows of 2
+    val rows = options.chunked(2)
 
-        Spacer(modifier = Modifier.height(16.dp))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        rows.forEach { rowOptions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                rowOptions.forEach { option ->
+                    ImageOption(
+                        imageRes = option.imageResId,
+                        label = option.english,
+                        isSelected = selectedOption == option.english,
+                        onSelected = { onOptionSelected(option.english) },
+                        isEnabled = isEnabled,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OptionItem(
-                item = options.getOrNull(2),
-                isSelected = selectedOption == options.getOrNull(2)?.english,
-                onOptionSelected = onOptionSelected,
-                modifier = Modifier.weight(1f)
-            )
+                // Add empty placeholders if needed to maintain layout
+                if (rowOptions.size < 2) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
 
-            OptionItem(
-                item = options.getOrNull(3),
-                isSelected = selectedOption == options.getOrNull(3)?.english,
-                onOptionSelected = onOptionSelected,
-                modifier = Modifier.weight(1f)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-fun OptionItem(
-    item: VocabularyItem?,
+fun ImageOption(
+    imageRes: Int,
+    label: String,
     isSelected: Boolean,
-    onOptionSelected: (String) -> Unit,
+    onSelected: () -> Unit,
+    isEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    if (item == null) return
-
-    Box(
+    Card(
         modifier = modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(16.dp))
             .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) Color(0xFF58CC02) else Color.LightGray,
-                shape = RoundedCornerShape(8.dp)
+                width = 1.dp,
+                color = Color.LightGray,
+                shape = RoundedCornerShape(16.dp)
             )
-            .background(if (isSelected) Color(0x1A58CC02) else Color.White)
-            .clickable { onOptionSelected(item.english) }
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .clickable(enabled = isEnabled) { onSelected() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFFE0F7FA) else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 4.dp else 0.dp
+        )
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = item.imageResId),
-                contentDescription = item.english,
+            // Image with error handling
+            Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .padding(bottom = 8.dp),
-                contentScale = ContentScale.Fit
-            )
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                    Image(
+                        painter = painterResource(id = imageRes),
+                        contentDescription = label,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize(0.8f)
+                    )
+            }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Label
             Text(
-                text = item.english,
-                fontSize = 16.sp,
+                text = label,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.DarkGray
+                color = Color.DarkGray,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -298,16 +491,17 @@ fun CheckButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isEnabled) Color(0xFF58CC02) else Color.LightGray
+            containerColor = if (isEnabled) DeepSeaBlue else Color(0xFFE0E0E0),
+            contentColor = if (isEnabled) Color.White else Color.Gray
         )
     ) {
         Text(
             text = "CHECK",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
+

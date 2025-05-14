@@ -12,7 +12,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -21,40 +32,58 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.deepsea.data.model.exercise.HearingExercise
+import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.ui.viewmodel.learn.LanguageListeningViewModel
+import com.example.deepsea.ui.viewmodel.learn.LanguageListeningViewModelFactory
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun LanguageListeningScreen(
     sectionId: Long,
     unitId: Long,
-    viewModel: LanguageListeningViewModel = viewModel(),
     onNavigateToSettings: () -> Unit = {},
     onComplete: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
+    val viewModel: LanguageListeningViewModel = viewModel(
+        factory = LanguageListeningViewModelFactory(RetrofitClient.hearingService, context)
+    )
+
     val hearingExercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
     val hearts by viewModel.hearts.collectAsState()
-    val isAudioPlaying by viewModel.isAudioPlaying.collectAsState()
-    val isSpellingPlaying by viewModel.isSpellingPlaying.collectAsState()
+    val isTtsPlaying by viewModel.isTtsPlaying.collectAsState()
     val selectedOption by viewModel.selectedOption.collectAsState()
     val isAnswerCorrect by viewModel.isAnswerCorrect.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -68,7 +97,17 @@ fun LanguageListeningScreen(
             showFeedback = true
             delay(1500)
             showFeedback = false
+            if (isAnswerCorrect == true) {
+                viewModel.onExerciseCompleted()
+                onComplete()
+            }
         }
+    }
+
+    // Initialize TTS and fetch exercise
+    LaunchedEffect(Unit) {
+        viewModel.initializeTts()
+        viewModel.fetchRandomExercise(sectionId, unitId)
     }
 
     // Retry fetching exercise on error
@@ -130,12 +169,10 @@ fun LanguageListeningScreen(
                         modifier = Modifier.padding(vertical = 24.dp)
                     )
 
-                    // Audio Buttons
+                    // Audio Button
                     AudioControls(
-                        isAudioPlaying = isAudioPlaying,
-                        onPlayNormal = { viewModel.playAudio() },
-                        onPlaySlow = { viewModel.playSlowAudio() },
-                        onPlayExerciseAudio = { viewModel.playExerciseAudio() }
+                        isTtsPlaying = isTtsPlaying,
+                        onPlayTts = { viewModel.playTts(hearingExercise?.correctAnswer ?: "") }
                     )
 
                     Divider(modifier = Modifier.padding(vertical = 16.dp))
@@ -170,13 +207,24 @@ fun LanguageListeningScreen(
 
                     // Answer Options
                     if (!showFeedback) {
-                        AnswerOptions(
-                            options = hearingExercise?.options ?: emptyList(),
-                            correctAnswer = hearingExercise?.correctAnswer ?: "",
-                            selectedOption = selectedOption,
-                            isSpellingPlaying = isSpellingPlaying,
-                            onOptionClick = { viewModel.checkAnswer(it) }
-                        )
+                        if (hearingExercise?.options?.isNotEmpty() == true) {
+                            AnswerOptions(
+                                options = hearingExercise!!.options,
+                                correctAnswer = hearingExercise!!.correctAnswer,
+                                selectedOption = selectedOption,
+                                isSpellingPlaying = false,
+                                onOptionClick = { viewModel.checkAnswer(it) }
+                            )
+                        } else {
+                            Text(
+                                text = "Loading options...",
+                                fontSize = 16.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -284,10 +332,8 @@ fun TopBar(
 
 @Composable
 fun AudioControls(
-    isAudioPlaying: Boolean,
-    onPlayNormal: () -> Unit,
-    onPlaySlow: () -> Unit,
-    onPlayExerciseAudio: () -> Unit
+    isTtsPlaying: Boolean,
+    onPlayTts: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -297,26 +343,10 @@ fun AudioControls(
     ) {
         AudioButton(
             size = 100.dp,
-            isPlaying = isAudioPlaying,
+            isPlaying = isTtsPlaying,
             icon = "🔊",
             iconSize = 36.sp,
-            onClick = onPlayExerciseAudio
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        AudioButton(
-            size = 70.dp,
-            isPlaying = isAudioPlaying,
-            icon = "🎧",
-            iconSize = 24.sp,
-            onClick = onPlayNormal
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        AudioButton(
-            size = 70.dp,
-            isPlaying = isAudioPlaying,
-            icon = "🐢",
-            iconSize = 24.sp,
-            onClick = onPlaySlow
+            onClick = onPlayTts
         )
     }
 }
@@ -372,6 +402,18 @@ fun AnswerOptions(
     isSpellingPlaying: Boolean,
     onOptionClick: (String) -> Unit
 ) {
+    if (options.isEmpty()) {
+        Text(
+            text = "No options available",
+            fontSize = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            textAlign = TextAlign.Center
+        )
+        return
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -379,7 +421,7 @@ fun AnswerOptions(
         modifier = Modifier.padding(top = 16.dp)
     ) {
         items(options.size) { index ->
-            val option = options[index]
+            val option = options.getOrNull(index) ?: return@items
             val isSelected = selectedOption == option
             val isCorrect = selectedOption != null && option == correctAnswer
             val isWrong = isSelected && option != correctAnswer
@@ -518,39 +560,3 @@ fun FeedbackMessage(
         )
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun LanguageListeningScreenPreview() {
-//    // Mock ViewModel for preview
-//    val mockViewModel = object : LanguageListeningViewModel(null) {
-//        override val currentExercise = MutableStateFlow(
-//            HearingExercise(
-//                id = "1",
-//                audio = "audio_url",
-//                correctAnswer = "ください",
-//                options = listOf("ください", "おちゃ", "ごはん", "と")
-//            )
-//        )
-//        override val userProgress = MutableStateFlow(0.4f)
-//        override val hearts = MutableStateFlow(3)
-//        override val isAudioPlaying = MutableStateFlow(false)
-//        override val isSpellingPlaying = MutableStateFlow(false)
-//        override val selectedOption = MutableStateFlow<String?>(null)
-//        override val isAnswerCorrect = MutableStateFlow<Boolean?>(null)
-//        override val isLoading = MutableStateFlow(false)
-//        override val errorMessage = MutableStateFlow<String?>(null)
-//    }
-//
-//    MaterialTheme {
-//        Surface {
-//            LanguageListeningScreen(
-//                sectionId = 1L,
-//                unitId = 1L,
-//                viewModel = mockViewModel,
-//                onNavigateToSettings = {},
-//                onComplete = {}
-//            )
-//        }
-//    }
-//}

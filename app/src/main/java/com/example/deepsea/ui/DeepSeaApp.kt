@@ -109,7 +109,7 @@ fun DeepSeaApp() {
                         ),
                     ) { backStackEntry ->
                         LoginPage(
-                            navController = deepSeaNavController,
+                            deepseaNavController = deepSeaNavController,
                             onLoginSuccess = {
                                 Log.d("DeepSeaApp", "Login success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
@@ -214,7 +214,7 @@ fun MainContainer(
             builder = {
                 composable("welcome") {
                     WelcomePage(
-                        navController = deepSeaNavController,
+                        deepseaNavController = deepSeaNavController,
                         authViewModel = authViewModel
                     )
                 }
@@ -372,7 +372,7 @@ fun MainContainer(
                     VoiceAssistantScreen()
                 }
 
-                composable("search-screen") {
+                composable("alphabet-screen") {
                     JapaneseCharacterLearningScreen()
                 }
 
@@ -399,7 +399,7 @@ fun MainContainer(
 
                 composable("login") {
                     LoginPage(
-                        navController = deepSeaNavController,
+                        deepseaNavController = deepSeaNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
                             Log.d("MainContainer", "Login success, navigating to learn-selection")
