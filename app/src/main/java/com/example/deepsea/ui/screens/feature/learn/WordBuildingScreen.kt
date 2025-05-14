@@ -34,156 +34,201 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.exercise.TranslationExercise
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
+import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModelFactory
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
 fun WordBuildingScreen(
-    viewModel: WordBuildingViewModel = viewModel(),
     onNavigateToSettings: () -> Unit = {},
-    onComplete: () -> Unit
+    onComplete: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
+    val viewModel: WordBuildingViewModel = viewModel(
+        factory = WordBuildingViewModelFactory(RetrofitClient.wordBuildingService, context.applicationContext as android.app.Application)
+    )
+
     val exercise by viewModel.currentExercise.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
     val hearts by viewModel.hearts.collectAsState()
     val isAudioPlaying by viewModel.isAudioPlaying.collectAsState()
     val selectedWords by viewModel.selectedWords.collectAsState()
     val isAnswerCorrect by viewModel.isAnswerCorrect.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showFeedback by remember { mutableStateOf(false) }
 
-    // Show feedback when answer is checked
     LaunchedEffect(isAnswerCorrect) {
         if (isAnswerCorrect != null) {
             showFeedback = true
             delay(1500)
             showFeedback = false
+            if (isAnswerCorrect == true) {
+                println("✅ Word building complete. Moving to next screen.")
+                onComplete()
+            }
         }
     }
 
-    Column(
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Top Bar with Settings and Progress
-        TopBarWordBuilding(
-            progress = userProgress,
-            hearts = hearts,
-            onSettingsClick = onNavigateToSettings
-        )
-
-        // Main Instruction
-        Text(
-            text = "Translate this sentence",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
-
-        // Source text to translate
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.LightGray.copy(alpha = 0.3f)
-            )
-        ) {
-            Text(
-                text = exercise.sourceText,
-                fontSize = 20.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-
-        // Audio Controls
-        AudioControls(
-            isAudioPlaying = isAudioPlaying,
-            onPlayNormal = { viewModel.playSentenceAudio() },
-            onPlaySlow = { viewModel.playSlowSentenceAudio() }
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Selected words area
-        SelectedWordsArea(
-            selectedWords = selectedWords,
-            onWordRemove = { index -> viewModel.removeWord(index) },
-            onClearAll = { viewModel.clearSelection() }
-        )
-
-        // Feedback animation when answer is checked
-        AnimatedVisibility(
-            visible = showFeedback,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isAnswerCorrect == true) {
-                    FeedbackWordBuildingMessage(
-                        message = "Great job!",
-                        icon = Icons.Default.Check,
-                        color = Color.Green
+        when {
+            isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            errorMessage != null -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = errorMessage ?: "Unknown error",
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
                     )
-                } else if (isAnswerCorrect == false) {
-                    FeedbackWordBuildingMessage(
-                        message = "Try again!",
-                        icon = Icons.Default.Close,
-                        color = Color.Red
-                    )
+                    Button(onClick = { viewModel.loadExercise() }) {
+                        Text("Retry")
+                    }
                 }
             }
-        }
+            exercise == null -> {
+                Text(
+                    text = "No exercise available",
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp)
+                )
+            }
+            else -> {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    TopBarWordBuilding(
+                        progress = userProgress,
+                        hearts = hearts,
+                        onSettingsClick = onNavigateToSettings
+                    )
 
-        Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Translate this sentence",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
 
-        // Word options
-        if (!showFeedback) {
-            WordOptions(
-                words = exercise.wordOptions,
-                selectedWords = selectedWords,
-                onWordClick = { word -> viewModel.addWord(word) }
-            )
-        }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.LightGray.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Text(
+                            text = exercise?.sourceText ?: "",
+                            fontSize = 20.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
-        Spacer(modifier = Modifier.weight(1f))
+                    AudioControls(
+                        isAudioPlaying = isAudioPlaying,
+                        onPlayNormal = { viewModel.playSentenceAudio() },
+                        onPlaySlow = { viewModel.playSlowSentenceAudio() }
+                    )
 
-        // Check Button
-        Button(
-            onClick = { viewModel.checkAnswer() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedWords.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.LightGray,
-                contentColor = if (selectedWords.isNotEmpty()) Color.White else Color.Gray
-            ),
-            enabled = selectedWords.isNotEmpty()
-        ) {
-            Text(
-                text = "CHECK",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    SelectedWordsArea(
+                        selectedWords = selectedWords,
+                        onWordRemove = { index -> viewModel.removeWord(index) },
+                        onClearAll = { viewModel.clearSelection() }
+                    )
+
+                    AnimatedVisibility(
+                        visible = showFeedback,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isAnswerCorrect == true) {
+                                FeedbackWordBuildingMessage(
+                                    message = "Great job!",
+                                    icon = Icons.Default.Check,
+                                    color = Color.Green
+                                )
+                            } else if (isAnswerCorrect == false) {
+                                FeedbackWordBuildingMessage(
+                                    message = "Try again!",
+                                    icon = Icons.Default.Close,
+                                    color = Color.Red
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (!showFeedback) {
+                        WordOptions(
+                            words = exercise?.wordOptions ?: emptyList(),
+                            selectedWords = selectedWords,
+                            onWordClick = { word -> viewModel.addWord(word) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Button(
+                        onClick = { viewModel.checkAnswer() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedWords.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.LightGray,
+                            contentColor = if (selectedWords.isNotEmpty()) Color.White else Color.Gray
+                        ),
+                        enabled = selectedWords.isNotEmpty()
+                    ) {
+                        Text(
+                            text = "CHECK",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -201,7 +246,6 @@ fun TopBarWordBuilding(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Settings Icon
         IconButton(
             onClick = onSettingsClick,
             modifier = Modifier
@@ -216,7 +260,6 @@ fun TopBarWordBuilding(
             )
         }
 
-        // Progress Bar
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -230,11 +273,10 @@ fun TopBarWordBuilding(
                     .fillMaxHeight()
                     .fillMaxWidth(progress)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFFF9800)) // Orange progress
+                    .background(Color(0xFFFF9800))
             )
         }
 
-        // Hearts
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -257,7 +299,7 @@ fun TopBarWordBuilding(
 fun AudioControls(
     isAudioPlaying: Boolean,
     onPlayNormal: () -> Unit,
-    onPlaySlow: () -> Unit,
+    onPlaySlow: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -265,7 +307,6 @@ fun AudioControls(
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.Center
     ) {
-        // Regular Speed Audio Button
         AudioWorldBuildingButton(
             size = 64.dp,
             isPlaying = isAudioPlaying,
@@ -276,7 +317,6 @@ fun AudioControls(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Slow Audio Button
         AudioWorldBuildingButton(
             size = 64.dp,
             isPlaying = isAudioPlaying,
@@ -345,7 +385,6 @@ fun SelectedWordsArea(
             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
     ) {
         if (selectedWords.isEmpty()) {
-            // Empty state
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -360,7 +399,6 @@ fun SelectedWordsArea(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Clear button
                 Box(
                     modifier = Modifier
                         .align(Alignment.End)
@@ -378,7 +416,6 @@ fun SelectedWordsArea(
                     }
                 }
 
-                // Selected words
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -404,8 +441,7 @@ fun SelectedWordChip(
     onRemove: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .clickable { onRemove() },
+        modifier = Modifier.clickable { onRemove() },
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.dp, Color(0xFF2196F3)),
         color = Color(0xFF2196F3).copy(alpha = 0.2f),
@@ -417,11 +453,10 @@ fun SelectedWordChip(
             color = Color(0xFF2196F3),
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 6.dp)
-                .wrapContentWidth(unbounded = true) // đảm bảo không bị bó
+                .wrapContentWidth(unbounded = true)
         )
     }
 }
-
 
 @Composable
 fun WordOptions(
@@ -442,7 +477,7 @@ fun WordOptions(
             WordOption(
                 text = word,
                 isUsed = isUsed,
-                onClick = { if (!isUsed) onWordClick(word) },
+                onClick = { if (!isUsed) onWordClick(word) }
             )
         }
     }
@@ -493,92 +528,12 @@ fun FeedbackWordBuildingMessage(
             tint = color,
             modifier = Modifier.size(32.dp)
         )
-
         Spacer(modifier = Modifier.width(8.dp))
-
         Text(
             text = message,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = color
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun WordBuildingScreenPreview() {
-    // Create a mock TranslationExercise
-    val mockExercise = TranslationExercise(
-        id = "1",
-        sourceText = "That's green tea",
-        targetText = "それはお茶です。",
-        sourceLanguage = "en",
-        targetLanguage = "ja",
-        wordOptions = listOf("それは", "お", "茶", "です", "。", "緑", "飲み物", "コーヒー")
-    )
-
-    MaterialTheme {
-        Surface {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Top Bar Preview
-                TopBar(progress = 0.3f, hearts = 2, onSettingsClick = {})
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Translate this sentence",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.LightGray.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Text(
-                        text = "That's green tea",
-                        fontSize = 20.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                AudioControls(
-                    isAudioPlaying = false,
-                    onPlayNormal = {},
-                    onPlaySlow = {}
-                )
-
-                SelectedWordsArea(
-                    selectedWords = listOf("それは", "お"),
-                    onWordRemove = {},
-                    onClearAll = {}
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                WordOptions(
-                    words = listOf("それは", "お", "茶", "です", "。", "緑", "飲み物", "コーヒー"),
-                    selectedWords = listOf("それは", "お"),
-                    onWordClick = {}
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                FeedbackMessage(
-                    message = "Great job!",
-                    icon = Icons.Default.Check,
-                    color = Color.Green
-                )
-            }
-        }
     }
 }

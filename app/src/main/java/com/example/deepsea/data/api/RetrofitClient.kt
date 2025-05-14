@@ -56,4 +56,8 @@ object RetrofitClient {
     val hearingService: HearingService by lazy {
         retrofit.create(HearingService::class.java)
     }
+
+    val wordBuildingService: WordBuildingService by lazy {
+        retrofit.create(WordBuildingService::class.java)
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import android.app.Application
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,8 +69,9 @@ fun QuizImageScreen(
     onBack: () -> Unit,
     onComplete: () -> Unit
 ) {
+    val context = LocalContext.current
     val learningViewModel: LearningViewModel = viewModel(
-        factory = LearningViewModel.Factory(lessonId)
+        factory = LearningViewModel.Factory(lessonId, context.applicationContext as Application)
     )
 
     val isLoading by learningViewModel.isLoading.collectAsState()
@@ -77,36 +80,30 @@ fun QuizImageScreen(
     val heartCount by learningViewModel.hearts.collectAsState()
     val progressPercent by learningViewModel.progress.collectAsState()
     val isAnswerCorrect by learningViewModel.isAnswerCorrect.collectAsState()
+    val isAudioPlaying by learningViewModel.isAudioPlaying.collectAsState()
 
     var selectedOption by remember { mutableStateOf<String?>(null) }
     var showFeedback by remember { mutableStateOf(false) }
 
-    // Check if the game is over
     val isGameOver = heartCount <= 0
-
-    // Check for lesson completion
     val isLessonComplete = progressPercent >= 1.0f
 
     LaunchedEffect(isGameOver, isLessonComplete) {
         if (isGameOver) {
-            // Handle game over
             delay(1500)
             onBack()
         } else if (isLessonComplete) {
-            // Handle lesson completion
             delay(1500)
             onComplete()
         }
     }
 
-    // Load next word when first launched
     LaunchedEffect(Unit) {
         if (currentWord == null && !isLoading) {
             learningViewModel.loadNextWord()
         }
     }
 
-    // Surface for consistent theming
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -116,32 +113,27 @@ fun QuizImageScreen(
             return@Surface
         }
 
-        // Check for feedback handling
         LaunchedEffect(isAnswerCorrect) {
             if (isAnswerCorrect != null) {
                 showFeedback = true
-                delay(2000) // Show feedback for 2 seconds
+                delay(2000)
                 showFeedback = false
-
                 if (isAnswerCorrect == true) {
                     learningViewModel.loadNextWord()
                     selectedOption = null
                     learningViewModel.resetAnswerState()
                 } else {
-                    // Only reset answer state for wrong answers
                     learningViewModel.resetAnswerState()
                 }
             }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Main content
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Top Bar
                 TopBar(
                     heartCount = heartCount,
                     progressPercent = progressPercent,
@@ -150,7 +142,6 @@ fun QuizImageScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Title
                 Text(
                     text = "Select the correct image",
                     fontSize = 28.sp,
@@ -159,14 +150,16 @@ fun QuizImageScreen(
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
-                // Word To Learn Section
                 currentWord?.let { word ->
-                    WordToLearnSection(currentWord = word)
+                    WordToLearnSection(
+                        currentWord = word,
+                        isAudioPlaying = isAudioPlaying,
+                        onPlayAudio = { learningViewModel.playWordAudio(word.native) }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Options Grid (only show if we have options)
                 if (options.isNotEmpty()) {
                     OptionsGrid(
                         options = options,
@@ -182,7 +175,6 @@ fun QuizImageScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Check Button
                 CheckButton(
                     isEnabled = selectedOption != null && isAnswerCorrect == null,
                     onClick = {
@@ -193,7 +185,6 @@ fun QuizImageScreen(
                 )
             }
 
-            // Feedback overlay
             AnimatedVisibility(
                 visible = showFeedback,
                 enter = fadeIn(),
@@ -283,7 +274,6 @@ fun TopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Back Button
         IconButton(
             onClick = onBackClick,
             modifier = Modifier.size(40.dp)
@@ -295,7 +285,6 @@ fun TopBar(
             )
         }
 
-        // Progress Bar
         LinearProgressIndicator(
             progress = progressPercent,
             modifier = Modifier
@@ -307,7 +296,6 @@ fun TopBar(
             trackColor = Color.LightGray
         )
 
-        // Hearts Counter
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 8.dp)
@@ -330,18 +318,23 @@ fun TopBar(
 }
 
 @Composable
-fun WordToLearnSection(currentWord: VocabularyItem) {
+fun WordToLearnSection(
+    currentWord: VocabularyItem,
+    isAudioPlaying: Boolean,
+    onPlayAudio: () -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp)
     ) {
-        // Audio Button
         Card(
             shape = CircleShape,
             colors = CardDefaults.cardColors(containerColor = Color(0xFF26A6E0)),
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier
+                .size(80.dp)
+                .clickable(enabled = !isAudioPlaying) { onPlayAudio() }
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -353,21 +346,25 @@ fun WordToLearnSection(currentWord: VocabularyItem) {
                     tint = Color.White,
                     modifier = Modifier.size(36.dp)
                 )
+                if (isAudioPlaying) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f))
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Word Information
         Column {
-            // Romaji (phonetic spelling)
             Text(
                 text = currentWord.romaji,
                 fontSize = 18.sp,
                 color = Color.Gray
             )
 
-            // Japanese word
             Text(
                 text = currentWord.native,
                 fontSize = 30.sp,
@@ -384,10 +381,8 @@ fun OptionsGrid(
     onOptionSelected: (String) -> Unit,
     isEnabled: Boolean
 ) {
-    // Ensure we have valid options to display
     if (options.size < 2) return
 
-    // Group options into rows of 2
     val rows = options.chunked(2)
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -407,7 +402,6 @@ fun OptionsGrid(
                     )
                 }
 
-                // Add empty placeholders if needed to maintain layout
                 if (rowOptions.size < 2) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -451,24 +445,22 @@ fun ImageOption(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Image with error handling
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                    Image(
-                        painter = painterResource(id = imageRes),
-                        contentDescription = label,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize(0.8f)
-                    )
+                Image(
+                    painter = painterResource(id = imageRes),
+                    contentDescription = label,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(0.8f)
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Label
             Text(
                 text = label,
                 fontSize = 18.sp,
@@ -504,4 +496,3 @@ fun CheckButton(
         )
     }
 }
-
