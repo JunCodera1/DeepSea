@@ -175,7 +175,7 @@ fun HomeScreen(
                             units = currentUnits,
                             starCountPerUnit = starCountPerUnit,
                             sectionIndex = currentSectionIndex,
-                            completedStars = completedStars, // Pass the completedStars parameter here
+                            completedStars = completedStars,
                             onJumpToSection = { sectionIndex, unitIndex ->
                                 viewModel.updateCurrentSection(sectionIndex + 1)
                                 viewModel.updateCurrentUnit(unitIndex)
@@ -188,6 +188,7 @@ fun HomeScreen(
                             },
                             section = currentSection,
                             sections = sections,
+                            navController = navController, // Added navController parameter
                             onGuideBookClicked = { unitId ->
                                 viewModel.navigateToGuideBook(unitId)
                             },
@@ -207,25 +208,11 @@ fun HomeScreen(
                                         selectedUnitId = unitId
                                     }
                                 )
+                            },
+                            onStarComplete = { unitId, starIndex -> // Added onStarComplete parameter
+                                viewModel.completeStar(unitId, starIndex)
                             }
-
                         )
-
-                        if (isDialogShown && selectedUnitId != null) {
-                            StarDialog(
-                                isDialogShown = isDialogShown,
-                                isDialogInteractive = isDialogInteractive,
-                                dialogTransition = dialogTransition,
-                                navController = navController,
-                                xpAmount = 15,
-                                unitId = selectedUnitId!!,
-                                onStarComplete = {
-                                    if (selectedStarIndex != null) {
-                                        viewModel.completeStar(selectedUnitId!!, selectedStarIndex!!)
-                                    }
-                                }
-                            )
-                        }
                     }
                 }
             }
@@ -239,7 +226,7 @@ private fun handleStarTap(
     isInteractive: Boolean,
     rootHeight: Float,
     lazyListState: LazyListState,
-    unitId: Long, // Added unitId parameter
+    unitId: Long,
     onDialogStateChange: (shown: Boolean, interactive: Boolean, transition: Float) -> Unit
 ) {
     val midCoordinate = rootHeight / 2
@@ -266,4 +253,3 @@ fun orderToPercentage(order: Int, isRTL: Boolean = true): Float {
         else -> 0.45f
     }
 }
-

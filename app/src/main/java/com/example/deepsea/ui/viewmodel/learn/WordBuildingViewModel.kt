@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.WordBuildingService
 import com.example.deepsea.data.model.exercise.TranslationExercise
+import com.example.deepsea.data.repository.MistakeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ import java.util.UUID
 
 class WordBuildingViewModel(
     private val apiService: WordBuildingService,
+    private val mistakeRepository: MistakeRepository,
     application: Application
 ) : AndroidViewModel(application) {
 
@@ -210,6 +212,22 @@ class WordBuildingViewModel(
             _userProgress.value = (_userProgress.value + 0.1f).coerceAtMost(1f)
         } else {
             _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
+            viewModelScope.launch {
+                try {
+                    val userId = 1L // Replace with actual user ID from auth system
+                    mistakeRepository.saveMistake(
+                        userId = userId,
+                        word = _currentExercise.value?.sourceText ?: "",
+                        correctAnswer = correctAnswer,
+                        userAnswer = selectedSentence,
+                        lessonId = null // Set lessonId if available
+                    )
+                    Log.d("ViewModel", "Mistake saved successfully")
+                } catch (e: Exception) {
+                    Log.e("ViewModel", "Failed to save mistake: ${e.message}")
+                    _errorMessage.value = "Failed to save mistake: ${e.message}"
+                }
+            }
         }
     }
 

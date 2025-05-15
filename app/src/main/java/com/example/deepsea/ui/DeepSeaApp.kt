@@ -55,7 +55,9 @@ import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
 import com.example.deepsea.ui.screens.feature.learn.JapaneseCharacterLearningScreen
 import com.example.deepsea.ui.screens.feature.learn.LessonCompletedScreen
 import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
+import com.example.deepsea.ui.screens.feature.review.MistakesScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
+import com.example.deepsea.ui.screens.feature.review.StoryScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.path.LanguageSelectionPage
@@ -74,6 +76,7 @@ import com.example.deepsea.ui.viewmodel.survey.SurveyViewModelFactory
 import com.example.deepsea.utils.LearningSessionManager
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
+import timber.log.Timber
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -113,14 +116,15 @@ fun DeepSeaApp() {
                         LoginPage(
                             deepseaNavController = deepSeaNavController,
                             onLoginSuccess = {
-                                Log.d("DeepSeaApp", "Login success, navigating to HOME_ROUTE")
+                                Timber.tag("DeepSeaApp")
+                                    .d("Login success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
                                 }
                             },
                             authViewModel = authViewModel,
                             onSignInClick = { email, password ->
-                                Log.d("DeepSeaApp", "Attempting login with email: $email")
+                                Timber.tag("DeepSeaApp").d("Attempting login with email: $email")
                                 authViewModel.login(email, password, deepSeaNavController.navController)
                             }
                         )
@@ -139,7 +143,8 @@ fun DeepSeaApp() {
                         SignupPage(
                             navController = deepSeaNavController,
                             onSignUpClick = { username, email, password, avatar, name ->
-                                Log.d("DeepSeaApp", "Attempting signup with email: $email and avatar: ${avatar != null}")
+                                Timber.tag("DeepSeaApp")
+                                    .d("Attempting signup with email: $email and avatar: ${true}")
                                 authViewModel.signup(username, email, password, avatar, name)
                             },
                             onSignInClick = {
@@ -147,7 +152,8 @@ fun DeepSeaApp() {
                             },
                             authViewModel = authViewModel,
                             onRegisterSuccess = {
-                                Log.d("DeepSeaApp", "Registration success, navigating to HOME_ROUTE")
+                                Timber.tag("DeepSeaApp")
+                                    .d("Registration success, navigating to HOME_ROUTE")
                                 deepSeaNavController.navController.navigate(MainDestinations.HOME_ROUTE) {
                                     popUpTo(MainDestinations.HOME_ROUTE) { inclusive = true }
                                 }
@@ -184,16 +190,16 @@ fun MainContainer(
     val userState by authViewModel.userState.collectAsState()
 
     LaunchedEffect(userState, currentRoute) {
-        Log.d("MainContainer", "UserState: $userState, CurrentRoute: $currentRoute")
+        Timber.tag("MainContainer").d("UserState: $userState, CurrentRoute: $currentRoute")
         if (userState is UserState.NotLoggedIn && isImportantRoute && currentRoute != "welcome") {
-            Log.d("MainContainer", "User not logged in, navigating to welcome")
+            Timber.tag("MainContainer").d("User not logged in, navigating to welcome")
             deepSeaNavController.navController.navigate("welcome") {
                 popUpTo(0) { inclusive = true }
             }
         } else if (userState is UserState.LoggedIn &&
             (currentRoute == "login" || currentRoute == "signup" || currentRoute == "welcome")
         ) {
-            Log.d("MainContainer", "User already logged in, navigating to home")
+            Timber.tag("MainContainer").d("User already logged in, navigating to home")
             deepSeaNavController.navController.navigate("home") {
                 popUpTo(0) { inclusive = true }
             }
@@ -365,7 +371,22 @@ fun MainContainer(
                 }
 
                 composable("home/review") {
-                    ReviewScreen()
+                    ReviewScreen(onMistakesClick = {
+                        deepSeaNavController.navController.navigate("mistake-screen")
+                    },
+                        onStoriesClick = {
+                            deepSeaNavController.navController.navigate("story-screen")
+                        })
+                }
+
+                composable("story-screen"){
+                    StoryScreen(onBackClick = {
+                        deepSeaNavController.navController.popBackStack()
+                    })
+                }
+
+                composable("mistake-screen") {
+                    MistakesScreen(onBackClick = {deepSeaNavController.navController.popBackStack()})
                 }
 
                 composable("home/game") {
@@ -400,7 +421,8 @@ fun MainContainer(
                     SignupPage(
                         navController = deepSeaNavController,
                         onSignUpClick = { username, email, password, avatar, name ->
-                            Log.d("MainContainer", "Attempting signup with email: $email and avatar: ${avatar != null}")
+                            Timber.tag("MainContainer")
+                                .d("Attempting signup with email: $email and avatar: ${true}")
                             authViewModel.signup(username, email, password, avatar)
                         },
                         onSignInClick = {
@@ -408,7 +430,8 @@ fun MainContainer(
                         },
                         authViewModel = authViewModel,
                         onRegisterSuccess = {
-                            Log.d("MainContainer", "Registration success, navigating to home/learn")
+                            Timber.tag("MainContainer")
+                                .d("Registration success, navigating to home/learn")
                             deepSeaNavController.navController.navigate("home/learn") {
                                 popUpTo("welcome") { inclusive = true }
                             }
@@ -421,10 +444,11 @@ fun MainContainer(
                         deepseaNavController = deepSeaNavController,
                         authViewModel = authViewModel,
                         onLoginSuccess = {
-                            Log.d("MainContainer", "Login success, navigating to learn-selection")
+                            Timber.tag("MainContainer")
+                                .d("Login success, navigating to learn-selection")
                         },
                         onSignInClick = { email, password ->
-                            Log.d("MainContainer", "Attempting login with email: $email")
+                            Timber.tag("MainContainer").d("Attempting login with email: $email")
                             authViewModel.login(email, password, deepSeaNavController.navController)
                         }
                     )

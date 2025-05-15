@@ -448,7 +448,7 @@ fun SelectableStarButton(
                         }
                     ) { _, _ -> }
                 },
-            painter = painterResource(id = if (isInitial) R.drawable.ic_star else R.drawable.ic_skip),
+            painter = painterResource(id = if (isInitial) R.drawable.ic_sushi else R.drawable.ic_skip),
             colorFilter = ColorFilter.tint(color = Color.White),
             contentDescription = "star"
         )
@@ -462,6 +462,7 @@ fun StarButton(
     colorMain: Color = if (isCompleted) FeatherGreen else Gray,
     colorDark: Color = if (isCompleted) FeatherGreenDark else GrayDark,
     onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit,
+    onLockedStarClicked: () -> Unit = {} // New parameter for locked star click
 ) {
     var isClicked by remember {
         mutableStateOf(false)
@@ -474,6 +475,7 @@ fun StarButton(
         mutableFloatStateOf(0f)
     }
     val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .animateContentSize()
@@ -513,9 +515,13 @@ fun StarButton(
                                     onStarClicked(positionInRoot, isCompleted || isUnlocked)
                                     isClicked = false
                                 }
+                            } else {
+                                // This is a locked star - show the locked dialog
+                                onLockedStarClicked()
                             }
                         }
-                    }.pointerInput(Unit) {
+                    }
+                    .pointerInput(Unit) {
                         detectDragGesturesAfterLongPress(
                             onDragStart = {
                                 if (isCompleted || isUnlocked) {
@@ -528,7 +534,7 @@ fun StarButton(
                                     onStarClicked(positionInRoot, isCompleted || isUnlocked)
                                 }
                             }
-                        ) { _,_-> }
+                        ) { _, _ -> }
                     },
                 painter = painterResource(id = R.drawable.ic_star),
                 colorFilter = ColorFilter.tint(color = if (isCompleted) Color.White else GrayDark),

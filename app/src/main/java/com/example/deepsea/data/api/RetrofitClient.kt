@@ -64,4 +64,8 @@ object RetrofitClient {
     val friendSuggestionService: FriendSuggestionService by lazy {
         retrofit.create(FriendSuggestionService::class.java)
     }
+
+    val mistakeApiService: MistakeApiService by lazy {
+        retrofit.create(MistakeApiService::class.java)
+    }
 }

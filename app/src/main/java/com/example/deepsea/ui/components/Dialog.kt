@@ -35,6 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -69,6 +70,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.data.model.course.language.LanguageOption
@@ -189,11 +191,17 @@ fun StarDialog(
     navController: NavController,
     xpAmount: Int,
     unitId: Long,
+    starIndex: Int,
+    onDismiss: () -> Unit, // Add dismiss callback
     onStarComplete: () -> Unit = {}
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
+    // Instead of a Box with fillMaxSize, use Dialog to show a popup
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
     ) {
         // Animate dialog scaling
         val animatedScale by animateFloatAsState(
@@ -201,18 +209,27 @@ fun StarDialog(
             label = "dialogScale"
         )
 
+        // Check if this is an early lesson that should be skippable
+        val isEarlyLesson = starIndex < 3
+
+        // Determine the actual interactive status
+        val canInteract = isDialogInteractive || isEarlyLesson
+
         // Dialog content
         Column(
             modifier = Modifier
                 .graphicsLayer {
-                    translationY = dialogTransition + 100.dp.toPx()
                     transformOrigin = TransformOrigin(0.5f, 0f)
                     scaleY = animatedScale
                     scaleX = animatedScale
                 }
-                .fillMaxWidth(0.8f)
+                .fillMaxWidth()
                 .background(
-                    color = if (isDialogInteractive) FeatherGreen else Polar,
+                    color = when {
+                        isDialogInteractive -> FeatherGreen
+                        isEarlyLesson -> FeatherGreen.copy(alpha = 0.8f)
+                        else -> Polar
+                    },
                     shape = RoundedCornerShape(8.dp)
                 )
                 .border(
@@ -223,18 +240,22 @@ fun StarDialog(
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Dialog title
+            // Dialog title - Dynamic based on lesson status
             Text(
-                text = "Make introductions",
-                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(alpha = 0.5f),
+                text = if (starIndex == 0) "Introduction" else "Lesson ${starIndex + 1}",
+                color = if (canInteract) Color.White else Color.DarkGray.copy(alpha = 0.5f),
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            // Dialog description
+            // Dialog description - Different message for early lessons
             Text(
-                text = "Complete all levels above to unlock this",
-                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(alpha = 0.3f)
+                text = when {
+                    isDialogInteractive -> "Ready to start this lesson"
+                    isEarlyLesson -> "Early lesson available for skipping ahead"
+                    else -> "Complete all levels above to unlock this"
+                },
+                color = if (canInteract) Color.White else Color.DarkGray.copy(alpha = 0.3f)
             )
 
             // Voice Assistant Button
@@ -254,7 +275,7 @@ fun StarDialog(
             }
 
             // XP Counter Animation when a star is completed
-            if (isDialogInteractive) {
+            if (canInteract) {
                 var showXpAnimation by remember { mutableStateOf(false) }
 
                 LaunchedEffect(isDialogShown) {
@@ -292,33 +313,158 @@ fun StarDialog(
                 }
             }
 
-            // Action button - Navigate to learning session
-            Button(
-                onClick = {
-                    if (isDialogInteractive) {
-                        // Call onStarComplete to update the star status
-                        onStarComplete()
+            // Action buttons row - Skip Ahead or Regular Study options for early lessons
+            if (isEarlyLesson && !isDialogInteractive) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Skip ahead button - Only for early lessons
+                    Button(
+                        onClick = {
+                            // Call onStarComplete to update the star status
+                            onStarComplete()
 
-                        // Navigate to learning session with unitId
-                        navController.navigate("learning_session/$unitId")
+                            // Navigate to learning session with unitId
+                            navController.navigate("learning_session/$unitId")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Skip Ahead +$xpAmount XP",
+                            color = FeatherGreen,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
+
+                    // Skip warning text
+                    Text(
+                        text = "You may miss important content by skipping ahead",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else {
+                // Standard button - Navigate to learning session
+                Button(
+                    onClick = {
+                        if (canInteract) {
+                            // Call onStarComplete to update the star status
+                            onStarComplete()
+
+                            // Navigate to learning session with unitId
+                            navController.navigate("learning_session/$unitId")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (canInteract)
+                            Color.White
+                        else
+                            Color.DarkGray.copy(alpha = 0.15f)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = canInteract
+                ) {
+                    Text(
+                        text = if (canInteract) "Start +$xpAmount XP" else "LOCKED",
+                        color = if (canInteract) FeatherGreen else Color.DarkGray.copy(alpha = 0.5f),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Add close button
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDialogInteractive)
-                        Color.White
-                    else
-                        Color.DarkGray.copy(alpha = 0.15f)
+                    containerColor = Color.White.copy(alpha = 0.2f)
                 ),
-                shape = RoundedCornerShape(12.dp),
-                enabled = isDialogInteractive
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    text = if (isDialogInteractive) "Start +$xpAmount XP" else "LOCKED",
-                    color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(alpha = 0.5f),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                Text("Close", color = Color.White)
+            }
+        }
+    }
+}
+
+@Composable
+fun LockedStarDialog(
+    isVisible: Boolean,
+    onDismiss: () -> Unit
+) {
+    if (isVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .width(280.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
                 )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Locked",
+                        tint = Color.Gray,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(8.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "This star is locked",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Complete previous stars to unlock this one.",
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { onDismiss() },
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3399FF)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Text("Got it")
+                    }
+                }
             }
         }
     }

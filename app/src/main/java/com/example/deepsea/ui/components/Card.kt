@@ -1,6 +1,10 @@
 package com.example.deepsea.ui.components
 
+import UserProfileViewModel
 import android.content.res.Configuration
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Person
@@ -28,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,7 +42,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.Modifier
@@ -60,6 +70,7 @@ import com.example.deepsea.ui.screens.feature.daily.LanguageProgress
 import com.example.deepsea.ui.screens.feature.game.Player
 import com.example.deepsea.ui.screens.feature.daily.getLanguageLevel
 import com.example.deepsea.ui.theme.DeepSeaTheme
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
@@ -139,7 +150,14 @@ fun InviteFriendsCard() {
 }
 
 @Composable
-fun UserBasicInfoCard(userProfile: UserProfileData?) {
+fun UserBasicInfoCard(
+    userProfile: UserProfileData?) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // State for tracking upload progress
+    var isUploading by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,17 +169,20 @@ fun UserBasicInfoCard(userProfile: UserProfileData?) {
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar with Coil image loading
+            // Avatar with Coil image loading and upload option
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(Color.LightGray),
+                    .background(Color.LightGray)
+                    .clickable {
+
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 // Load avatar from URL using Coil
                 val painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
+                    ImageRequest.Builder(context)
                         .data(userProfile?.avatarUrl ?: "")
                         .error(R.drawable.cut) // Replace with your default avatar drawable
                         .placeholder(R.drawable.cut) // Replace with your placeholder drawable
@@ -174,6 +195,37 @@ fun UserBasicInfoCard(userProfile: UserProfileData?) {
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+
+                // Show upload overlay
+                if (!isUploading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Camera,
+                            contentDescription = "Change Profile Picture",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                // Show loading indicator during upload
+                if (isUploading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

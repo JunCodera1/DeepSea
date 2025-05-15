@@ -10,7 +10,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.question.QuizQuestion
+import com.example.deepsea.data.model.user.User
+import com.example.deepsea.data.repository.MistakeRepository
 import com.example.deepsea.data.repository.QuestionFactoryImpl
+import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.data.repository.VocabularyRepository
 import com.example.deepsea.utils.JsonLogProcessor
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +35,8 @@ data class VocabularyItem(
 class LearningViewModel(
     private val repository: VocabularyRepository,
     private val lessonId: Long = 1,
+    private val userProfileRepository: UserProfileRepository,
+    private val mistakeRepository: MistakeRepository,
     application: Application
 ) : AndroidViewModel(application) {
 
@@ -42,7 +47,7 @@ class LearningViewModel(
     val options: StateFlow<List<VocabularyItem>> = _options
 
     private val _hearts = MutableStateFlow(5)
-    val hearts: StateFlow<Int> = _hearts
+    var hearts: StateFlow<Int> = _hearts
 
     private val _progress = MutableStateFlow(0f)
     val progress: StateFlow<Float> = _progress
@@ -69,9 +74,38 @@ class LearningViewModel(
     private var currentIndex = 0
     private var totalWords = 10
 
+    // Current user
+    private val _currentUser = MutableStateFlow<User?>(null)
+
+    // Thêm thuộc tính và functions mới để lưu trữ lỗi
+    private val _isSavingMistake = MutableStateFlow(false)
+    val isSavingMistake: StateFlow<Boolean> = _isSavingMistake.asStateFlow()
+
+    private val _mistakeSaved = MutableStateFlow<Boolean?>(null)
+    val mistakeSaved: StateFlow<Boolean?> = _mistakeSaved.asStateFlow()
+
     init {
         initTextToSpeech()
         loadLesson()
+        loadCurrentUser() // Add this function to load the current user
+    }
+
+    // Add this function to load the current user
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            try {
+                userProfileRepository.getUserProfile(1) // Replace with actual user ID source
+                    .onSuccess { profileData ->
+                        _currentUser.value = User(
+                            id = 1, // Replace with actual user ID source
+                            username = profileData.username,
+                            profileData = profileData
+                        )
+                    }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading current user")
+            }
+        }
     }
 
     private fun initTextToSpeech() {
@@ -215,9 +249,11 @@ class LearningViewModel(
     }
 
     fun checkAnswer(selectedOption: String) {
+        val current = currentWord.value ?: return
         if (isAnswerCorrect(selectedOption)) {
             _isAnswerCorrect.value = true
         } else {
+            saveUserMistake(current.native, current.english, selectedOption)
             _isAnswerCorrect.value = false
             decreaseHearts()
         }
@@ -231,6 +267,32 @@ class LearningViewModel(
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = "Lỗi: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    private fun saveUserMistake(word: String, correctAnswer: String, userAnswer: String) {
+        viewModelScope.launch {
+            try {
+                _isSavingMistake.value = true
+
+                val currentUser = _currentUser.value
+                if (currentUser != null) {
+                    mistakeRepository.saveMistake(
+                        userId = currentUser.id,
+                        word = word,
+                        correctAnswer = correctAnswer,
+                        userAnswer = userAnswer,
+                        lessonId = lessonId
+                    )
+                    _mistakeSaved.value = true
+                } else {
+                    _mistakeSaved.value = false
+                }
+            } catch (e: Exception) {
+                _mistakeSaved.value = false
+            } finally {
+                _isSavingMistake.value = false
             }
         }
     }
@@ -271,15 +333,24 @@ class LearningViewModel(
     }
 
     class Factory(
-        private val lessonId: Long,
-        private val application: Application
+        private val application: Application,
+        private val lessonId: Long
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(LearningViewModel::class.java)) {
                 val questionFactory = QuestionFactoryImpl()
                 val repository = VocabularyRepository(RetrofitClient.vocabularyApiService, questionFactory)
-                return LearningViewModel(repository, lessonId, application) as T
+                val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)
+                val mistakeRepository = MistakeRepository(RetrofitClient.mistakeApiService)
+
+                return LearningViewModel(
+                    repository = repository,
+                    lessonId = lessonId,
+                    userProfileRepository = userProfileRepository,
+                    mistakeRepository = mistakeRepository,
+                    application = application
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

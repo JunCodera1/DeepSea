@@ -71,7 +71,7 @@ fun QuizImageScreen(
 ) {
     val context = LocalContext.current
     val learningViewModel: LearningViewModel = viewModel(
-        factory = LearningViewModel.Factory(lessonId, context.applicationContext as Application)
+        factory = LearningViewModel.Factory(context.applicationContext as Application,lessonId)
     )
 
     val isLoading by learningViewModel.isLoading.collectAsState()
