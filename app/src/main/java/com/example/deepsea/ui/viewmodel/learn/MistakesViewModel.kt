@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.mistake.Mistake
+import com.example.deepsea.data.model.review.Mistake
 import com.example.deepsea.data.model.user.User
 import com.example.deepsea.data.repository.MistakeRepository
 import com.example.deepsea.data.repository.UserProfileRepository

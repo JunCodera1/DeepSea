@@ -2,8 +2,8 @@ package com.example.deepsea.data.repository
 
 import com.example.deepsea.data.api.MistakeApiService
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.model.mistake.Mistake
-import com.example.deepsea.data.model.mistake.MistakeRequest
+import com.example.deepsea.data.model.review.Mistake
+import com.example.deepsea.data.model.review.MistakeRequest
 
 import retrofit2.HttpException
 import java.io.IOException

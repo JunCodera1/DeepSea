@@ -33,6 +33,7 @@ import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.exercise.LessonResult
 import com.example.deepsea.data.repository.UnitGuideRepository
 import com.example.deepsea.data.repository.UserProfileRepository
+import com.example.deepsea.data.repository.WordRepository
 import com.example.deepsea.ui.components.DeepSeaScaffold
 import com.example.deepsea.ui.components.StreakScreen
 import com.example.deepsea.ui.components.DeepSeaBottomBar
@@ -58,6 +59,7 @@ import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
 import com.example.deepsea.ui.screens.feature.review.MistakesScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.review.StoryScreen
+import com.example.deepsea.ui.screens.feature.review.WordsScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.path.LanguageSelectionPage
@@ -71,6 +73,7 @@ import com.example.deepsea.ui.viewmodel.course.language.LanguageSelectionViewMod
 import com.example.deepsea.ui.viewmodel.learn.GuideUiState
 import com.example.deepsea.ui.viewmodel.learn.UnitGuideViewModel
 import com.example.deepsea.ui.viewmodel.learn.UnitGuideViewModelFactory
+import com.example.deepsea.ui.viewmodel.learn.WordViewModel
 import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
 import com.example.deepsea.ui.viewmodel.survey.SurveyViewModelFactory
 import com.example.deepsea.utils.LearningSessionManager
@@ -376,6 +379,9 @@ fun MainContainer(
                     },
                         onStoriesClick = {
                             deepSeaNavController.navController.navigate("story-screen")
+                        },
+                        onWordsClick = {
+                            deepSeaNavController.navController.navigate("words-screen")
                         })
                 }
 
@@ -383,6 +389,12 @@ fun MainContainer(
                     StoryScreen(onBackClick = {
                         deepSeaNavController.navController.popBackStack()
                     })
+                }
+
+                composable("words-screen") {
+                    val repository = WordRepository(RetrofitClient.wordApiService)
+                    val viewModel = WordViewModel(repository)
+                    WordsScreen(viewModel)
                 }
 
                 composable("mistake-screen") {

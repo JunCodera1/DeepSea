@@ -1,7 +1,7 @@
 package com.example.deepsea.data.api
 
-import com.example.deepsea.data.model.mistake.Mistake
-import com.example.deepsea.data.model.mistake.MistakeRequest
+import com.example.deepsea.data.model.review.Mistake
+import com.example.deepsea.data.model.review.MistakeRequest
 import retrofit2.http.*
 
 interface MistakeApiService {

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deepsea.R
-import com.example.deepsea.data.model.mistake.Mistake
+import com.example.deepsea.data.model.review.Mistake
 import com.example.deepsea.ui.theme.DeepSeaBlue
 import com.example.deepsea.ui.theme.HeartRed
 import com.example.deepsea.ui.viewmodel.review.MistakesViewModel

@@ -1,8 +1,8 @@
 package com.example.deepsea.ui.screens.feature.review
 
 import android.content.Context
+import android.speech.tts.TextToSpeech
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -14,11 +14,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
@@ -31,9 +35,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,10 +49,17 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.model.review.Story
+import com.example.deepsea.data.repository.StoryRepository
+import com.example.deepsea.ui.viewmodel.learn.StoriesState
+import com.example.deepsea.ui.viewmodel.learn.StoryViewModel
+import com.example.deepsea.ui.viewmodel.learn.StoryViewModelFactory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 // DataStore setup
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "bookmarks")
@@ -58,31 +70,29 @@ fun StoryScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {}
 ) {
+    // Create StoryViewModel
+    val storyRepository = StoryRepository(RetrofitClient.storyApiService)
+    val viewModel: StoryViewModel = viewModel(
+        factory = StoryViewModelFactory(storyRepository)
+    )
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var selectedStory by remember { mutableStateOf<Story?>(null) }
     var searchQuery by remember { mutableStateOf("") }
-    var filteredStories by remember { mutableStateOf(stories) }
     val bookmarkedStories = remember { mutableStateOf(setOf<String>()) }
+    val storiesState by remember { derivedStateOf { viewModel.storiesState } }
+
+    // Load stories
+    LaunchedEffect(Unit) {
+        viewModel.loadStories()
+    }
 
     // Load bookmarks from DataStore
     LaunchedEffect(Unit) {
         bookmarkedStories.value = context.dataStore.data
             .map { it[BOOKMARK_KEY] ?: emptySet() }
             .first()
-    }
-
-    // Filter stories based on search query
-    LaunchedEffect(searchQuery) {
-        filteredStories = if (searchQuery.isEmpty()) {
-            stories
-        } else {
-            stories.filter {
-                it.title.contains(searchQuery, ignoreCase = true) ||
-                        it.level.contains(searchQuery, ignoreCase = true) ||
-                        it.content.contains(searchQuery, ignoreCase = true)
-            }
-        }
     }
 
     Scaffold(
@@ -97,56 +107,110 @@ fun StoryScreen(
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            AnimatedVisibility(
-                visible = selectedStory == null,
-                enter = fadeIn() + slideInHorizontally(),
-                exit = fadeOut() + slideOutHorizontally()
-            ) {
-                StoryListScreen(
-                    stories = filteredStories,
-                    bookmarkedStories = bookmarkedStories.value,
-                    onStoryClick = { selectedStory = it },
-                    onBookmarkClick = { storyTitle ->
-                        scope.launch {
-                            context.dataStore.edit { preferences ->
-                                val currentBookmarks = preferences[BOOKMARK_KEY] ?: emptySet()
-                                preferences[BOOKMARK_KEY] = if (storyTitle in currentBookmarks) {
-                                    currentBookmarks - storyTitle
-                                } else {
-                                    currentBookmarks + storyTitle
-                                }
-                                bookmarkedStories.value = preferences[BOOKMARK_KEY] ?: emptySet()
+            when (val state = storiesState) {
+                is StoriesState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is StoriesState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.Clear,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color.Gray
+                            )
+                            Text(
+                                text = "Error: ${state.message}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                color = Color.Red
+                            )
+                            Button(
+                                onClick = { viewModel.loadStories() }
+                            ) {
+                                Text("Retry")
                             }
                         }
-                    },
-                    modifier = modifier.fillMaxSize()
-                )
-            }
+                    }
+                }
+                is StoriesState.Success -> {
+                    val filteredStories = if (searchQuery.isEmpty()) {
+                        state.stories
+                    } else {
+                        state.stories.filter {
+                            it.title.contains(searchQuery, ignoreCase = true) ||
+                                    it.level.contains(searchQuery, ignoreCase = true) ||
+                                    it.content.contains(searchQuery, ignoreCase = true)
+                        }
+                    }
 
-            AnimatedVisibility(
-                visible = selectedStory != null,
-                enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it })
-            ) {
-                selectedStory?.let { story ->
-                    StoryDetailScreen(
-                        story = story,
-                        onBackClick = { selectedStory = null },
-                        isBookmarked = story.title in bookmarkedStories.value,
-                        onBookmarkClick = {
-                            scope.launch {
-                                context.dataStore.edit { preferences ->
-                                    val currentBookmarks = preferences[BOOKMARK_KEY] ?: emptySet()
-                                    preferences[BOOKMARK_KEY] = if (story.title in currentBookmarks) {
-                                        currentBookmarks - story.title
-                                    } else {
-                                        currentBookmarks + story.title
+                    AnimatedVisibility(
+                        visible = selectedStory == null,
+                        enter = fadeIn() + slideInHorizontally(),
+                        exit = fadeOut() + slideOutHorizontally()
+                    ) {
+                        StoryListScreen(
+                            stories = filteredStories,
+                            bookmarkedStories = bookmarkedStories.value,
+                            onStoryClick = { selectedStory = it },
+                            onBookmarkClick = { storyTitle ->
+                                scope.launch {
+                                    context.dataStore.edit { preferences ->
+                                        val currentBookmarks = preferences[BOOKMARK_KEY] ?: emptySet()
+                                        preferences[BOOKMARK_KEY] = if (storyTitle in currentBookmarks) {
+                                            currentBookmarks - storyTitle
+                                        } else {
+                                            currentBookmarks + storyTitle
+                                        }
+                                        bookmarkedStories.value = preferences[BOOKMARK_KEY] ?: emptySet()
                                     }
-                                    bookmarkedStories.value = preferences[BOOKMARK_KEY] ?: emptySet()
                                 }
-                            }
+                            },
+                            modifier = modifier.fillMaxSize()
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = selectedStory != null,
+                        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+                        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it })
+                    ) {
+                        selectedStory?.let { story ->
+                            StoryDetailScreen(
+                                story = story,
+                                onBackClick = { selectedStory = null },
+                                isBookmarked = story.title in bookmarkedStories.value,
+                                onBookmarkClick = {
+                                    scope.launch {
+                                        context.dataStore.edit { preferences ->
+                                            val currentBookmarks = preferences[BOOKMARK_KEY] ?: emptySet()
+                                            preferences[BOOKMARK_KEY] = if (story.title in currentBookmarks) {
+                                                currentBookmarks - story.title
+                                            } else {
+                                                currentBookmarks + story.title
+                                            }
+                                            bookmarkedStories.value = preferences[BOOKMARK_KEY] ?: emptySet()
+                                        }
+                                    }
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }
@@ -229,7 +293,7 @@ fun StoryListScreen(
                 contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(stories) { story ->
+                items(stories, key = { it.id }) { story ->
                     StoryItem(
                         story = story,
                         isBookmarked = story.title in bookmarkedStories,
@@ -362,7 +426,25 @@ fun StoryDetailScreen(
     isBookmarked: Boolean,
     onBookmarkClick: () -> Unit
 ) {
-    val annotatedText = remember(story) { buildFuriganaAnnotatedString(story) }
+    val context = LocalContext.current
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    var isPlaying by remember { mutableStateOf(false) }
+    var ttsInitialized by remember { mutableStateOf(false) }
+
+    // Initialize TTS
+    DisposableEffect(Unit) {
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val result = tts?.setLanguage(Locale.JAPANESE)
+                ttsInitialized = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED
+            }
+        }
+        onDispose {
+            tts?.stop()
+            tts?.shutdown()
+            tts = null
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -375,7 +457,11 @@ fun StoryDetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = onBackClick,
+                onClick = {
+                    tts?.stop()
+                    isPlaying = false
+                    onBackClick()
+                },
                 modifier = Modifier
                     .clip(CircleShape)
                     .background(Color.White)
@@ -393,6 +479,29 @@ fun StoryDetailScreen(
                     imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
                     contentDescription = if (isBookmarked) "Remove bookmark" else "Add bookmark",
                     tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.Gray
+                )
+            }
+            IconButton(
+                onClick = {
+                    if (ttsInitialized) {
+                        if (isPlaying) {
+                            tts?.stop()
+                            isPlaying = false
+                        } else {
+                            tts?.speak(story.content, TextToSpeech.QUEUE_FLUSH, null, null)
+                            isPlaying = true
+                        }
+                    }
+                },
+                enabled = ttsInitialized,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White)
+            ) {
+                Icon(
+                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause story" else "Play story",
+                    tint = if (ttsInitialized) MaterialTheme.colorScheme.primary else Color.Gray
                 )
             }
         }
@@ -442,10 +551,12 @@ fun StoryDetailScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = annotatedText,
-                    fontSize = 16.sp,
-                    lineHeight = 28.sp,
+
+                // Use EnhancedFuriganaText with dynamic furigana
+                EnhancedFuriganaText(
+                    text = story.content,
+                    furiganaData = processFuriganaForStory(story),
+                    fontSize = 16,
                     modifier = Modifier.semantics { contentDescription = story.content }
                 )
             }
@@ -470,7 +581,11 @@ fun StoryDetailScreen(
                 )
             }
             OutlinedButton(
-                onClick = onBackClick,
+                onClick = {
+                    tts?.stop()
+                    isPlaying = false
+                    onBackClick()
+                },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -483,6 +598,106 @@ fun StoryDetailScreen(
             }
         }
     }
+}
+
+// Enhanced version with support for character-level furigana
+@Composable
+fun EnhancedFuriganaText(
+    text: String,
+    furiganaData: List<FuriganaMapping>,
+    fontSize: Int = 16,
+    modifier: Modifier = Modifier
+) {
+    val (annotatedString, inlineContent) = remember(text, furiganaData) {
+        buildEnhancedFuriganaAnnotatedString(text, furiganaData)
+    }
+
+    Text(
+        text = annotatedString,
+        inlineContent = inlineContent,
+        fontSize = fontSize.sp,
+        lineHeight = (fontSize * 1.8).sp,
+        modifier = modifier
+    )
+}
+
+// FuriganaMapping with character positions
+data class FuriganaMapping(
+    val word: String,
+    val reading: String,
+    val startIndex: Int,
+    val id: String = "furigana-$startIndex-$word"
+)
+
+// Build annotated string with position-aware furigana
+private fun buildEnhancedFuriganaAnnotatedString(
+    text: String,
+    furiganaData: List<FuriganaMapping>
+): Pair<AnnotatedString, Map<String, InlineTextContent>> {
+    val inlineContentMap = mutableMapOf<String, InlineTextContent>()
+    val sortedFurigana = furiganaData.sortedBy { it.startIndex }
+
+    val builder = buildAnnotatedString {
+        var currentPosition = 0
+
+        for (furigana in sortedFurigana) {
+            // Append regular text before furigana
+            if (furigana.startIndex > currentPosition) {
+                append(text.substring(currentPosition, furigana.startIndex))
+            }
+
+            // Add furigana content
+            appendInlineContent(furigana.id, furigana.word)
+
+            // Create inline content
+            inlineContentMap[furigana.id] = InlineTextContent(
+                placeholder = Placeholder(
+                    width = furigana.word.length.toFloat().sp,
+                    height = 24.sp,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.Bottom
+                )
+            ) {
+                FuriganaLayout(kanji = furigana.word, reading = furigana.reading)
+            }
+
+            currentPosition = furigana.startIndex + furigana.word.length
+        }
+
+        // Append remaining text
+        if (currentPosition < text.length) {
+            append(text.substring(currentPosition))
+        }
+    }
+
+    return builder to inlineContentMap
+}
+
+// Helper function to process the story and generate FuriganaMapping with position info
+fun processFuriganaForStory(story: Story): List<FuriganaMapping> {
+    val furiganaList = furiganaMap[story.title] ?: emptyList()
+    val result = mutableListOf<FuriganaMapping>()
+    val text = story.content
+
+    for (furigana in furiganaList) {
+        var startSearchIndex = 0
+        while (true) {
+            val foundIndex = text.indexOf(furigana.kanji, startSearchIndex)
+            if (foundIndex == -1) break
+
+            result.add(
+                FuriganaMapping(
+                    word = furigana.kanji,
+                    reading = furigana.reading,
+                    startIndex = foundIndex,
+                    id = "furigana-$foundIndex-${furigana.kanji}"
+                )
+            )
+
+            startSearchIndex = foundIndex + furigana.kanji.length
+        }
+    }
+
+    return result.sortedBy { it.startIndex }
 }
 
 // Helper functions
@@ -651,102 +866,24 @@ val furiganaMap = mapOf(
     )
 )
 
-// Data classes
-data class Story(
-    val title: String,
-    val level: String,
-    val content: String
-)
-
 data class Furigana(val kanji: String, val reading: String)
 
-// Furigana rendering
-fun buildFuriganaAnnotatedString(story: Story): AnnotatedString {
-    val builder = AnnotatedString.Builder()
-    val text = story.content
-    val furiganaList = furiganaMap[story.title] ?: emptyList()
-
-    var currentIndex = 0
-    while (currentIndex < text.length) {
-        val matchingFurigana = furiganaList
-            .filter { text.startsWith(it.kanji, currentIndex) }
-            .maxByOrNull { it.kanji.length }
-
-        if (matchingFurigana != null) {
-            builder.append(matchingFurigana.kanji)
-            builder.addStyle(
-                SpanStyle(fontSize = 10.sp, baselineShift = BaselineShift.Superscript),
-                currentIndex,
-                currentIndex + matchingFurigana.kanji.length
-            )
-            builder.append("(${matchingFurigana.reading})")
-            currentIndex += matchingFurigana.kanji.length
-        } else {
-            builder.append(text[currentIndex].toString())
-            currentIndex++
-        }
+@Composable
+private fun FuriganaLayout(kanji: String, reading: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = reading,
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.offset(y = (-2).dp)
+        )
+        Text(
+            text = kanji,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
+        )
     }
-    return builder.toAnnotatedString()
 }
-
-// Sample stories
-val stories = listOf(
-    Story(
-        title = "猫と犬",
-        level = "Beginner",
-        content = """
-            ある日、猫と犬が公園で会いました。
-            猫は言いました。「こんにちは、犬さん！元気？」
-            犬は答えました。「うん、元気だよ！猫さんは？」
-            猫は笑いました。「私も元気！一緒に遊ぼう！」
-            それから、猫と犬は楽しく遊びました。
-            友達になるのは、とても簡単でした。
-        """.trimIndent()
-    ),
-    Story(
-        title = "山の冒険",
-        level = "Intermediate",
-        content = """
-            太郎は山に登るのが大好きです。ある晴れた日、彼は新しい山に挑戦しました。
-            道は険しかったですが、太郎は頑張りました。頂上に着くと、美しい景色が見えました。
-            「すごい！」太郎は叫びました。彼は写真を撮って、友達に送りました。
-            その日、太郎は自然の美しさを感じました。
-        """.trimIndent()
-    ),
-    Story(
-        title = "未来の町",
-        level = "Advanced",
-        content = """
-            2050年、町はとても変わりました。空飛ぶ車が道を走り、ロボットが人を助けます。
-            しかし、ある日、町の電力が止まりました。人々はパニックになりました。
-            若いエンジニアの花子は、原因を見つけるために働きました。彼女は古いシステムのバグを見つけ、すぐに直しました。
-            町はまた明るくなり、花子はヒーローになりました。
-        """.trimIndent()
-    ),
-    Story(
-        title = "四季の美しさ",
-        level = "Intermediate",
-        content = """
-            日本には四つの季節があります。春、夏、秋、冬です。
-            春には、桜が咲きます。人々は花見を楽しみます。
-            夏には、海や山に行きます。花火大会もあります。
-            秋には、紅葉がとてもきれいです。食べ物もおいしいです。
-            冬 frying panには、雪が降る地域もあります。お正月は特別な時期です。
-            日本の四季は、それぞれ違う美しさがあります。
-        """.trimIndent()
-    ),
-    Story(
-        title = "友情の意味",
-        level = "Advanced",
-        content = """
-            健太と直樹は幼い頃からの友達でした。彼らは同じ学校に通い、常に一緒にいました。
-            しかし、高校生になると、二人は違う道を歩き始めました。健太は勉強に集中し、直樹はスポーツに夢中になりました。
-            ある日、直樹が大きな試合で怪我をしました。誰も助けることができませんでしたが、健太は毎日病院に通い、直樹を励ましました。
-            「なぜここまでしてくれるの？」と直樹が尋ねると、健太は答えました。「友達だからさ。距離があっても、友情は変わらないよ。」
-            その瞬間、二人は真の友情の意味を理解しました。時間や距離に関係なく、本当の友達はいつも心の中にいるのです。
-        """.trimIndent()
-    )
-)
 
 @Preview(showBackground = true)
 @Composable

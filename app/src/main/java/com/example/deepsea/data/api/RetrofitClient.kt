@@ -68,4 +68,12 @@ object RetrofitClient {
     val mistakeApiService: MistakeApiService by lazy {
         retrofit.create(MistakeApiService::class.java)
     }
+
+    val wordApiService: WordApiService by lazy {
+        retrofit.create(WordApiService::class.java)
+    }
+
+    val storyApiService: StoryApiService by lazy {
+        retrofit.create(StoryApiService::class.java)
+    }
 }

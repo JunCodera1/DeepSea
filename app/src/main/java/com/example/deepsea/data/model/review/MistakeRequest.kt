@@ -1,4 +1,4 @@
-package com.example.deepsea.data.model.mistake
+package com.example.deepsea.data.model.review
 
 data class MistakeRequest(
     val userId: Long,
