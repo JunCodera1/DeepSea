@@ -9,6 +9,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -56,6 +58,7 @@ import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
 import com.example.deepsea.ui.screens.feature.learn.JapaneseCharacterLearningScreen
 import com.example.deepsea.ui.screens.feature.learn.LessonCompletedScreen
 import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
+import com.example.deepsea.ui.screens.feature.profile.PaymentScreen
 import com.example.deepsea.ui.screens.feature.review.MistakesScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.review.StoryScreen
@@ -359,10 +362,22 @@ fun MainContainer(
                     val sessionManager = SessionManager(context)
                     ProfilePage(
                         sessionManager = sessionManager,
-                        paddingValues = padding,
+                        paddingValues = PaddingValues(0.dp),
                         onNavigateToSettings = {
                             deepSeaNavController.navController.navigate("settings")
+                        },
+                        onNavigateToPayment = {
+                            deepSeaNavController.navController.navigate("payment")
                         }
+                    )
+                }
+
+                composable("payment") {
+                    val context = LocalContext.current
+                    val sessionManager = SessionManager(context)
+                    PaymentScreen(
+                        sessionManager = sessionManager,
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
                     )
                 }
 

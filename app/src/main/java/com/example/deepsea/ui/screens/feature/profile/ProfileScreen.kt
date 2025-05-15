@@ -4,6 +4,7 @@ import UserProfileViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +21,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,7 +67,8 @@ fun ProfilePage(
     sessionManager: SessionManager,
     viewModel: UserProfileViewModel = viewModel(),
     paddingValues: PaddingValues,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToPayment: () -> Unit = {} // New callback
 ) {
     val userId by sessionManager.userId.collectAsState(initial = null)
     val userProfile by viewModel.userProfileData
@@ -79,6 +83,7 @@ fun ProfilePage(
     }
 
     val userPaths = pathViewModel.userPaths
+    val isPremium by sessionManager.isPremium.collectAsState(initial = false)
 
     LaunchedEffect(userId) {
         if (userId != null) {
@@ -88,28 +93,31 @@ fun ProfilePage(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFF5F7F9)
+        color = MaterialTheme.colorScheme.background
     ) {
-        // Thay thế verticalScroll bằng LazyColumn để cải thiện hiệu suất
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
                 .padding(paddingValues),
         ) {
-            // Profile Header
             item {
                 ProfileHeader(onNavigateToSettings)
             }
 
-            // Basic Info Card - chỉ render lại khi userProfile thay đổi
             item {
                 UserBasicInfoCard(userProfile)
             }
 
+            if (!isPremium) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    GoPremiumCard(onNavigateToPayment)
+                }
+            }
+
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                // Languages section
                 Text(
                     text = "Languages",
                     fontSize = 18.sp,
@@ -117,13 +125,8 @@ fun ProfilePage(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Languages row
                 LanguageFlags(userPaths) { /* Language selection handler */ }
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Statistics section
                 Text(
                     text = "Statistics",
                     fontSize = 18.sp,
@@ -132,12 +135,10 @@ fun ProfilePage(
                 )
             }
 
-            // Statistics Card
             item {
                 StatisticsCard(userProfile)
             }
 
-            // Friend suggestions section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -148,23 +149,57 @@ fun ProfilePage(
                 )
             }
 
-            // Friends section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 FriendsSection()
             }
 
-            // Invite friends section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 InviteFriendsCard()
             }
 
-            // Achievements section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 AchievementsSection(userProfile)
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun GoPremiumCard(onNavigateToPayment: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToPayment() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Go Premium",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Unlock unlimited access for $9.99/month",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Button(
+                onClick = { onNavigateToPayment() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Learn More")
             }
         }
     }

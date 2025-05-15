@@ -89,4 +89,6 @@ dependencies {
     implementation("com.facebook.android:facebook-login:18.0.2")
     implementation("com.facebook.android:facebook-android-sdk:18.0.2")
     implementation("com.jakewharton.timber:timber:5.0.1")
+
+    implementation ("com.stripe:stripe-android:21.12.0")
 }

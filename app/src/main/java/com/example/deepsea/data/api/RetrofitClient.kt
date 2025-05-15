@@ -76,4 +76,8 @@ object RetrofitClient {
     val storyApiService: StoryApiService by lazy {
         retrofit.create(StoryApiService::class.java)
     }
+
+    val paymentService: PaymentService by lazy {
+        retrofit.create(PaymentService::class.java)
+    }
 }

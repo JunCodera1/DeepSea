@@ -22,6 +22,7 @@ class SessionManager(private val context: Context) {
         private val KEY_PROFILE_ID = longPreferencesKey("profile_id")
         private val KEY_EMAIL = stringPreferencesKey("email")
         private val KEY_IS_FIRST_LOGIN = booleanPreferencesKey("is_first_login")
+        private val IS_PREMIUM_KEY = booleanPreferencesKey("is_premium")
     }
 
     suspend fun saveFirstLoginStatus(isFirstLogin: Boolean) {
@@ -41,9 +42,17 @@ class SessionManager(private val context: Context) {
         }
     }
 
+    suspend fun setPremiumStatus(isPremium: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_PREMIUM_KEY] = isPremium
+        }
+    }
+
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_TOKEN]
     }
+
+    val isPremium: Flow<Boolean> = context.dataStore.data.map { it[IS_PREMIUM_KEY] ?: false }
 
     val username: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[KEY_USERNAME]
@@ -75,4 +84,8 @@ class SessionManager(private val context: Context) {
     }
 
 
+
+    suspend fun clear() {
+        context.dataStore.edit { it.clear() }
+    }
 }
