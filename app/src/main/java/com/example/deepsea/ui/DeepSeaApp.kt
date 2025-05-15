@@ -60,6 +60,14 @@ import com.example.deepsea.ui.screens.feature.review.MistakesScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.review.StoryScreen
 import com.example.deepsea.ui.screens.feature.review.WordsScreen
+import com.example.deepsea.ui.screens.feature.settings.CoursesScreen
+import com.example.deepsea.ui.screens.feature.settings.DeepSeaForSchoolsScreen
+import com.example.deepsea.ui.screens.feature.settings.FeedbackScreen
+import com.example.deepsea.ui.screens.feature.settings.HelpCenterScreen
+import com.example.deepsea.ui.screens.feature.settings.NotificationsScreen
+import com.example.deepsea.ui.screens.feature.settings.PreferencesScreen
+import com.example.deepsea.ui.screens.feature.settings.PrivacySettingsScreen
+import com.example.deepsea.ui.screens.feature.settings.ProfileScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
 import com.example.deepsea.ui.screens.path.DailyGoalSelectionPage
 import com.example.deepsea.ui.screens.path.LanguageSelectionPage
@@ -408,15 +416,58 @@ fun MainContainer(
                 composable("settings") {
                     SettingsPage(
                         onBackPressed = { deepSeaNavController.navController.popBackStack() },
-                        onPreferencesClick = { deepSeaNavController.navController.navigate("preferences") },
-                        onProfileClick = { deepSeaNavController.navController.navigate("profile") },
-                        onNotificationsClick = { deepSeaNavController.navController.navigate("notifications") },
-                        onCoursesClick = { deepSeaNavController.navController.navigate("courses") },
-                        onPrivacySettingsClick = { deepSeaNavController.navController.navigate("privacy_settings") },
-                        onHelpCenterClick = { deepSeaNavController.navController.navigate("help_center") },
-                        onFeedbackClick = { deepSeaNavController.navController.navigate("feedback") },
-                        onSignOut = { authViewModel.logout() },
-                        paddingValues = padding
+                        onPreferencesClick = { deepSeaNavController.navController.navigate("settings/preferences") },
+                        onProfileClick = { deepSeaNavController.navController.navigate("settings/profile") },
+                        onNotificationsClick = { deepSeaNavController.navController.navigate("settings/notifications") },
+                        onCoursesClick = { deepSeaNavController.navController.navigate("settings/courses") },
+                        onDeepSeaForSchoolsClick = { deepSeaNavController.navController.navigate("settings/schools") },
+                        onPrivacySettingsClick = { deepSeaNavController.navController.navigate("settings/privacy") },
+                        onHelpCenterClick = { deepSeaNavController.navController.navigate("settings/help") },
+                        onFeedbackClick = { deepSeaNavController.navController.navigate("settings/feedback") },
+                        onSignOut = {
+                            // TODO: Implement sign out (e.g., clear auth token, navigate to login)
+                        }
+                    )
+                }
+
+                composable("settings/preferences") {
+                    PreferencesScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/profile") {
+                    ProfileScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/notifications") {
+                    NotificationsScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/courses") {
+                    CoursesScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/schools") {
+                    DeepSeaForSchoolsScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/privacy") {
+                    PrivacySettingsScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/help") {
+                    HelpCenterScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
+                    )
+                }
+                composable("settings/feedback") {
+                    FeedbackScreen(
+                        onBackClick = { deepSeaNavController.navController.popBackStack() }
                     )
                 }
 
