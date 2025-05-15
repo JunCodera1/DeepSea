@@ -21,10 +21,10 @@ import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.repository.CourseRepository
 import com.example.deepsea.ui.components.StarDialog
 import com.example.deepsea.ui.components.TopBar
-import com.example.deepsea.viewmodel.CourseUiState
-import com.example.deepsea.viewmodel.HomeViewModel
-import com.example.deepsea.viewmodel.HomeViewModelFactory
-import com.example.deepsea.viewmodel.NavigationEvent
+import com.example.deepsea.ui.viewmodel.home.CourseUiState
+import com.example.deepsea.ui.viewmodel.home.HomeViewModel
+import com.example.deepsea.ui.viewmodel.home.HomeViewModelFactory
+import com.example.deepsea.ui.viewmodel.home.NavigationEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,6 +48,9 @@ fun HomeScreen(
     val currentSectionIndex by viewModel.currentSectionIndex
     val currentUnitIndex = currentSectionIndex
 
+    // Get completed stars from the ViewModel
+    val completedStars by viewModel.completedStars.collectAsStateWithLifecycle()
+
     val coroutineScope = rememberCoroutineScope()
     val starCountPerUnit = 5
 
@@ -56,6 +59,7 @@ fun HomeScreen(
     var dialogTransition by remember { mutableFloatStateOf(0f) }
     var rootHeight by remember { mutableFloatStateOf(0f) }
     var selectedUnitId by remember { mutableStateOf<Long?>(null) }
+    var selectedStarIndex by remember { mutableStateOf<Int?>(null) }
 
     var isHeaderExpanded by remember { mutableStateOf(false) }
     val unitListStates = remember { mutableMapOf<Int, LazyListState>() }
@@ -171,6 +175,7 @@ fun HomeScreen(
                             units = currentUnits,
                             starCountPerUnit = starCountPerUnit,
                             sectionIndex = currentSectionIndex,
+                            completedStars = completedStars, // Pass the completedStars parameter here
                             onJumpToSection = { sectionIndex, unitIndex ->
                                 viewModel.updateCurrentSection(sectionIndex + 1)
                                 viewModel.updateCurrentUnit(unitIndex)
@@ -186,7 +191,8 @@ fun HomeScreen(
                             onGuideBookClicked = { unitId ->
                                 viewModel.navigateToGuideBook(unitId)
                             },
-                            onStarClicked = { starCoordinate, isInteractive, unitId ->
+                            onStarClicked = { starCoordinate, isInteractive, unitId, starIndex ->
+                                selectedStarIndex = starIndex
                                 handleStarTap(
                                     coroutineScope = coroutineScope,
                                     starCoordinate = starCoordinate,
@@ -202,6 +208,7 @@ fun HomeScreen(
                                     }
                                 )
                             }
+
                         )
 
                         if (isDialogShown && selectedUnitId != null) {
@@ -211,7 +218,12 @@ fun HomeScreen(
                                 dialogTransition = dialogTransition,
                                 navController = navController,
                                 xpAmount = 15,
-                                unitId = selectedUnitId!!
+                                unitId = selectedUnitId!!,
+                                onStarComplete = {
+                                    if (selectedStarIndex != null) {
+                                        viewModel.completeStar(selectedUnitId!!, selectedStarIndex!!)
+                                    }
+                                }
                             )
                         }
                     }
@@ -254,3 +266,4 @@ fun orderToPercentage(order: Int, isRTL: Boolean = true): Float {
         else -> 0.45f
     }
 }
+

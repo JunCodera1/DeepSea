@@ -1,21 +1,27 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deepsea.data.model.exercise.LessonResult
 import com.example.deepsea.ui.theme.Blue
@@ -28,6 +34,14 @@ import com.example.deepsea.ui.theme.PurpleLight
 import com.example.deepsea.ui.theme.YellowPrimary
 import com.example.deepsea.R
 import androidx.navigation.compose.rememberNavController
+import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.repository.UserProfileRepository
+import com.example.deepsea.repository.CourseRepository
+import com.example.deepsea.ui.viewmodel.home.HomeViewModel
+import com.example.deepsea.ui.viewmodel.home.HomeViewModelFactory
+import com.example.deepsea.ui.viewmodel.learn.LessonViewModel
+import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
@@ -37,7 +51,8 @@ fun LessonCompletedScreenPreview() {
     MaterialTheme {
         LessonCompletedScreen(
             navController = navController,
-            lessonResult = LessonResult(xp = 80, time = "2:30", accuracy = 95)
+            lessonResult = LessonResult(xp = 80, time = "2:30", accuracy = 95),
+            lessonId = 1
         )
     }
 }
@@ -46,8 +61,20 @@ fun LessonCompletedScreenPreview() {
 @Composable
 fun LessonCompletedScreen(
     navController: NavController,
-    lessonResult: LessonResult = LessonResult(50, "1:11", 100)
+    lessonResult: LessonResult,
+    lessonId: Long
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(CourseRepository(RetrofitClient.courseApiService))
+    )
+    val lessonViewModel: LessonViewModel = viewModel(factory = LessonViewModel.LessonViewModelFactory())
+
+    LaunchedEffect(lessonId) {
+        lessonViewModel.getLessonResult(lessonId)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -59,7 +86,6 @@ fun LessonCompletedScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top decorative elements (fireworks)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,7 +101,6 @@ fun LessonCompletedScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Character and owl
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -86,13 +111,11 @@ fun LessonCompletedScreen(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Character with pink outfit
                     Image(
                         painter = painterResource(id = R.drawable.ic_character),
                         contentDescription = "Character",
                         modifier = Modifier.height(180.dp)
                     )
-
                     Image(
                         painter = painterResource(id = R.drawable.ic_dog),
                         contentDescription = "Owl",
@@ -103,7 +126,6 @@ fun LessonCompletedScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Perfect lesson text
             Text(
                 text = "Perfect lesson!",
                 fontSize = 40.sp,
@@ -112,7 +134,6 @@ fun LessonCompletedScreen(
                 textAlign = TextAlign.Center
             )
 
-            // Take a bow text
             Text(
                 text = "Take a bow!",
                 fontSize = 24.sp,
@@ -123,14 +144,12 @@ fun LessonCompletedScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Stats cards row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // XP Card
                 StatCard(
                     title = "TOTAL XP",
                     value = "${lessonResult.xp}",
@@ -138,8 +157,6 @@ fun LessonCompletedScreen(
                     backgroundColor = PurpleLight,
                     iconTint = Purple
                 )
-
-                // Time Card
                 StatCard(
                     title = "BLAZING",
                     value = lessonResult.time,
@@ -147,8 +164,6 @@ fun LessonCompletedScreen(
                     backgroundColor = BlueLight,
                     iconTint = Blue
                 )
-
-                // Accuracy Card
                 StatCard(
                     title = "AMAZING",
                     value = "${lessonResult.accuracy}%",
@@ -160,9 +175,22 @@ fun LessonCompletedScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Continue button
             Button(
-                onClick = { navController.navigate("home") },
+                onClick = {
+                    coroutineScope.launch {
+                        try {
+                            homeViewModel.completeUnit(lessonId, earnedXp = lessonResult.xp)
+                            navController.navigate("home") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println("Error: ${e.message}")
+                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),

@@ -60,4 +60,8 @@ object RetrofitClient {
     val wordBuildingService: WordBuildingService by lazy {
         retrofit.create(WordBuildingService::class.java)
     }
+
+    val friendSuggestionService: FriendSuggestionService by lazy {
+        retrofit.create(FriendSuggestionService::class.java)
+    }
 }

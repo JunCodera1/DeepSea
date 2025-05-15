@@ -127,7 +127,7 @@ fun GamePage(viewModel: GameViewModel = viewModel()) {
                         onMatchFound = {
                             viewModel.startMatch(
                                 request = GameStartRequest(
-                                    userId = currentPlayer.id.toLong(),
+                                    userId = 1,
                                     gameMode = selectedMode.toString(),
                                     language = "ENGLISH"
                                 ),

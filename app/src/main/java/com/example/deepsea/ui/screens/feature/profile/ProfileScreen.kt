@@ -51,7 +51,6 @@ import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.course.path.PathOption
 import com.example.deepsea.data.model.user.UserProfileData
 import com.example.deepsea.ui.components.AchievementCard
-import com.example.deepsea.ui.components.FriendSuggestionCard
 import com.example.deepsea.ui.components.InviteFriendsCard
 import com.example.deepsea.ui.components.ProfileHeader
 import com.example.deepsea.ui.components.StatisticsCard
@@ -147,7 +146,6 @@ fun ProfilePage(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-                FriendSuggestionCard()
             }
 
             // Friends section

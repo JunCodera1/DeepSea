@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
+import com.example.deepsea.data.model.question.QuizQuestion
 import com.example.deepsea.data.repository.QuestionFactoryImpl
 import com.example.deepsea.data.repository.VocabularyRepository
 import com.example.deepsea.utils.JsonLogProcessor
@@ -57,6 +58,12 @@ class LearningViewModel(
 
     private var textToSpeech: TextToSpeech? = null
     private var ttsInitialized = false
+
+    private val _question = MutableStateFlow<QuizQuestion?>(null)
+    val question: StateFlow<QuizQuestion?> = _question
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     private val vocabularyItems = mutableListOf<VocabularyItem>()
     private var currentIndex = 0
@@ -213,6 +220,30 @@ class LearningViewModel(
         } else {
             _isAnswerCorrect.value = false
             decreaseHearts()
+        }
+    }
+
+    fun loadQuestionById(id: Long) {
+        viewModelScope.launch {
+            try {
+                val result = repository.getQuestionById(id)
+                _question.value = result
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value = "Lỗi: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun loadRandomQuestion() {
+        viewModelScope.launch {
+            try {
+                val result = repository.getRandomQuestion()
+                _question.value = result
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value = "Lỗi: ${e.localizedMessage}"
+            }
         }
     }
 

@@ -9,6 +9,6 @@ data class Match(
     @JsonProperty("player2Id") val player2Id: Long?,
     @JsonProperty("gameMode") val gameMode: String,
     @JsonProperty("status") val status: String,
-    @JsonProperty("createdAt") val createdAt: LocalDateTime,
-    @JsonProperty("completedAt") val completedAt: LocalDateTime?
+    @JsonProperty("createdAt") val createdAt: String,
+    @JsonProperty("completedAt") val completedAt: String?
 )

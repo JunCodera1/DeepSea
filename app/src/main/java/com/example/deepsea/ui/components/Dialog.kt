@@ -11,7 +11,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,6 +48,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
@@ -183,7 +188,8 @@ fun StarDialog(
     dialogTransition: Float,
     navController: NavController,
     xpAmount: Int,
-    unitId: Long // Add unitId parameter to pass to learning session
+    unitId: Long,
+    onStarComplete: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -191,7 +197,8 @@ fun StarDialog(
     ) {
         // Animate dialog scaling
         val animatedScale by animateFloatAsState(
-            targetValue = if (isDialogShown) 1f else 0f
+            targetValue = if (isDialogShown) 1f else 0f,
+            label = "dialogScale"
         )
 
         // Dialog content
@@ -219,7 +226,7 @@ fun StarDialog(
             // Dialog title
             Text(
                 text = "Make introductions",
-                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.5f),
+                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(alpha = 0.5f),
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -227,7 +234,7 @@ fun StarDialog(
             // Dialog description
             Text(
                 text = "Complete all levels above to unlock this",
-                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(0.3f)
+                color = if (isDialogInteractive) Color.White else Color.DarkGray.copy(alpha = 0.3f)
             )
 
             // Voice Assistant Button
@@ -246,11 +253,53 @@ fun StarDialog(
                 }
             }
 
+            // XP Counter Animation when a star is completed
+            if (isDialogInteractive) {
+                var showXpAnimation by remember { mutableStateOf(false) }
+
+                LaunchedEffect(isDialogShown) {
+                    if (isDialogShown) {
+                        // Reset animation state when dialog opens
+                        showXpAnimation = false
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = showXpAnimation,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_star),
+                            contentDescription = "XP",
+                            modifier = Modifier.size(24.dp),
+                            colorFilter = ColorFilter.tint(Color.Yellow)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "+$xpAmount XP",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
             // Action button - Navigate to learning session
             Button(
                 onClick = {
                     if (isDialogInteractive) {
-                        // Navigate to learning session with unitId as lessonId
+                        // Call onStarComplete to update the star status
+                        onStarComplete()
+
+                        // Navigate to learning session with unitId
                         navController.navigate("learning_session/$unitId")
                     }
                 },
@@ -259,14 +308,14 @@ fun StarDialog(
                     containerColor = if (isDialogInteractive)
                         Color.White
                     else
-                        Color.DarkGray.copy(0.15f)
+                        Color.DarkGray.copy(alpha = 0.15f)
                 ),
                 shape = RoundedCornerShape(12.dp),
-                enabled = isDialogInteractive // Disable button if not interactive
+                enabled = isDialogInteractive
             ) {
                 Text(
                     text = if (isDialogInteractive) "Start +$xpAmount XP" else "LOCKED",
-                    color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(0.5f),
+                    color = if (isDialogInteractive) FeatherGreen else Color.DarkGray.copy(alpha = 0.5f),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -274,6 +323,7 @@ fun StarDialog(
         }
     }
 }
+
 
 @Composable
 fun AddTaskDialog(onDismiss: () -> Unit, onTaskAdded: (Task) -> Unit) {

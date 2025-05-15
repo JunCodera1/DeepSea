@@ -320,4 +320,11 @@ class MockUserProfileService : UserProfileService {
     override suspend fun getUserRank(userId: Long): LeaderboardRankResponse {
         TODO("Not yet implemented")
     }
+
+    override suspend fun addXp(
+        userId: Long,
+        amount: Int
+    ): UserProfileData {
+        TODO("Not yet implemented")
+    }
 }

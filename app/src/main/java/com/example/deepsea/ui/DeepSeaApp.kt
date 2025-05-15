@@ -30,6 +30,7 @@ import androidx.navigation.navArgument
 import com.example.deepsea.AI_assistant.VoiceAssistantScreen
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.exercise.LessonResult
 import com.example.deepsea.data.repository.UnitGuideRepository
 import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.components.DeepSeaScaffold
@@ -52,6 +53,7 @@ import com.example.deepsea.ui.screens.feature.home.HomeScreen
 import com.example.deepsea.ui.screens.feature.leaderboard.LeaderboardPage
 import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
 import com.example.deepsea.ui.screens.feature.learn.JapaneseCharacterLearningScreen
+import com.example.deepsea.ui.screens.feature.learn.LessonCompletedScreen
 import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
 import com.example.deepsea.ui.screens.feature.review.ReviewScreen
 import com.example.deepsea.ui.screens.feature.settings.SettingsPage
@@ -177,7 +179,8 @@ fun MainContainer(
             currentRoute != "daily-goal-selection" &&
             currentRoute != "path_selection" &&
             currentRoute != "home/streak" &&
-            currentRoute?.startsWith("learning_session") != true
+            currentRoute?.startsWith("learning_session") != true &&
+            currentRoute?.startsWith("lesson_completed") != true
     val userState by authViewModel.userState.collectAsState()
 
     LaunchedEffect(userState, currentRoute) {
@@ -238,6 +241,7 @@ fun MainContainer(
                         sessionManager = sessionManager
                     )
                 }
+
                 composable("survey-selection") {
                     val userProfileRepository = UserProfileRepository(RetrofitClient.userProfileService)
                     val surveySelectionViewModel: SurveySelectionViewModel = viewModel(
@@ -283,17 +287,32 @@ fun MainContainer(
                     route = "learning_session/{lessonId}",
                     arguments = listOf(navArgument("lessonId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val lessonId = backStackEntry.arguments?.getLong("lessonId") ?: 0L
+                    val lessonId = backStackEntry.arguments?.getLong("lessonId") ?: 1L
                     LearningSessionManager(
                         lessonId = lessonId,
-                        onComplete = {
-                            deepSeaNavController.navController.navigate("home") {
-                                popUpTo("home") { inclusive = false }
-                            }
-                        }
+                        navController = deepSeaNavController.navController,
+                        onComplete = {}
                     )
                 }
-
+                composable(
+                    route = "lesson_completed/{xp}/{time}/{accuracy}/{lessonId}",
+                    arguments = listOf(
+                        navArgument("xp") { type = NavType.IntType },
+                        navArgument("time") { type = NavType.StringType },
+                        navArgument("accuracy") { type = NavType.IntType },
+                        navArgument("lessonId") { type = NavType.LongType }
+                    )
+                ) { backStackEntry ->
+                    val xp = backStackEntry.arguments?.getInt("xp") ?: 0
+                    val time = backStackEntry.arguments?.getString("time") ?: "0:00"
+                    val accuracy = backStackEntry.arguments?.getInt("accuracy") ?: 100
+                    val lessonId = backStackEntry.arguments?.getLong("lessonId") ?: 1L
+                    LessonCompletedScreen(
+                        navController = deepSeaNavController.navController,
+                        lessonResult = LessonResult(xp = xp, time = time, accuracy = accuracy),
+                        lessonId = lessonId
+                    )
+                }
                 // Unit Guide Screen
                 composable(
                     route = "unit_guide/{unitId}",

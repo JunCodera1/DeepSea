@@ -6,7 +6,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface VocabularyApiService {
-    @GET("api/lessons/{lessonId}/questions")
+        @GET("api/lessons/{lessonId}/questions")
     suspend fun getLessonQuestions(
         @Path("lessonId") lessonId: Long,
         @Query("type") type: String? = null
@@ -20,5 +20,11 @@ interface VocabularyApiService {
 
     @GET("api/vocabulary/options")
     suspend fun getVocabularyOptions(@Query("size") size: Int = 4): List<QuizQuestion>
+
+    @GET("api/questions/{questionId}")
+    suspend fun getQuestionById(@Path("questionId") questionId: Long): QuizQuestion
+
+    @GET("api/questions/random")
+    suspend fun getRandomQuestion(): QuizQuestion
 
 }

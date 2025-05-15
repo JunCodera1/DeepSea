@@ -1,6 +1,7 @@
 package com.example.deepsea.data.repository
 
 import com.example.deepsea.data.api.VocabularyApiService
+import com.example.deepsea.data.model.question.QuizQuestion
 import com.example.deepsea.ui.viewmodel.learn.VocabularyItem
 import com.example.deepsea.utils.QuizResponseParser
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +53,10 @@ class VocabularyRepository(
         }
     }
 
+    fun convertQuizQuestionToVocabularyItem(question: QuizQuestion): VocabularyItem {
+        return quizResponseParser.convertToVocabularyItem(question)
+    }
+
     /**
      * Process raw JSON response from API
      * This method can be called directly when handling raw JSON data
@@ -59,5 +64,13 @@ class VocabularyRepository(
     fun processRawQuizResponse(jsonString: String): List<VocabularyItem> {
         val quizQuestions = quizResponseParser.parseQuizQuestions(jsonString)
         return quizResponseParser.convertToVocabularyItems(quizQuestions)
+    }
+
+    suspend fun getQuestionById(questionId: Long): QuizQuestion {
+        return apiService.getQuestionById(questionId)
+    }
+
+    suspend fun getRandomQuestion(): QuizQuestion {
+        return apiService.getRandomQuestion()
     }
 }

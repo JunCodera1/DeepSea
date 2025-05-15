@@ -1,4 +1,4 @@
-package com.example.deepsea.viewmodel
+package com.example.deepsea.ui.viewmodel.home
 
 import android.content.Context
 import android.util.Log
@@ -48,6 +48,10 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
     // Completed units
     private val _completedUnits = MutableStateFlow<Set<Long>>(emptySet())
     val completedUnits: StateFlow<Set<Long>> = _completedUnits.asStateFlow()
+
+    // Completed stars - Map of unitId to set of completed star indices
+    private val _completedStars = MutableStateFlow<Map<Long, Set<Int>>>(emptyMap())
+    val completedStars: StateFlow<Map<Long, Set<Int>>> = _completedStars.asStateFlow()
 
     // User's total XP
     private val _totalXp = MutableStateFlow(0)
@@ -116,6 +120,10 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
                         _completedUnits.value = userProgress.completedUnits?.toSet() ?: emptySet()
                         Log.d("HomeViewModel", "Completed units: ${_completedUnits.value.size}")
 
+                        // Load completed stars from user progress if available
+                        // In a real app, this would come from the API
+                        loadCompletedStars()
+
                         // Update XP and streak
                         _totalXp.value = userProgress.totalXp ?: 0
                         _dailyStreak.value = userProgress.dailyStreak ?: 0
@@ -166,6 +174,26 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
                 useFallbackData()
             }
         }
+    }
+
+    private fun loadCompletedStars() {
+        // This is a sample implementation - in a real app this would come from the API
+        // For now, we'll just create some random completed stars for demonstration
+
+        val starsMap = mutableMapOf<Long, Set<Int>>()
+
+        // For each completed unit, mark the first star as completed
+        _completedUnits.value.forEach { unitId ->
+            starsMap[unitId] = setOf(0)
+        }
+
+        // For the first unit (if any), complete more stars to demonstrate progression
+        _completedUnits.value.firstOrNull()?.let { firstUnitId ->
+            starsMap[firstUnitId] = setOf(0, 1, 2)
+        }
+
+        _completedStars.value = starsMap
+        Log.d("HomeViewModel", "Loaded completed stars: $starsMap")
     }
 
     private fun useFallbackData() {
@@ -258,6 +286,33 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
         Log.d("HomeViewModel", "Current unit updated to $index")
     }
 
+    fun completeStar(unitId: Long, starIndex: Int, earnedXp: Int = 5) {
+        viewModelScope.launch {
+            Log.d("HomeViewModel", "Completing star $starIndex for unit $unitId with $earnedXp XP")
+
+            val currentStarsMap = _completedStars.value.toMutableMap()
+            val unitStars = currentStarsMap[unitId]?.toMutableSet() ?: mutableSetOf()
+
+            if (!unitStars.contains(starIndex)) {
+                unitStars.add(starIndex)
+                currentStarsMap[unitId] = unitStars
+                _completedStars.value = currentStarsMap
+
+                // Add XP
+                _totalXp.value = _totalXp.value + earnedXp
+                Log.d("HomeViewModel", "Star $starIndex of unit $unitId completed, total XP now: ${_totalXp.value}")
+
+                // If all stars for this unit are completed, mark the unit as completed
+                if (unitStars.size == 5) { // Assuming 5 stars per unit
+                    completeUnit(unitId, 0) // No additional XP since we already awarded it per star
+                }
+
+                // In a real app, you would send this update to the server
+                // courseRepository.updateUserStarProgress(...)
+            }
+        }
+    }
+
     fun completeUnit(unitId: Long, earnedXp: Int = 10) {
         viewModelScope.launch {
             Log.d("HomeViewModel", "Completing unit $unitId with $earnedXp XP")
@@ -289,6 +344,10 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
     fun isUnitCompleted(unitId: Long): Boolean {
         return _completedUnits.value.contains(unitId)
+    }
+
+    fun isStarCompleted(unitId: Long, starIndex: Int): Boolean {
+        return _completedStars.value[unitId]?.contains(starIndex) == true
     }
 
     fun calculateSectionProgress(sectionId: Long): Float {

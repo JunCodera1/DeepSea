@@ -57,4 +57,10 @@ interface UserProfileService {
 
     @GET("api/leaderboard/rank")
     suspend fun getUserRank(@Query("userId") userId: Long): LeaderboardRankResponse
+
+    @POST("/api/users/{userId}/add-xp")
+    suspend fun addXp(
+        @Path("userId") userId: Long,
+        @Query("amount") amount: Int
+    ): UserProfileData
 }

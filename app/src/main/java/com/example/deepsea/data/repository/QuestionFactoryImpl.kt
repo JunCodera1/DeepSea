@@ -69,6 +69,8 @@ class QuestionFactoryImpl : QuestionFactory {
         )
     }
 
+
+
     /**
      * Tính độ khó của câu hỏi dựa trên dữ liệu có sẵn
      */

@@ -24,6 +24,20 @@ class QuizResponseParser {
             emptyList()
         }
     }
+    fun convertToVocabularyItem(question: QuizQuestion): VocabularyItem {
+        val correct = question.correctAnswer
+
+        return VocabularyItem(
+            id = correct.id,
+            native = correct.getTextForLanguage("ja"),          // Từ tiếng Nhật
+            romaji = correct.getPronunciationForLanguage("ja"), // Phiên âm romaji
+            english = correct.getTextForLanguage("en"),         // Nghĩa tiếng Anh
+            imageResId = correct.image                          // Nếu là Int. Nếu là URL thì bạn cần sửa type bên dưới
+        )
+    }
+
+
+
 
     /**
      * Convert QuizQuestion objects to VocabularyItem objects

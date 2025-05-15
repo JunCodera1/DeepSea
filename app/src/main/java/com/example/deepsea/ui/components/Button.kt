@@ -457,9 +457,12 @@ fun SelectableStarButton(
 
 @Composable
 fun StarButton(
-    onStarClicked: (coordinateInRoot: Float, isInteractive : Boolean) -> Unit,
+    isCompleted: Boolean = false,
+    isUnlocked: Boolean = false,
+    colorMain: Color = if (isCompleted) FeatherGreen else Gray,
+    colorDark: Color = if (isCompleted) FeatherGreenDark else GrayDark,
+    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit,
 ) {
-    //val isClicked by interactionSource.collectIsPressedAsState()
     var isClicked by remember {
         mutableStateOf(false)
     }
@@ -484,40 +487,51 @@ fun StarButton(
                     rotationX = 30f
                 }
                 .padding(12.dp)
-                .background(color = GrayDark, shape = CircleShape)
+                .background(color = colorDark, shape = CircleShape)
         ) {
             Image(
                 modifier = Modifier
                     .width(72.dp)
                     .graphicsLayer {
                         translationY = animatedTranslation
+                        // Add slight opacity for unlocked but not completed stars
+                        alpha = when {
+                            isCompleted -> 1f
+                            isUnlocked -> 0.8f
+                            else -> 0.5f
+                        }
                     }
                     .padding(0.dp)
-                    .background(color = Gray, shape = CircleShape)
+                    .background(color = colorMain, shape = CircleShape)
                     .padding(20.dp)
                     .pointerInput(Unit) {
                         detectTapGestures {
-                            scope.launch {
-                                isClicked = true
-                                delay(80)
-                                onStarClicked(positionInRoot, false)
-                                isClicked = false
+                            if (isCompleted || isUnlocked) {
+                                scope.launch {
+                                    isClicked = true
+                                    delay(80)
+                                    onStarClicked(positionInRoot, isCompleted || isUnlocked)
+                                    isClicked = false
+                                }
                             }
                         }
                     }.pointerInput(Unit) {
-                        detectDragGesturesAfterLongPress (
+                        detectDragGesturesAfterLongPress(
                             onDragStart = {
-                                isClicked = true
-                            }, onDragEnd = {
-                                isClicked = false
-                                onStarClicked(positionInRoot, false)
+                                if (isCompleted || isUnlocked) {
+                                    isClicked = true
+                                }
+                            },
+                            onDragEnd = {
+                                if (isCompleted || isUnlocked) {
+                                    isClicked = false
+                                    onStarClicked(positionInRoot, isCompleted || isUnlocked)
+                                }
                             }
                         ) { _,_-> }
-                    }
-
-                ,
+                    },
                 painter = painterResource(id = R.drawable.ic_star),
-                colorFilter = ColorFilter.tint(color = GrayDark),
+                colorFilter = ColorFilter.tint(color = if (isCompleted) Color.White else GrayDark),
                 contentDescription = "star"
             )
         }

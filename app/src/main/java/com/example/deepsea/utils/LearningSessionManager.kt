@@ -1,6 +1,8 @@
 package com.example.deepsea.utils
 
 import android.app.Application
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,18 +28,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.api.SessionData
+import com.example.deepsea.data.dto.LessonCompletionDto
+import com.example.deepsea.data.model.exercise.LessonResult
 import com.example.deepsea.ui.screens.feature.learn.LanguageListeningScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsViewModel
 import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
 import com.example.deepsea.ui.viewmodel.learn.LearningViewModel
+import com.example.deepsea.ui.viewmodel.learn.LessonViewModel
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModelFactory
 import kotlinx.coroutines.launch
@@ -46,16 +56,56 @@ import kotlin.random.Random
 fun LearningSessionManager(
     modifier: Modifier = Modifier,
     lessonId: Long,
+    navController: NavController,
     onComplete: () -> Unit
 ) {
-    val navController = rememberNavController()
+    val navControllerLocal = rememberNavController()
     var sessionState by remember { mutableStateOf(SessionState()) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current.applicationContext as Application
+    val lessonViewModel: LessonViewModel = viewModel(factory = LessonViewModel.LessonViewModelFactory())
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Initialize sessionState with 5-10 screens
+    // Time tracking
+    var startTime by remember { mutableStateOf(System.currentTimeMillis()) }
+    var pausedTime by remember { mutableStateOf(0L) }
+    var isPaused by remember { mutableStateOf(false) }
+    var lessonResult by remember { mutableStateOf(LessonResult(xp = 0, time = "0:00", accuracy = 100)) }
+
+    // Pause/resume functions
+    fun pauseSession() {
+        if (!isPaused) {
+            isPaused = true
+            pausedTime = System.currentTimeMillis()
+        }
+    }
+
+    fun resumeSession() {
+        if (isPaused) {
+            startTime += (System.currentTimeMillis() - pausedTime)
+            isPaused = false
+            pausedTime = 0L
+        }
+    }
+
+    // Lifecycle observer for pause/resume
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> pauseSession()
+                Lifecycle.Event.ON_RESUME -> resumeSession()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Initialize session
     LaunchedEffect(Unit) {
-        val screenCount = Random.nextInt(3, 5) // 5-10 screens per unit
+        val screenCount = Random.nextInt(3, 5)
         val screens = generateRandomScreens(screenCount)
         sessionState = sessionState.copy(
             totalScreens = screenCount,
@@ -63,12 +113,19 @@ fun LearningSessionManager(
             currentScreenIndex = 0,
             progress = 0f
         )
+        startTime = System.currentTimeMillis()
     }
 
-    // Only render NavHost when screens are populated
+    // Update LessonResult
+    fun updateLessonResult(progress: Float) {
+        val xp = (progress * 100).toInt()
+        val accuracy = (progress * 100).toInt()
+        lessonResult = LessonResult(xp = xp, time = "0:00", accuracy = accuracy)
+    }
+
     if (sessionState.screens.isNotEmpty()) {
         NavHost(
-            navController = navController,
+            navController = navControllerLocal,
             startDestination = "learning_screen/0",
             modifier = modifier
         ) {
@@ -87,7 +144,7 @@ fun LearningSessionManager(
                             factory = LearningViewModel.Factory(lessonId, context)
                         )
                         ScreenType.MATCHING_PAIRS -> viewModel<MatchingPairsViewModel>()
-                        else -> null // Handle LANGUAGE_LISTENING if needed
+                        else -> null
                     }
                     LearningScreenWrapper(
                         sessionState = sessionState,
@@ -98,13 +155,14 @@ fun LearningSessionManager(
                             val screenProgress = 1f / sessionState.totalScreens
                             val totalProgress = (sessionState.currentScreenIndex * screenProgress) + (newProgress * screenProgress)
                             sessionState = sessionState.copy(progress = totalProgress.coerceIn(0f, 1f))
+                            updateLessonResult(totalProgress)
                         },
                         onNextScreen = {
                             val nextIndex = sessionState.currentScreenIndex + 1
                             if (nextIndex < sessionState.totalScreens) {
                                 sessionState = sessionState.copy(currentScreenIndex = nextIndex)
-                                navController.navigate("learning_screen/$nextIndex") {
-                                    popUpTo(navController.graph.startDestinationId) {
+                                navControllerLocal.navigate("learning_screen/$nextIndex") {
+                                    popUpTo(navControllerLocal.graph.startDestinationId) {
                                         inclusive = false
                                     }
                                     launchSingleTop = true
@@ -112,11 +170,51 @@ fun LearningSessionManager(
                             } else {
                                 coroutineScope.launch {
                                     saveSessionProgress(lessonId, sessionState)
+                                    // Calculate final time
+                                    val elapsedMillis = if (isPaused) {
+                                        (pausedTime - startTime)
+                                    } else {
+                                        (System.currentTimeMillis() - startTime)
+                                    }
+                                    val elapsedSeconds = elapsedMillis / 1000
+                                    val finalTime = "${elapsedSeconds / 60}:${(elapsedSeconds % 60).toString().padStart(2, '0')}"
+                                    lessonResult = lessonResult.copy(time = finalTime)
+
+                                    // Save LessonResult
+                                    lessonViewModel.saveLessonResult(
+                                        xp = lessonResult.xp,
+                                        time = lessonResult.time,
+                                        accuracy = lessonResult.accuracy
+                                    )
+
+                                    // Call /api/lessons/{id}/complete
+                                    try {
+                                        val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                                        val userId = sharedPreferences.getLong("user_id", 1L)
+                                        RetrofitClient.lessonApi.completeLesson(
+                                            lessonId,
+                                            userId,
+                                            LessonCompletionDto(
+                                                score = lessonResult.accuracy,
+                                                timeTaken = lessonResult.time
+                                            )
+                                        )
+                                    } catch (e: Exception) {
+                                        println("Failed to complete lesson: ${e.message}")
+                                        Toast.makeText(context, "Failed to complete lesson: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                    // Navigate to LessonCompletedScreen
+                                    navController.navigate("lesson_completed/${lessonResult.xp}/${lessonResult.time}/${lessonResult.accuracy}/$lessonId") {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            inclusive = true
+                                        }
+                                    }
                                     onComplete()
                                 }
                             }
                         },
-                        onBack = { navController.popBackStack() }
+                        onBack = { navControllerLocal.popBackStack() }
                     )
                 }
             }
