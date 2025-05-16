@@ -1,5 +1,7 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.background
@@ -21,30 +23,41 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -52,6 +65,7 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.net.URLEncoder
 import kotlin.random.Random
 
 @Composable
@@ -107,6 +121,54 @@ fun JapaneseCharacterLearningScreen() {
             character = selectedCharacter!!,
             onDismiss = { showDetailDialog = false }
         )
+    }
+}
+
+class AudioPlayer {
+    private var mediaPlayer: MediaPlayer? = null
+
+    fun play(url: String, onCompletion: () -> Unit) {
+        // Release any existing player first
+        release()
+
+        // Create and configure a new player
+        mediaPlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build()
+            )
+
+            try {
+                setDataSource(url)
+                setOnPreparedListener { mp -> mp.start() }
+                setOnCompletionListener { mp ->
+                    mp.reset()
+                    onCompletion()
+                }
+                setOnErrorListener { mp, _, _ ->
+                    mp.reset()
+                    onCompletion()
+                    true
+                }
+                prepareAsync()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onCompletion()
+            }
+        }
+    }
+
+    fun release() {
+        mediaPlayer?.apply {
+            if (isPlaying) {
+                stop()
+            }
+            reset()
+            release()
+        }
+        mediaPlayer = null
     }
 }
 
@@ -581,9 +643,22 @@ fun CharacterDetailDialog(character: JapaneseCharacter, onDismiss: () -> Unit) {
 
 @Composable
 fun JishoDictionaryLookup() {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var inputWord by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var searchResults by remember { mutableStateOf<List<JishoResult>>(emptyList()) }
+
+    // Audio player state management
+    val audioPlayer = remember { AudioPlayer() }
+    var currentlyPlayingIndex by remember { mutableStateOf<Int?>(null) }
+
+    // Clean up resources when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            audioPlayer.release()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -601,11 +676,26 @@ fun JishoDictionaryLookup() {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            androidx.compose.material3.OutlinedTextField(
+            OutlinedTextField(
                 value = inputWord,
                 onValueChange = { inputWord = it },
                 placeholder = { Text("Enter Japanese or English word") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                trailingIcon = {
+                    if (inputWord.isNotBlank()) {
+                        IconButton(
+                            onClick = {
+                                isLoading = true
+                                searchJishoWithAudio(inputWord) { results ->
+                                    searchResults = results
+                                    isLoading = false
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Search, "Search")
+                        }
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -614,7 +704,7 @@ fun JishoDictionaryLookup() {
                 onClick = {
                     if (inputWord.isNotBlank()) {
                         isLoading = true
-                        searchJisho(inputWord) { results ->
+                        searchJishoWithAudio(inputWord) { results ->
                             searchResults = results
                             isLoading = false
                         }
@@ -632,7 +722,7 @@ fun JishoDictionaryLookup() {
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Loading results...")
+                CircularProgressIndicator()
             }
         } else if (searchResults.isEmpty() && inputWord.isNotBlank()) {
             Box(
@@ -644,13 +734,260 @@ fun JishoDictionaryLookup() {
         } else {
             LazyColumn {
                 items(searchResults.size) { index ->
-                    JishoResultCard(searchResults[index])
+                    val result = searchResults[index]
+                    JishoResultCardWithAudio(
+                        result = result,
+                        isPlaying = currentlyPlayingIndex == index,
+                        onPlayAudio = {
+                            if (result.audioUrl != null) {
+                                currentlyPlayingIndex = index
+                                coroutineScope.launch {
+                                    audioPlayer.play(result.audioUrl) {
+                                        currentlyPlayingIndex = null
+                                    }
+                                }
+                            }
+                        }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
     }
 }
+
+@Composable
+fun JishoResultCardWithAudio(
+    result: JishoResult,
+    isPlaying: Boolean,
+    onPlayAudio: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = result.japanese,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        if (result.reading.isNotEmpty() && result.reading != result.japanese) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "[${result.reading}]",
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Audio button
+                if (result.audioUrl != null) {
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = onPlayAudio,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    if (isPlaying) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.VolumeUp,
+                                contentDescription = "Play pronunciation",
+                                tint = if (isPlaying) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.primary
+                            )
+
+
+                        }
+
+                        if (isPlaying) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .padding(4.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column {
+                result.meanings.forEachIndexed { index, meaning ->
+                    Text(
+                        text = "${index + 1}. $meaning",
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
+            }
+
+            if (result.partsOfSpeech.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Parts of speech: ${result.partsOfSpeech.joinToString(", ")}",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+fun searchJishoWithAudio(word: String, onResult: (List<JishoResult>) -> Unit) {
+    val client = OkHttpClient()
+    val encodedWord = URLEncoder.encode(word, "UTF-8")
+    val url = "https://jisho.org/api/v1/search/words?keyword=$encodedWord"
+    val request = Request.Builder().url(url).build()
+
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Handler(Looper.getMainLooper()).post {
+                onResult(emptyList())
+            }
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            response.body?.string()?.let { body ->
+                try {
+                    val json = JSONObject(body)
+                    val data = json.getJSONArray("data")
+                    val results = mutableListOf<JishoResult>()
+
+                    for (i in 0 until minOf(data.length(), 10)) {
+                        val entry = data.getJSONObject(i)
+                        val japanese = entry.getJSONArray("japanese")
+
+                        val japaneseWord = if (japanese.length() > 0) {
+                            val japaneseObj = japanese.getJSONObject(0)
+                            val word = if (japaneseObj.has("word")) japaneseObj.getString("word") else ""
+                            val reading = if (japaneseObj.has("reading")) japaneseObj.getString("reading") else word
+                            Pair(word, reading)
+                        } else {
+                            Pair("", "")
+                        }
+
+                        // Find audio URL if available
+                        var audioUrl: String? = null
+                        if (entry.has("attribution")) {
+                            try {
+                                if (entry.has("media") && !entry.isNull("media")) {
+                                    val mediaArray = entry.getJSONArray("media")
+                                    for (j in 0 until mediaArray.length()) {
+                                        val mediaObj = mediaArray.getJSONObject(j)
+                                        if (mediaObj.has("audio") && !mediaObj.isNull("audio")) {
+                                            val audioObj = mediaObj.getJSONObject("audio")
+                                            if (audioObj.has("mp3") && !audioObj.isNull("mp3")) {
+                                                audioUrl = audioObj.getString("mp3")
+                                                break
+                                            } else if (audioObj.has("opus") && !audioObj.isNull("opus")) {
+                                                audioUrl = audioObj.getString("opus")
+                                                break
+                                            } else if (audioObj.has("aac") && !audioObj.isNull("aac")) {
+                                                audioUrl = audioObj.getString("aac")
+                                                break
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                // Handle exception in audio URL extraction
+                                e.printStackTrace()
+                            }
+                        }
+
+                        // If no audio URL in Jisho API response, try to generate one using TTS API
+                        if (audioUrl == null && japaneseWord.first.isNotEmpty()) {
+                            // Using TTS API for Japanese pronunciation
+                            audioUrl = getTextToSpeechUrl(japaneseWord.first)
+                        }
+
+                        val senses = entry.getJSONArray("senses")
+                        val meanings = mutableListOf<String>()
+                        val partsOfSpeech = mutableListOf<String>()
+
+                        if (senses.length() > 0) {
+                            val sense = senses.getJSONObject(0)
+                            if (sense.has("parts_of_speech")) {
+                                val pos = sense.getJSONArray("parts_of_speech")
+                                for (j in 0 until pos.length()) {
+                                    partsOfSpeech.add(pos.getString(j))
+                                }
+                            }
+                            if (sense.has("english_definitions")) {
+                                val defs = sense.getJSONArray("english_definitions")
+                                for (j in 0 until defs.length()) {
+                                    meanings.add(defs.getString(j))
+                                }
+                            }
+                        }
+
+                        results.add(
+                            JishoResult(
+                                japanese = japaneseWord.first,
+                                reading = japaneseWord.second,
+                                meanings = meanings,
+                                partsOfSpeech = partsOfSpeech,
+                                audioUrl = audioUrl
+                            )
+                        )
+                    }
+
+                    Handler(Looper.getMainLooper()).post {
+                        onResult(results)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Handler(Looper.getMainLooper()).post {
+                        onResult(emptyList())
+                    }
+                }
+            } ?: run {
+                Handler(Looper.getMainLooper()).post {
+                    onResult(emptyList())
+                }
+            }
+        }
+    })
+}
+
+fun getTextToSpeechUrl(text: String): String {
+    val encodedText = URLEncoder.encode(text, "UTF-8")
+
+    // Use Google Translate TTS API (note: this is not officially supported and may require API key for production)
+    // In a real app, you should use an official TTS API service or bundle your own audio files
+    return "https://translate.google.com/translate_tts?ie=UTF-8&q=$encodedText&tl=ja&client=tw-ob"
+
+    // Alternative free TTS APIs:
+    // return "https://api.voicerss.org/?key=YOUR_API_KEY&hl=ja-jp&src=$encodedText"
+    // return "https://ttsmp3.com/makemp3_new.php?msg=$encodedText&lang=Takumi&source=ttsmp3"
+}
+
+// Ext
 
 @Composable
 fun JishoResultCard(result: JishoResult) {
@@ -789,7 +1126,8 @@ data class JishoResult(
     val japanese: String,
     val reading: String,
     val meanings: List<String>,
-    val partsOfSpeech: List<String>
+    val partsOfSpeech: List<String>,
+    val audioUrl: String? = null
 )
 
 data class JapaneseCharacter(

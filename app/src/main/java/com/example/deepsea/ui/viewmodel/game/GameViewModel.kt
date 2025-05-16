@@ -33,7 +33,7 @@ class GameViewModel : ViewModel() {
     fun getMatchQuestions(matchId: Long, onSuccess: (List<UiQuestion>) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val response: Response<List<com.example.deepsea.data.model.game.Question>> = apiService.getMatchQuestions(matchId)
+                val response: Response<List<Question>> = apiService.getMatchQuestions(matchId)
                 if (response.isSuccessful) {
                     response.body()?.let { dataQuestions ->
                         // Map data model to UI model
@@ -44,7 +44,8 @@ class GameViewModel : ViewModel() {
                                 options = dataQuestion.options,
                                 correctAnswer = dataQuestion.correctAnswer,
                                 gameMode = dataQuestion.gameMode,
-                                language = dataQuestion.language
+                                language = dataQuestion.language,
+                                explanation = "TODO()"
                             )
                         }
                         onSuccess(uiQuestions)

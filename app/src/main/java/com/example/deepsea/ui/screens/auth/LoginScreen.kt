@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
 import com.example.deepsea.ui.LocalSharedTransitionScope
@@ -45,7 +46,7 @@ import androidx.activity.ComponentActivity as ActivityComponentActivity
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun LoginPage(
-    deepseaNavController: DeepSeaNavController,
+    deepseaNavController: NavController,
     onSignInClick: (email: String, password: String) -> Unit,
     onLoginSuccess: () -> Unit,
     authViewModel: AuthViewModel
@@ -88,7 +89,7 @@ fun LoginPage(
                 val account = task.getResult(ApiException::class.java)
                 account?.idToken?.let { token ->
                     Log.d("WelcomePage", "Google ID token obtained: ${token.take(10)}...")
-                    authViewModel.signInWithGoogle(token, deepseaNavController.navController)
+                    authViewModel.signInWithGoogle(token, deepseaNavController)
                 } ?: run {
                     Log.e("WelcomePage", "Google sign-in failed: ID token is null")
                     showError = true
@@ -133,7 +134,7 @@ fun LoginPage(
                 override fun onSuccess(result: LoginResult) {
                     result.accessToken.token?.let { token ->
                         // Gọi viewModel để xử lý đăng nhập với Facebook
-                        authViewModel.signInWithFacebook(token, navController = deepseaNavController.navController)
+                        authViewModel.signInWithFacebook(token, navController = deepseaNavController)
                     }
                 }
 
@@ -199,7 +200,7 @@ fun LoginPage(
             TextButton(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
-                    deepseaNavController.navController.navigate("forgot-password")
+                    deepseaNavController.navigate("forgot-password")
                 }
             ) {
                 Text("Forgot password?")
@@ -249,7 +250,7 @@ fun LoginPage(
 
             TextButton(
                 onClick = {
-                    deepseaNavController.navController.navigate("signup")
+                    deepseaNavController.navigate("signup")
                 }
             ) {
                 Text("Don't have account? Sign Up.")

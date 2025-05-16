@@ -85,6 +85,89 @@ import com.example.deepsea.ui.theme.Gray
 import com.example.deepsea.ui.theme.Polar
 
 @Composable
+fun RewardTreasureDialog(
+    reward: String,
+    isWinner: Boolean,
+    onDismiss: () -> Unit,
+    streakDays: Int = 0
+) {
+    val primaryColor = Color(0xFF0078D7)
+    val accentColor = Color(0xFFFF9500)
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Hình ảnh phần thưởng
+                Icon(
+                    painter = painterResource(id = if (isWinner) R.drawable.ic_treasure else R.drawable.ic_close),
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = if (isWinner) accentColor else Color.Gray
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Tiêu đề
+                Text(
+                    text = if (isWinner) "Treasure Unlocked!" else "Adventure Reward",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryColor
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Mô tả phần thưởng
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "You earned: $reward",
+                        fontSize = 16.sp,
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Center
+                    )
+                    if (streakDays > 0) {
+                        Text(
+                            text = "Streak: $streakDays days!",
+                            fontSize = 14.sp,
+                            color = accentColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Nút đóng
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                ) {
+                    Text(
+                        text = "COLLECT",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun LanguageSelectionDialog(
     showDialog: Boolean,
     availableLanguages: List<LanguageOption>,

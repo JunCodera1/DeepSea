@@ -1,11 +1,17 @@
 package com.example.deepsea.ui.screens.feature.learn
 
 import android.app.Application
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -55,7 +62,12 @@ fun WordBuildingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Word Building") },
+                title = {
+                    Text(
+                        "Word Building",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -86,12 +98,14 @@ fun WordBuildingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(Color(0xFFF5F9FF))
         ) {
             when {
                 isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = DeepSeaBlue
+                        color = DeepSeaBlue,
+                        strokeWidth = 4.dp
                     )
                 }
                 errorMessage != null -> {
@@ -113,20 +127,25 @@ fun WordBuildingScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         // Progress and Hearts
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             LinearProgressIndicator(
                                 progress = userProgress,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(8.dp),
-                                color = DeepSeaBlue
+                                    .height(10.dp)
+                                    .clip(CircleShape),
+                                color = DeepSeaBlue,
+                                trackColor = Color(0xFFD0D0D0)
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Row {
@@ -135,133 +154,307 @@ fun WordBuildingScreen(
                                         painter = painterResource(id = R.drawable.ic_heart),
                                         contentDescription = "Heart",
                                         tint = HeartRed,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(28.dp)
                                     )
                                 }
                             }
                         }
 
-                        // Source Text and Audio Buttons
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                        // Source Text Card
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 2.dp
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = currentExercise?.sourceText ?: "",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DeepSeaBlue,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(
-                                onClick = { viewModel.playSentenceAudio() },
-                                enabled = !isAudioPlaying
+                            Column(
+                                modifier = Modifier.padding(16.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Play Sentence",
-                                    tint = DeepSeaBlue
+                                Text(
+                                    text = "Sentence to build:",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Medium
                                 )
-                            }
-                            IconButton(
-                                onClick = { viewModel.playSlowSentenceAudio() },
-                                enabled = !isAudioPlaying
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_slow_play),
-                                    contentDescription = "Play Slow Sentence",
-                                    tint = DeepSeaBlue
-                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = currentExercise?.sourceText ?: "",
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepSeaBlue,
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        IconButton(
+                                            onClick = { viewModel.playSentenceAudio() },
+                                            enabled = !isAudioPlaying,
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (!isAudioPlaying) DeepSeaBlue.copy(alpha = 0.1f)
+                                                    else Color.Gray.copy(alpha = 0.1f)
+                                                )
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.PlayArrow,
+                                                contentDescription = "Play Sentence",
+                                                tint = if (!isAudioPlaying) DeepSeaBlue else Color.Gray,
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        IconButton(
+                                            onClick = { viewModel.playSlowSentenceAudio() },
+                                            enabled = !isAudioPlaying,
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (!isAudioPlaying) DeepSeaBlue.copy(alpha = 0.1f)
+                                                    else Color.Gray.copy(alpha = 0.1f)
+                                                )
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_slow_play),
+                                                contentDescription = "Play Slow Sentence",
+                                                tint = if (!isAudioPlaying) DeepSeaBlue else Color.Gray,
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 
                         // Selected Words
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 2.dp
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Column(
+                                modifier = Modifier.padding(16.dp)
                             ) {
-                                selectedWords.forEachIndexed { index, word ->
-                                    Text(
-                                        text = word,
+                                Text(
+                                    text = "Your answer:",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                if (selectedWords.isEmpty()) {
+                                    Box(
                                         modifier = Modifier
-                                            .background(
+                                            .fillMaxWidth()
+                                            .height(48.dp)
+                                            .border(
+                                                width = 1.dp,
                                                 color = Color.LightGray,
-                                                shape = RoundedCornerShape(4.dp)
-                                            )
-                                            .padding(4.dp)
-                                            .clickable { viewModel.removeWord(index) },
-                                        fontSize = 16.sp
-                                    )
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Tap words below to build your sentence",
+                                            color = Color.Gray,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        selectedWords.forEachIndexed { index, word ->
+                                            Card(
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = DeepSeaBlue.copy(alpha = 0.1f)
+                                                ),
+                                                shape = RoundedCornerShape(8.dp),
+                                                modifier = Modifier
+                                                    .clickable { viewModel.removeWord(index) }
+                                            ) {
+                                                Text(
+                                                    text = word,
+                                                    modifier = Modifier.padding(
+                                                        horizontal = 12.dp,
+                                                        vertical = 8.dp
+                                                    ),
+                                                    fontSize = 16.sp,
+                                                    color = DeepSeaBlue,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
 
                         // Word Options
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 2.dp
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            items(currentExercise?.wordOptions ?: emptyList()) { word ->
-                                Button(
-                                    onClick = { viewModel.addWord(word) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = DeepSeaBlue
-                                    )
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "Available words:",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    contentPadding = PaddingValues(4.dp)
                                 ) {
-                                    Text(word)
+                                    items(currentExercise?.wordOptions ?: emptyList()) { word ->
+                                        Button(
+                                            onClick = { viewModel.addWord(word) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = DeepSeaBlue
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            contentPadding = PaddingValues(
+                                                horizontal = 16.dp,
+                                                vertical = 8.dp
+                                            ),
+                                            elevation = ButtonDefaults.buttonElevation(
+                                                defaultElevation = 4.dp
+                                            )
+                                        ) {
+                                            Text(
+                                                text = word,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.weight(1f))
 
                         // Check Answer Button
                         Button(
                             onClick = { viewModel.checkAnswer() },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
+                                .height(56.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = DeepSeaBlue
+                                containerColor = DeepSeaBlue,
+                                disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
                             ),
-                            enabled = selectedWords.isNotEmpty()
+                            enabled = selectedWords.isNotEmpty(),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 4.dp
+                            )
                         ) {
-                            Text("Check Answer")
+                            Text(
+                                "Check Answer",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
 
                         // Answer Feedback
-                        isAnswerCorrect?.let { correct ->
-                            Text(
-                                text = if (correct) {
-                                    "Correct!"
-                                } else {
-                                    "Incorrect. Mistake saved for review."
-                                },
-                                fontSize = 18.sp,
-                                color = if (correct) Color.Green else HeartRed,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    viewModel.resetState()
-                                    viewModel.loadExercise()
-                                    if (correct && viewModel.userProgress.value >= 1f) {
-                                        onComplete()
+                        AnimatedVisibility(
+                            visible = isAnswerCorrect != null,
+                            enter = fadeIn(animationSpec = tween(300)),
+                            exit = fadeOut(animationSpec = tween(300))
+                        ) {
+                            isAnswerCorrect?.let { correct ->
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Card(
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (correct) Color(0xFFE7F8E7) else Color(0xFFFCE8E8)
+                                        ),
+                                        shape = RoundedCornerShape(16.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = if (correct) {
+                                                "Correct! Good job!"
+                                            } else {
+                                                "Incorrect. Mistake saved for review."
+                                            },
+                                            fontSize = 18.sp,
+                                            color = if (correct) Color(0xFF2E7D32) else HeartRed,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            textAlign = TextAlign.Center,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = DeepSeaBlue
-                                )
-                            ) {
-                                Text("Next Exercise")
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Button(
+                                        onClick = {
+                                            viewModel.resetState()
+                                            viewModel.loadExercise()
+                                            if (correct && viewModel.userProgress.value >= 1f) {
+                                                onComplete()
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(56.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (correct) Color(0xFF4CAF50) else DeepSeaBlue
+                                        ),
+                                        shape = RoundedCornerShape(16.dp),
+                                        elevation = ButtonDefaults.buttonElevation(
+                                            defaultElevation = 4.dp
+                                        )
+                                    ) {
+                                        Text(
+                                            "Next Exercise",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -277,40 +470,64 @@ fun ErrorMessage(
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        ),
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+            .width(300.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_mistakes),
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = HeartRed
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Oops! Something went wrong",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.DarkGray
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = message,
-            fontSize = 16.sp,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = onRetryClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = DeepSeaBlue
-            )
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text("Retry")
+            Icon(
+                painter = painterResource(id = R.drawable.ic_mistakes),
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
+                tint = HeartRed
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Oops! Something went wrong",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.DarkGray
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                fontSize = 16.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onRetryClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DeepSeaBlue
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text(
+                    "Retry",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

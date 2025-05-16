@@ -45,6 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.deepsea.R
@@ -57,9 +58,9 @@ import com.example.deepsea.utils.RegisterState
 
 @Composable
 fun SignupPage(
-    onSignUpClick: (name: String, username: String, email: String, password: String, avatar: Uri?) -> Unit = { _, _, _, _, _ -> },
+    onSignUpClick:(name: String, username: String, email: String, password: String, avatar: Uri?) -> Unit,
     onSignInClick: () -> Unit = {},
-    navController: DeepSeaNavController,
+    navController: NavController,
     authViewModel: AuthViewModel,
     onRegisterSuccess: () -> Unit
 ) {
@@ -290,7 +291,7 @@ fun SignupPage(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row {
-                    TextButton(onClick = { navController.navController.navigate("login") }) {
+                    TextButton(onClick = { navController.navigate("login") }) {
                         Text("Already have an account? ")
                         Text(
                             text = "Sign In",

@@ -4,56 +4,43 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.deepsea.R
 import com.example.deepsea.ui.components.StatItem
-import com.example.deepsea.ui.viewmodel.game.GameViewModel
 
 @Composable
 fun ResultScreen(
     currentPlayer: Player,
-    opponent: Player,
     playerScore: Int,
-    opponentScore: Int,
+    playerHealth: Int,
     totalQuestions: Int,
     onPlayAgain: () -> Unit,
-    onClaimReward: () -> Unit
-){
+    onClaimReward: () -> Unit,
+    gameStats: GameStats,
+    gameMode: GameMode,
+    isDailyStreak: Boolean
+) {
     val primaryColor = Color(0xFF0078D7)
     val accentColor = Color(0xFFFF9500)
 
-    val playerWins = playerScore > opponentScore
-    val isDraw = playerScore == opponentScore
+    val isTreasureFound = playerScore >= totalQuestions * 0.7 && playerHealth > 0
 
-    // Animation for result
     val resultScale by animateFloatAsState(
         targetValue = 1f,
         animationSpec = tween(
@@ -71,82 +58,36 @@ fun ResultScreen(
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Result text
-        Text(
-            text = when {
-                playerWins -> "VICTORY!"
-                isDraw -> "IT'S A DRAW!"
-                else -> "GOOD EFFORT!"
-            },
-            fontSize = 32.sp * resultScale,
-            fontWeight = FontWeight.Bold,
-            color = when {
-                playerWins -> Color(0xFFFFD700)
-                isDraw -> Color(0xFF0078D7)
-                else -> Color(0xFF666666)
-            }
-        )
+        // Kết quả
+        if (isTreasureFound) {
+            Text(
+                text = "TREASURE FOUND!",
+                fontSize = 32.sp * resultScale,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFD700)
+            )
+            Image(
+                painter = painterResource(id = R.drawable.ic_treasure),
+                contentDescription = null,
+                modifier = Modifier.size(100.dp)
+            )
+        } else {
+            Text(
+                text = "THE TREASURE SLIPPED AWAY!",
+                fontSize = 24.sp * resultScale,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF666666)
+            )
+            Text(
+                text = "Keep exploring to find it next time!",
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+        }
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Player scores comparison
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // Your score
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "YOU",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
-
-                Text(
-                    text = playerScore.toString(),
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = primaryColor
-                )
-            }
-
-            // VS divider
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "VS",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
-            }
-
-            // Opponent score
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = opponent.name.uppercase(),
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
-
-                Text(
-                    text = opponentScore.toString(),
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Game stats
+        // Thống kê
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
@@ -155,7 +96,7 @@ fun ResultScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "GAME STATS",
+                    text = "ADVENTURE STATS",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.DarkGray
@@ -169,20 +110,28 @@ fun ResultScreen(
                 ) {
                     StatItem(
                         label = "Correct Answers",
-                        value = playerScore.toString(),
+                        value = gameStats.correctAnswers.toString(),
                         color = primaryColor
                     )
-
                     StatItem(
                         label = "Incorrect",
-                        value = (totalQuestions - playerScore).toString(),
+                        value = (totalQuestions - gameStats.correctAnswers).toString(),
                         color = Color.Gray
                     )
-
                     StatItem(
                         label = "Accuracy",
-                        value = "${(playerScore.toFloat() / totalQuestions * 100).toInt()}%",
+                        value = "${(gameStats.correctAnswers.toFloat() / totalQuestions * 100).toInt()}%",
                         color = accentColor
+                    )
+                    StatItem(
+                        label = "Time Spent",
+                        value = "${gameStats.timeSpent}s",
+                        color = Color.DarkGray
+                    )
+                    StatItem(
+                        label = "Streak",
+                        value = gameStats.streak.toString(),
+                        color = if (isDailyStreak) accentColor else primaryColor
                     )
                 }
             }
@@ -190,8 +139,8 @@ fun ResultScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Reward info
-        if (playerWins) {
+        // Thông tin phần thưởng
+        if (isTreasureFound) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -212,12 +161,11 @@ fun ResultScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "You won a reward!",
+                            text = "You found a treasure!",
                             fontWeight = FontWeight.Bold
                         )
-
                         Text(
-                            text = "Claim your XP and special badge",
+                            text = if (gameMode == GameMode.DAILY_CHALLENGE) "Streak: ${currentPlayer.streakDays} days" else "Claim your XP and badge",
                             color = Color.Gray
                         )
                     }
@@ -225,7 +173,7 @@ fun ResultScreen(
             }
         } else {
             Text(
-                text = if (isDraw) "You'll get a small consolation prize" else "Better luck next time!",
+                text = "You gained some experience. Try again!",
                 color = Color.Gray,
                 textAlign = TextAlign.Center
             )
@@ -233,7 +181,7 @@ fun ResultScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Buttons
+        // Nút
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -250,11 +198,9 @@ fun ResultScreen(
                     contentDescription = null,
                     tint = primaryColor
                 )
-
                 Spacer(modifier = Modifier.width(8.dp))
-
                 Text(
-                    text = "PLAY AGAIN",
+                    text = "NEW ADVENTURE",
                     color = primaryColor
                 )
             }
@@ -267,7 +213,7 @@ fun ResultScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
             ) {
                 Text(
-                    text = if (playerWins) "CLAIM REWARD" else "CONTINUE",
+                    text = if (isTreasureFound) "CLAIM TREASURE" else "CONTINUE",
                     fontWeight = FontWeight.Bold
                 )
             }

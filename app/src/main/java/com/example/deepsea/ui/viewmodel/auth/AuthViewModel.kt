@@ -4,9 +4,10 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.deepsea.utils.CloudinaryUploadService
@@ -19,14 +20,25 @@ import com.example.deepsea.utils.LoginState
 import com.example.deepsea.utils.RegisterState
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
     private val cloudinaryUploadService = CloudinaryUploadService()
+
+    // Flag to prevent auto-navigation after logout
+    var isLoggingOut by mutableStateOf(false)
+        private set
+
+    // Flag to skip automatic navigation when not needed
+    var skipAutoNavigation by mutableStateOf(false)
+        private set
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
@@ -45,13 +57,21 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
+            if (isLoggingOut) {
+                Timber.d("Init: Skipping session check due to ongoing logout")
+                return@launch
+            }
             val token = sessionManager.authToken.first()
-            if (token != null) {
-                _userState.value = UserState.LoggedIn(
-                    username = sessionManager.username.first() ?: "",
-                    email = sessionManager.email.first() ?: ""
-                )
-                loadDashboard()
+            Timber.d("Init: Token = $token")
+            if (token != null && sessionManager.isSessionValid().first()) {
+                val username = sessionManager.username.first() ?: ""
+                val email = sessionManager.email.first() ?: ""
+                _userState.value = UserState.LoggedIn(username, email)
+                Timber.d("Init: Session valid, setting UserState.LoggedIn for $username")
+            } else {
+                sessionManager.clearAuthData()
+                _userState.value = UserState.NotLoggedIn
+                Timber.d("Init: Session invalid or no token, setting UserState.NotLoggedIn")
             }
         }
     }
@@ -63,57 +83,54 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = RetrofitClient.authApi.login(LoginRequest(email, password))
                 if (response.isSuccessful && response.body() != null) {
                     val jwtResponse = response.body()!!
-                    Log.d("AuthViewModel", "Login response: $jwtResponse")
-
-                    val username = jwtResponse.username
-                    val userEmail = jwtResponse.email
+                    Timber.d("Login response: $jwtResponse")
 
                     sessionManager.saveAuthToken(
                         token = jwtResponse.token,
-                        username = username,
+                        username = jwtResponse.username,
                         userId = jwtResponse.id,
-                        email = userEmail,
+                        email = jwtResponse.email,
                         profileId = jwtResponse.profile_id
                     )
 
-                    _userState.value = UserState.LoggedIn(username, userEmail)
+                    _userState.value = UserState.LoggedIn(jwtResponse.username, jwtResponse.email)
                     _loginState.value = LoginState.Success
 
                     if (jwtResponse.firstLogin == true) {
                         navController.navigate("language-selection") {
                             popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
                         }
                     } else {
                         navController.navigate("home") {
                             popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
 
-                    Log.d("AuthViewModel", "Login successful, state updated to Success")
+                    Timber.d("Login successful, state updated to Success")
                 } else {
                     _loginState.value = LoginState.Error("Login failed: ${response.message()}")
-                    Log.e("AuthViewModel", "Login failed: ${response.message()}")
+                    Timber.e("Login failed: ${response.message()}")
                 }
             } catch (e: Exception) {
                 _loginState.value = LoginState.Error("Error: ${e.message}")
-                Log.e("AuthViewModel", "Login exception: ${e.message}", e)
+                Timber.e("Login exception: ${e.message}", e)
             }
         }
     }
 
-    // Google login
     fun signInWithGoogle(idToken: String, navController: NavController) {
         viewModelScope.launch {
             try {
                 _loginState.value = LoginState.Loading
-                Log.d("AuthViewModel", "Processing Google sign-in with token: ${idToken.take(10)}...")
+                Timber.d("Processing Google sign-in with token: ${idToken.take(10)}...")
 
-                // Gọi API đăng nhập với Google
                 val response = RetrofitClient.authApi.loginWithGoogle(GoogleTokenRequest(idToken))
 
                 if (response.isSuccessful && response.body() != null) {
                     val jwtResponse = response.body()!!
-                    Log.d("AuthViewModel", "Google login response: $jwtResponse")
+                    Timber.d("Google login response: $jwtResponse")
 
                     sessionManager.saveAuthToken(
                         token = jwtResponse.token,
@@ -129,43 +146,38 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     if (jwtResponse.firstLogin == true) {
                         navController.navigate("language-selection") {
                             popUpTo("welcome") { inclusive = true }
+                            launchSingleTop = true
                         }
                     } else {
                         navController.navigate("home") {
                             popUpTo("welcome") { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
 
-                    Log.d("AuthViewModel", "Google login successful, navigating...")
+                    Timber.d("Google login successful, navigating...")
                 } else {
                     val errorMsg = "Google sign in failed: ${response.message()}"
-                    Log.e("AuthViewModel", errorMsg)
+                    Timber.e(errorMsg)
                     _loginState.value = LoginState.Error(errorMsg)
                 }
             } catch (e: Exception) {
                 val errorMsg = "Google sign in error: ${e.message}"
-                Log.e("AuthViewModel", errorMsg, e)
+                Timber.e(errorMsg, e)
                 _loginState.value = LoginState.Error(errorMsg)
             }
         }
     }
 
-    // Facebook login
     fun signInWithFacebook(token: String, navController: NavController) {
         viewModelScope.launch {
             try {
                 _loginState.value = LoginState.Loading
-                Log.d("AuthViewModel", "Processing Facebook sign-in...")
-
-                // Gọi API đăng nhập với Facebook
-                // TODO: Implement actual Facebook login API call
-                // val response = RetrofitClient.authApi.loginWithFacebook(FacebookTokenRequest(token))
-
-                // Temporary placeholder response handling - replace with actual API call
+                Timber.d("Processing Facebook sign-in...")
                 _loginState.value = LoginState.Error("Facebook login not implemented yet")
             } catch (e: Exception) {
                 val errorMsg = "Facebook sign in failed: ${e.message}"
-                Log.e("AuthViewModel", errorMsg, e)
+                Timber.e(errorMsg, e)
                 _loginState.value = LoginState.Error(errorMsg)
             }
         }
@@ -205,14 +217,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun uploadAvatarToCloudinary(uri: Uri): String? {
         return try {
             _avatarUploadState.value = AvatarUploadState.Loading
-
             val context = getApplication<Application>().applicationContext
             val uploadedUrl = cloudinaryUploadService.uploadImage(context, uri)
-
             _avatarUploadState.value = AvatarUploadState.Success(uploadedUrl)
             uploadedUrl
         } catch (e: Exception) {
-            Log.e("AuthViewModel", "Avatar upload failed: ${e.message}")
+            Timber.e("Avatar upload failed: ${e.message}")
             _avatarUploadState.value = AvatarUploadState.Error("Failed to upload avatar: ${e.message}")
             null
         }
@@ -228,37 +238,41 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         return path
     }
 
-    fun loadDashboard() {
+    fun logout(navController: NavController) {
         viewModelScope.launch {
-            _dashboardState.value = DashboardState.Loading
-            try {
-                val token = sessionManager.authToken.first()
-                if (token != null) {
-                    val response = RetrofitClient.authApi.getDashboard("Bearer $token")
-                    if (response.isSuccessful && response.body() != null) {
-                        _dashboardState.value = DashboardState.Success(response.body()!!.message)
-                    } else {
-                        if (response.code() == 401) {
-                            logout()
-                        }
-                        _dashboardState.value = DashboardState.Error("Failed to load dashboard: ${response.message()}")
-                    }
-                } else {
-                    _dashboardState.value = DashboardState.Error("You are not logged in")
-                    _userState.value = UserState.NotLoggedIn
-                }
-            } catch (e: Exception) {
-                _dashboardState.value = DashboardState.Error("Error: ${e.message}")
-            }
-        }
-    }
+            isLoggingOut = true
+            skipAutoNavigation = true
+            Timber.d("Logout: Starting logout process")
 
-    fun logout() {
-        viewModelScope.launch {
+            // Clear auth data first
             sessionManager.clearAuthData()
+
+            // Update states
             _userState.value = UserState.NotLoggedIn
             _loginState.value = LoginState.Idle
+            _registerState.value = RegisterState.Idle
             _dashboardState.value = DashboardState.Loading
+
+            Timber.d("Logout: Session cleared, UserState set to NotLoggedIn")
+
+            // Wait for DataStore to persist
+            delay(300)
+
+            val tokenAfterClear = sessionManager.authToken.first()
+            Timber.d("Logout: Token after clear = $tokenAfterClear")
+
+            // Navigate to welcome screen and clear backstack
+            navController.navigate("welcome") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+
+            // Give the navigation time to complete
+            delay(500)
+            isLoggingOut = false
+
+            // Keep skip flag true until next login
+            Timber.d("Logout: Completed, navigated to welcome")
         }
     }
 
@@ -268,6 +282,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun resetRegisterState() {
         _registerState.value = RegisterState.Idle
+    }
+
+    fun resetSkipAutoNavigation() {
+        skipAutoNavigation = false
     }
 }
 

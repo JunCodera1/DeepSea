@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.payment.ConfirmPaymentRequest
@@ -33,6 +34,7 @@ fun PaymentScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showQrPayment by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val userId by sessionManager.userId.collectAsState(initial = null)
     var clientSecret by remember { mutableStateOf<String?>(null) }
@@ -182,6 +184,65 @@ fun PaymentScreen(
                             text = it,
                             fontSize = 14.sp,
                             color = if (it.contains("successful", true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
+
+                paymentStatus?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = it,
+                        color = if (it.contains("failed", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "DeepSea Donate",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "money is not important, pay as much as you like",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "- Nothing \uD83E\uDD70",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Button(
+                        onClick = { showQrPayment = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Pay with QR Code")
+                    }
+                    if (showQrPayment) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        AsyncImage(
+                            model = "https://scontent.fhan2-3.fna.fbcdn.net/v/t1.15752-9/494823127_1251834223007976_320845584253777640_n.png?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_ohc=HZ-xBfARwLUQ7kNvwGrEtmQ&_nc_oc=AdmsPW72p6DguMeo2kMI1nr2fb4PKqbNNAgRk8l3JhYlwDM2gZw_RyjBKY6sF22ltA8&_nc_zt=23&_nc_ht=scontent.fhan2-3.fna&oh=03_Q7cD2QHk5tuKt1LtNPgUbV7upSzL_oktRvfht3PDk_oMnmif2w&oe=684D51DE", // Thay URL thật ở đây
+                            contentDescription = "QR Code",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(400.dp)
                         )
                     }
                 }

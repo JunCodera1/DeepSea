@@ -172,6 +172,7 @@ class QuizResponseParser {
             10006 -> R.drawable.ic_jump
             10007 -> R.drawable.ic_walk
             10008 -> R.drawable.ic_drinks
+            10009 -> R.drawable.vku_logo
 
             else -> R.drawable.avatar_placeholder // Fallback
         }

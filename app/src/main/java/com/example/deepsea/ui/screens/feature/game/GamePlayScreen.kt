@@ -1,6 +1,9 @@
 package com.example.deepsea.ui.screens.feature.game
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,25 +13,28 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.deepsea.ui.components.PlayerScoreCard
-import com.example.deepsea.ui.viewmodel.game.GameViewModel
+import com.example.deepsea.R
 import kotlinx.coroutines.delay
 
 @Composable
 fun GamePlayScreen(
     currentPlayer: Player,
-    opponent: Player,
     question: Question,
     playerScore: Int,
-    opponentScore: Int,
+    playerHealth: Int,
+    mapProgress: Int,
     currentQuestionIndex: Int,
     totalQuestions: Int,
-    onAnswerSelected: (Int) -> Unit // Changed from Boolean to Int
+    onAnswerSelected: (Int, Int) -> Unit, // Thêm timeUsed
+    gameMode: GameMode,
+    difficulty: DifficultyLevel
 ) {
     val primaryColor = Color(0xFF0078D7)
     val accentColor = Color(0xFFFF9500)
@@ -38,6 +44,12 @@ fun GamePlayScreen(
     var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) }
     var isAnswerSubmitted by remember { mutableStateOf(false) }
     var shouldProceed by remember { mutableStateOf(false) }
+
+    // Hiệu ứng phóng to khi trả lời
+    val answerScale by animateFloatAsState(
+        targetValue = if (isAnswerSubmitted) 1.1f else 1f,
+        label = "answerScale"
+    )
 
     // Timer effect
     LaunchedEffect(key1 = currentQuestionIndex) {
@@ -63,14 +75,14 @@ fun GamePlayScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Game header with progress
+        // Game header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Question ${currentQuestionIndex + 1}/$totalQuestions",
+                text = "Q${currentQuestionIndex + 1}/$totalQuestions - ${difficulty.name}",
                 fontWeight = FontWeight.Medium
             )
 
@@ -83,46 +95,50 @@ fun GamePlayScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        LinearProgressIndicator(
-            progress = (currentQuestionIndex.toFloat() + 0.5f) / totalQuestions,
-            modifier = Modifier.fillMaxWidth(),
-            color = primaryColor,
-            trackColor = Color(0xFFE1E8ED)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Players scores
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        // Thanh tiến trình bản đồ
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .background(Color(0xFFE1E8ED))
         ) {
-            PlayerScoreCard(
-                player = currentPlayer,
-                score = playerScore,
-                isCurrentPlayer = true
-            )
-
-            Text(
-                text = "VS",
+            Icon(
+                painter = painterResource(id = R.drawable.ic_treasure),
+                contentDescription = null,
                 modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .align(Alignment.CenterVertically),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color.Gray
+                    .align(Alignment.CenterEnd)
+                    .size(32.dp),
+                tint = accentColor
             )
-
-            PlayerScoreCard(
-                player = opponent,
-                score = opponentScore,
-                isCurrentPlayer = false
+            Icon(
+                painter = painterResource(id = R.drawable.ic_player),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(x = (mapProgress * 3).dp)
+                    .size(32.dp),
+                tint = primaryColor
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Thanh máu
+        LinearProgressIndicator(
+            progress = playerHealth / 100f,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Green,
+            trackColor = Color.Red
+        )
+        Text(
+            text = "Health: $playerHealth",
+            fontWeight = FontWeight.Medium,
+            color = if (playerHealth <= 30) Color.Red else Color.Black
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Question
+        // Câu hỏi
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -133,17 +149,32 @@ fun GamePlayScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = question.text,
+                    text = when (gameMode) {
+                        GameMode.QUIZ -> question.text
+                        GameMode.SCRAMBLE -> "${question.text} (Unscramble to find the word)"
+                        GameMode.MATCH -> "${question.text} (Match the word to its meaning)"
+                        GameMode.DAILY_CHALLENGE -> "Challenge: ${question.text}"
+                        else -> question.text
+                    },
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
+                if (question.imageResource != null) {
+                    Image(
+                        painter = painterResource(id = question.imageResource),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(200.dp)
+                            .padding(top = 8.dp)
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Answer options
+        // Các lựa chọn trả lời
         question.options.forEachIndexed { index, option ->
             val isSelected = selectedAnswerIndex == index
             val borderColor = when {
@@ -168,7 +199,8 @@ fun GamePlayScreen(
                         if (!isAnswerSubmitted) {
                             selectedAnswerIndex = index
                         }
-                    },
+                    }
+                    .scale(answerScale),
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(containerColor = backgroundColor),
                 border = BorderStroke(1.dp, borderColor)
@@ -203,9 +235,26 @@ fun GamePlayScreen(
             }
         }
 
+        // Giải thích nếu trả lời sai
+        if (isAnswerSubmitted && !isAnswerCorrect!!) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAE6))
+            ) {
+                Text(
+                    text = question.explanation,
+                    modifier = Modifier.padding(16.dp),
+                    color = Color.DarkGray,
+                    fontSize = 14.sp
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
-        // Submit button
+        // Nút submit
         Button(
             onClick = {
                 if (selectedAnswerIndex != null && !isAnswerSubmitted) {
@@ -233,8 +282,8 @@ fun GamePlayScreen(
 
         if (shouldProceed) {
             LaunchedEffect(Unit) {
-                delay(1500)
-                onAnswerSelected(selectedAnswerIndex ?: -1) // Pass selected answer index
+                delay(2000) // Chờ 2 giây để xem giải thích
+                onAnswerSelected(selectedAnswerIndex ?: -1, 15 - timeRemaining)
                 shouldProceed = false
             }
         }

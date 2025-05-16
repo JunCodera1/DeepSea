@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.ui.components.ImageButton
 import com.example.deepsea.ui.navigation.DeepSeaNavController
@@ -51,7 +52,7 @@ import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun WelcomePage(
-    deepseaNavController: DeepSeaNavController,
+    deepseaNavController: NavController,
     authViewModel: AuthViewModel
 ) {
     val scrollState = rememberScrollState()
@@ -87,7 +88,7 @@ fun WelcomePage(
             val account = task.getResult(ApiException::class.java)
             account?.idToken?.let { token ->
                 Log.d("WelcomePage", "Google ID token obtained: ${token.take(10)}...")
-                authViewModel.signInWithGoogle(token, deepseaNavController.navController)
+                authViewModel.signInWithGoogle(token, deepseaNavController)
             } ?: run {
                 Log.e("WelcomePage", "Google sign-in failed: ID token is null")
                 showError = true
@@ -113,7 +114,7 @@ fun WelcomePage(
         when (loginState) {
             is LoginState.Success -> {
                 Log.d("WelcomePage", "Login successful, navigating...")
-                deepseaNavController.navController.navigate("home") {
+                deepseaNavController.navigate("home") {
                     popUpTo("welcome") { inclusive = true }
                 }
             }
@@ -155,7 +156,7 @@ fun WelcomePage(
 
                 // Nút Sign In
                 OutlinedButton(
-                    onClick = { deepseaNavController.navController.navigate("login") },
+                    onClick = { deepseaNavController.navigate("login") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -167,7 +168,7 @@ fun WelcomePage(
 
                 // Nút Sign Up
                 Button(
-                    onClick = { deepseaNavController.navController.navigate("signup")},
+                    onClick = { deepseaNavController.navigate("signup")},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)

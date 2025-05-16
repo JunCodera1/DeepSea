@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DeepSeaScaffold(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     topBar: @Composable (() -> Unit) = {},
     bottomBar: @Composable (() -> Unit) = {},
@@ -32,14 +32,12 @@ fun DeepSeaScaffold(
     backgroundColor: Color = DeepSeaTheme.colors.uiBackground,
     contentColor: Color = DeepSeaTheme.colors.textSecondary,
     content: @Composable (PaddingValues) -> Unit
-){
+) {
     Scaffold(
         modifier = modifier,
         topBar = topBar,
         bottomBar = bottomBar,
-        snackbarHost = {
-            snackbarHost(snackBarHostState)
-        },
+        snackbarHost = { snackbarHost(snackBarHostState) },
         floatingActionButton = floatingActionButton,
         floatingActionButtonPosition = floatingActionButtonPosition,
         containerColor = backgroundColor,
@@ -49,7 +47,7 @@ fun DeepSeaScaffold(
 }
 
 @Composable
-fun rememberJetsnackScaffoldState(
+fun rememberDeepSeaScaffoldState(
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     snackbarManager: SnackbarManager = SnackbarManager,
     resources: Resources = resources(),
@@ -57,8 +55,9 @@ fun rememberJetsnackScaffoldState(
 ): DeepSeaScaffoldState = remember(snackBarHostState, snackbarManager, resources, coroutineScope) {
     DeepSeaScaffoldState(snackBarHostState, snackbarManager, resources, coroutineScope)
 }
+
 /**
- * Responsible for holding [ScaffoldState], handles the logic of showing snackbar messages
+ * Responsible for holding [SnackbarHostState], handles the logic of showing snackbar messages
  */
 @Stable
 class DeepSeaScaffoldState(
@@ -67,26 +66,22 @@ class DeepSeaScaffoldState(
     private val resources: Resources,
     coroutineScope: CoroutineScope
 ) {
-    // Process snackbars coming from SnackbarManager
     init {
         coroutineScope.launch {
             snackbarManager.messages.collect { currentMessages ->
                 if (currentMessages.isNotEmpty()) {
                     val message = currentMessages[0]
-                    val text = resources.getText(message.messageId)
-                    // Notify the SnackbarManager so it can remove the current message from the list
+                    val text = resources.getText(message.messageId).toString()
                     snackbarManager.setMessageShown(message.id)
-                    // Display the snackbar on the screen. `showSnackbar` is a function
-                    // that suspends until the snackbar disappears from the screen
-                    snackBarHostState.showSnackbar(text.toString())
+                    snackBarHostState.showSnackbar(text)
                 }
             }
         }
     }
 }
+
 /**
- * A composable function that returns the [Resources]. It will be recomposed when `Configuration`
- * gets updated.
+ * Returns the [Resources], recomposed when [Configuration] updates.
  */
 @Composable
 @ReadOnlyComposable
