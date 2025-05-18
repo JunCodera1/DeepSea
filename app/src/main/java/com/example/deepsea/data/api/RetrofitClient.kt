@@ -80,4 +80,8 @@ object RetrofitClient {
     val paymentService: PaymentService by lazy {
         retrofit.create(PaymentService::class.java)
     }
+
+    val shadowListeningApiService: ShadowListeningApiService by lazy {
+        retrofit.create(ShadowListeningApiService::class.java)
+    }
 }

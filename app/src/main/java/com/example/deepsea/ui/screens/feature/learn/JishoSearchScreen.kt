@@ -4,6 +4,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -99,20 +100,22 @@ fun JapaneseCharacterLearningScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when (selectedTabIndex) {
-            0 -> HiraganaGrid { character ->
-                selectedCharacter = character
-                showDetailDialog = true
+        Crossfade(targetState = selectedTabIndex) { index ->
+            when (index) {
+                0 -> HiraganaGrid { character ->
+                    selectedCharacter = character
+                    showDetailDialog = true
+                }
+                1 -> KatakanaGrid { character ->
+                    selectedCharacter = character
+                    showDetailDialog = true
+                }
+                2 -> BasicKanjiGrid { character ->
+                    selectedCharacter = character
+                    showDetailDialog = true
+                }
+                3 -> JishoDictionaryLookup()
             }
-            1 -> KatakanaGrid { character ->
-                selectedCharacter = character
-                showDetailDialog = true
-            }
-            2 -> BasicKanjiGrid { character ->
-                selectedCharacter = character
-                showDetailDialog = true
-            }
-            3 -> JishoDictionaryLookup()
         }
     }
 
@@ -242,10 +245,14 @@ fun HiraganaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        hiraganaChars.forEach { row ->
+        hiraganaChars.forEachIndexed { index, row ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        if (index % 2 == 0) MaterialTheme.colorScheme.surfaceVariant
+                        else MaterialTheme.colorScheme.surface
+                    )
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
@@ -338,10 +345,14 @@ fun KatakanaGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        katakanaChars.forEach { row ->
+        katakanaChars.forEachIndexed { index, row ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        if (index % 2 == 0) MaterialTheme.colorScheme.surfaceVariant
+                        else MaterialTheme.colorScheme.surface
+                    )
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
@@ -401,7 +412,7 @@ fun BasicKanjiGrid(onCharacterClick: (JapaneseCharacter) -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Loading Kanji...")
+                CircularProgressIndicator()
             }
         } else if (kanjiList.isEmpty()) {
             Box(
@@ -510,17 +521,19 @@ fun fetchRandomKanji(onResult: (List<JapaneseCharacter>) -> Unit) {
 
 @Composable
 fun CharacterCard(character: JapaneseCharacter, onClick: (JapaneseCharacter) -> Unit) {
-    Box(
+    Card(
         modifier = Modifier
             .size(60.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
             .clickable { onClick(character) },
-        contentAlignment = Alignment.Center
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = character.char,

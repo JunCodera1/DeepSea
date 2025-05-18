@@ -3,7 +3,6 @@
 package com.example.deepsea.ui
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -63,7 +62,7 @@ import com.example.deepsea.ui.screens.feature.leaderboard.LoadingIndicator
 import com.example.deepsea.ui.screens.feature.learn.JapaneseCharacterLearningScreen
 import com.example.deepsea.ui.screens.feature.learn.LessonCompletedScreen
 import com.example.deepsea.ui.screens.feature.learn.UnitGuideBookScreen
-import com.example.deepsea.ui.screens.feature.listen.ListenScreen
+import com.example.deepsea.ui.screens.feature.listen.ShadowListeningScreen
 import com.example.deepsea.ui.screens.feature.profile.PaymentScreen
 import com.example.deepsea.ui.screens.feature.profile.ProfilePage
 import com.example.deepsea.ui.screens.feature.review.MistakesScreen
@@ -446,7 +445,7 @@ fun NavGraphBuilder.reviewRoutes(navController: NavHostController) {
     }
 
     composable("listen-screen") {
-        ListenScreen(onBackClick = { navController.popBackStack() })
+        ShadowListeningScreen(onBackClick = { navController.popBackStack() })
     }
 }
 

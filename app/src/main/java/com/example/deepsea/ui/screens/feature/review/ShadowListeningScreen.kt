@@ -1,20 +1,25 @@
 package com.example.deepsea.ui.screens.feature.listen
 
-import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -26,172 +31,108 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.deepsea.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.deepsea.data.model.review.ShadowListeningSession
+import com.example.deepsea.ui.viewmodel.learn.ShadowListeningViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.random.Random
 
-// Model class representing a shadow listening session
-data class ShadowListeningSession(
-    val id: String,
-    val title: String,
-    val difficulty: String,
-    val duration: String,
-    val transcript: String,
-    val keyPhrases: List<String>
-)
-
-// Simulated ViewModel with updated data for Japanese sessions
-class ListenViewModel {
-    fun getShadowListeningSessions(): List<ShadowListeningSession> {
-        return listOf(
-            // Dữ liệu cũ (giữ nguyên)
-            ShadowListeningSession(
-                id = "1",
-                title = "Greetings in Japanese",
-                difficulty = "Beginner",
-                duration = "1:00",
-                transcript = "こんにちは、私は田中です。よろしくお願いします。",
-                keyPhrases = listOf("こんにちは", "よろしくお願いします")
-            ),
-            ShadowListeningSession(
-                id = "2",
-                title = "Ordering Food",
-                difficulty = "Intermediate",
-                duration = "1:30",
-                transcript = "すみません、ラーメンと餃子をください。お水もお願いします。",
-                keyPhrases = listOf("すみません", "ラーメンと餃子", "お水も")
-            ),
-            ShadowListeningSession(
-                id = "3",
-                title = "Asking for Directions",
-                difficulty = "Advanced",
-                duration = "2:00",
-                transcript = "駅に行きたいのですが、どうやって行きますか？この道をまっすぐ行って、右に曲がってください。",
-                keyPhrases = listOf("駅に行きたい", "どうやって", "右に曲がって")
-            ),
-            ShadowListeningSession(
-                id = "4",
-                title = "Shopping in Japan",
-                difficulty = "Beginner",
-                duration = "1:20",
-                transcript = "このシャツはいくらですか？3000円です。かしこまりました。",
-                keyPhrases = listOf("いくらですか", "3000円", "かしこまりました")
-            ),
-            ShadowListeningSession(
-                id = "5",
-                title = "Talking About Hobbies",
-                difficulty = "Intermediate",
-                duration = "1:40",
-                transcript = "趣味は何ですか？私はアニメを見るのが好きです。週末によく見ます。",
-                keyPhrases = listOf("趣味は何", "アニメを見る", "週末に")
-            ),
-            ShadowListeningSession(
-                id = "6",
-                title = "Making Plans",
-                difficulty = "Advanced",
-                duration = "2:10",
-                transcript = "来週の土曜日に映画を見に行きませんか？いいですね、何時に会いましょうか？午後2時でどうですか？",
-                keyPhrases = listOf("映画を見に行きませんか", "何時に会いましょう", "午後2時")
-            ),
-
-            // Dữ liệu mới
-            ShadowListeningSession(
-                id = "7",
-                title = "Visiting the Doctor",
-                difficulty = "Intermediate",
-                duration = "1:50",
-                transcript = "先生、最近頭が痛いです。熱はありませんが、疲れやすいです。薬をください。",
-                keyPhrases = listOf("頭が痛いです", "疲れやすい", "薬をください")
-            ),
-            ShadowListeningSession(
-                id = "8",
-                title = "Buying Train Tickets",
-                difficulty = "Advanced",
-                duration = "2:20",
-                transcript = "新幹線のチケットをください。東京から大阪まで、明日の朝9時頃の便でお願いします。指定席でお願いします。",
-                keyPhrases = listOf("新幹線のチケット", "東京から大阪", "指定席で")
-            ),
-            ShadowListeningSession(
-                id = "9",
-                title = "Introducing Family",
-                difficulty = "Beginner",
-                duration = "1:10",
-                transcript = "私の家族を紹介します。父と母と妹がいます。妹は学生です。",
-                keyPhrases = listOf("家族を紹介します", "父と母", "妹は学生")
-            ),
-            ShadowListeningSession(
-                id = "10",
-                title = "Talking About Weather",
-                difficulty = "Intermediate",
-                duration = "1:30",
-                transcript = "今日の天気はどうですか？晴れていますが、少し寒いです。傘は要らないですね。",
-                keyPhrases = listOf("今日の天気", "晴れています", "少し寒い")
-            ),
-            ShadowListeningSession(
-                id = "11",
-                title = "At the Airport",
-                difficulty = "Advanced",
-                duration = "2:30",
-                transcript = "成田空港行きのリムジンバスはどこですか？12時発の便に乗ります。パスポートを準備してください。",
-                keyPhrases = listOf("成田空港行き", "12時発の便", "パスポートを準備")
-            ),
-            ShadowListeningSession(
-                id = "12",
-                title = "Making a Phone Call",
-                difficulty = "Intermediate",
-                duration = "1:40",
-                transcript = "もしもし、山田です。明日の会議についてお話ししたいです。午後3時はいかがですか？",
-                keyPhrases = listOf("もしもし", "会議について", "午後3時はいかが")
-            )
-        )
-    }
-}
-
 @Composable
-fun ListenScreen(
+fun ShadowListeningScreen(
     modifier: Modifier = Modifier,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    viewModel: ShadowListeningViewModel = viewModel()
 ) {
-    val viewModel = remember { ListenViewModel() }
-    val sessions = remember { viewModel.getShadowListeningSessions() }
+    val sessions by viewModel.sessions.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
     var selectedSession by remember { mutableStateOf<ShadowListeningSession?>(null) }
+    val context = LocalContext.current
 
     Surface(
         modifier = modifier.fillMaxSize(),
         color = Color(0xFFF5F5F5)
     ) {
-        if (selectedSession == null) {
-            SessionSelectionScreen(
-                sessions = sessions,
-                onSessionSelected = { selectedSession = it },
-                onBackClick = onBackClick
-            )
-        } else {
-            ShadowListeningScreen(
-                session = selectedSession!!,
-                onBackClick = { selectedSession = null }
-            )
+        when {
+            isLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFF7B61FF))
+                }
+            }
+            error != null -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = error ?: "Unknown error",
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.fetchSessions() },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B61FF))
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            }
+            else -> {
+                if (selectedSession == null) {
+                    SessionSelectionScreen(
+                        sessions = sessions,
+                        onSessionSelected = { selectedSession = it },
+                        onBackClick = onBackClick
+                    )
+                } else {
+                    ShadowListeningDetailScreen(
+                        session = selectedSession!!,
+                        onBackClick = { selectedSession = null }
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
         }
     }
 }
@@ -347,13 +288,23 @@ fun SessionCard(
                         color = Color.Gray
                     )
                 }
+
+                session.description?.let {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = it,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        maxLines = 2
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ShadowListeningScreen(
+fun ShadowListeningDetailScreen(
     session: ShadowListeningSession,
     onBackClick: () -> Unit
 ) {
@@ -367,7 +318,7 @@ fun ShadowListeningScreen(
     val tts = remember {
         TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // Không sử dụng tts trực tiếp trong lambda, thay vào đó xử lý sau
+                // Không sử dụng tts trực tiếp trong lambda
             } else {
                 Toast.makeText(context, "TTS initialization failed", Toast.LENGTH_LONG).show()
             }
@@ -387,14 +338,6 @@ fun ShadowListeningScreen(
         }
     }
 
-    // Cleanup TTS on composable disposal
-    DisposableEffect(Unit) {
-        onDispose {
-            tts.stop()
-            tts.shutdown()
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -405,7 +348,7 @@ fun ShadowListeningScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
             IconButton(onClick = {
-                tts.stop() // Stop TTS when going back
+                tts.stop()
                 onBackClick()
             }) {
                 Icon(
@@ -424,7 +367,7 @@ fun ShadowListeningScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Audio visualization card (now for TTS)
+        // Audio visualization card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -439,7 +382,7 @@ fun ShadowListeningScreen(
                     "prepare" -> {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "Listen to the Japanese text and shadow it in real-time",
+                                text = "Listen to the ${session.language} text and shadow it in real-time",
                                 fontSize = 16.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(horizontal = 24.dp)
@@ -452,7 +395,7 @@ fun ShadowListeningScreen(
                                     playState = "playing"
                                     tts.speak(session.transcript, TextToSpeech.QUEUE_FLUSH, null, "listenSession")
                                     coroutineScope.launch {
-                                        delay(3000) // Adjust delay based on transcript length
+                                        delay(3000) // Adjust based on transcript length
                                         playState = "recording"
                                         delay(5000)
                                         playState = "comparing"
@@ -588,7 +531,7 @@ fun ShadowListeningScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Transcript card
+        // Session details card
         Card(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -596,13 +539,18 @@ fun ShadowListeningScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Transcript",
+                    text = "Session Details",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Text(
+                    text = "Transcript",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
                 Text(
                     text = session.transcript,
                     fontSize = 16.sp,
@@ -613,12 +561,9 @@ fun ShadowListeningScreen(
 
                 Text(
                     text = "Key Phrases",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 session.keyPhrases.forEach { phrase ->
                     Row(
                         modifier = Modifier.padding(vertical = 4.dp),
@@ -630,15 +575,44 @@ fun ShadowListeningScreen(
                             tint = Color(0xFF4CAF50),
                             modifier = Modifier.size(16.dp)
                         )
-
                         Spacer(modifier = Modifier.width(8.dp))
-
                         Text(
                             text = phrase,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                session.description?.let {
+                    Text(
+                        text = "Description",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = it,
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                session.createdAt?.let {
+                    Text(
+                        text = "Created: $it",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+                session.updatedAt?.let {
+                    Text(
+                        text = "Updated: $it",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
                 }
             }
         }
@@ -783,11 +757,11 @@ fun RecordingVisualizer() {
 
 @Preview(showBackground = true)
 @Composable
-fun ListenScreenPreview() {
+fun ShadowListeningScreenPreview() {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFF5F5F5)
     ) {
-        ListenScreen()
+        ShadowListeningScreen()
     }
 }
