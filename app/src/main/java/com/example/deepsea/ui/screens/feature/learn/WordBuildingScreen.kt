@@ -36,6 +36,7 @@ import com.example.deepsea.ui.theme.DeepSeaBlue
 import com.example.deepsea.ui.theme.HeartRed
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModelFactory
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +59,19 @@ fun WordBuildingScreen(
     val hearts by viewModel.hearts.collectAsState()
     val userProgress by viewModel.userProgress.collectAsState()
     val isAudioPlaying by viewModel.isAudioPlaying.collectAsState()
+
+    // Log để gỡ lỗi
+    LaunchedEffect(userProgress, isAnswerCorrect) {
+        Log.d("WordBuildingScreen", "User progress: $userProgress, isAnswerCorrect: $isAnswerCorrect")
+    }
+
+    // Gọi onComplete ngay khi trả lời đúng
+    LaunchedEffect(isAnswerCorrect) {
+        if (isAnswerCorrect == true) {
+            Log.d("WordBuildingScreen", "Correct answer, calling onComplete")
+            onComplete()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -381,7 +395,7 @@ fun WordBuildingScreen(
                                 containerColor = DeepSeaBlue,
                                 disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
                             ),
-                            enabled = selectedWords.isNotEmpty(),
+                            enabled = selectedWords.isNotEmpty() && isAnswerCorrect == null,
                             shape = RoundedCornerShape(16.dp),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 4.dp
@@ -432,10 +446,10 @@ fun WordBuildingScreen(
                                     Button(
                                         onClick = {
                                             viewModel.resetState()
-                                            viewModel.loadExercise()
-                                            if (correct && viewModel.userProgress.value >= 1f) {
-                                                onComplete()
+                                            if (!correct) {
+                                                viewModel.loadExercise()
                                             }
+                                            // Không gọi onComplete ở đây vì đã gọi trong LaunchedEffect
                                         },
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -449,7 +463,7 @@ fun WordBuildingScreen(
                                         )
                                     ) {
                                         Text(
-                                            "Next Exercise",
+                                            if (correct) "Continue" else "Try Again",
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold
                                         )

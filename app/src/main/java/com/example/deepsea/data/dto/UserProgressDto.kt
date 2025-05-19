@@ -9,5 +9,6 @@ data class UserProgressDto(
     val currentUnitId: Long,
     val totalXp: Int,
     val dailyStreak: Int,
-    val completedUnits: List<Long>
+    val completedUnits: List<Long>,
+    val streakHistory: List<LocalDate> = emptyList() // Add streak history
 )

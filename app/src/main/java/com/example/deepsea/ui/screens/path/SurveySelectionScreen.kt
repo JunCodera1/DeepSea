@@ -28,13 +28,15 @@ import com.example.deepsea.data.model.course.path.UserPathDto
 import com.example.deepsea.data.model.user.FriendSuggestion
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.course.path.PathOptionRequest
+import com.example.deepsea.data.model.daily.DayStreakRequest
 import com.example.deepsea.data.model.goal.DailyGoalRequest
 import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
 import com.example.deepsea.data.model.leaderboard.LeaderboardRankResponse
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOptionResponse
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UpdateProgressRequest
+import com.example.deepsea.data.model.user.UserProfile
 import com.example.deepsea.data.repository.UserProfileRepository
 import com.example.deepsea.ui.viewmodel.survey.SurveySelectionViewModel
 import com.example.deepsea.utils.SessionManager
@@ -261,7 +263,7 @@ fun SurveySelectionPreview() {
 
 // Mock class for preview
 class MockUserProfileService : UserProfileService {
-    override suspend fun getUserProfileById(id: Long?): UserProfileData {
+    override suspend fun getUserProfileById(id: Long?): UserProfile {
         TODO("Not yet implemented")
     }
 
@@ -269,7 +271,7 @@ class MockUserProfileService : UserProfileService {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getUserProfile(userId: Long): Response<UserProfileData> {
+    override suspend fun getUserProfile(userId: Long): Response<UserProfile> {
         throw NotImplementedError("Preview mock")
     }
 
@@ -277,8 +279,8 @@ class MockUserProfileService : UserProfileService {
         TODO("Not yet implemented")
     }
 
-    override suspend fun saveSurveySelections(request: SurveyOptionRequest): UserProfileData {
-        return UserProfileData(
+    override suspend fun saveSurveySelections(request: SurveyOptionRequest): UserProfile {
+        return UserProfile(
             name = "Preview User",
             username = "preview_user",
             followers = 0,
@@ -290,7 +292,7 @@ class MockUserProfileService : UserProfileService {
         )
     }
 
-    override suspend fun saveLanguageSelections(request: LanguageOptionRequest): UserProfileData {
+    override suspend fun saveLanguageSelections(request: LanguageOptionRequest): UserProfile {
         TODO("Not yet implemented")
     }
 
@@ -313,7 +315,7 @@ class MockUserProfileService : UserProfileService {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getAllUsersSortedByXp(): List<UserProfileData> {
+    override suspend fun getAllUsersSortedByXp(): List<UserProfile> {
         TODO("Not yet implemented")
     }
 
@@ -324,7 +326,21 @@ class MockUserProfileService : UserProfileService {
     override suspend fun addXp(
         userId: Long,
         amount: Int
-    ): UserProfileData {
+    ): UserProfile {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateProgress(
+        userId: Long,
+        request: UpdateProgressRequest
+    ): Response<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateDayStreak(
+        userId: Long,
+        dayStreakRequest: DayStreakRequest
+    ): Response<String> {
         TODO("Not yet implemented")
     }
 }

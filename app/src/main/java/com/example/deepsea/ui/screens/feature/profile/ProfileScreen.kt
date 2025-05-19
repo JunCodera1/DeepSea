@@ -52,7 +52,7 @@ import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.course.path.PathOption
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UserProfile
 import com.example.deepsea.ui.components.AchievementCard
 import com.example.deepsea.ui.components.InviteFriendsCard
 import com.example.deepsea.ui.components.ProfileHeader
@@ -71,7 +71,7 @@ fun ProfilePage(
     onNavigateToPayment: () -> Unit = {} // New callback
 ) {
     val userId by sessionManager.userId.collectAsState(initial = null)
-    val userProfile by viewModel.userProfileData
+    val userProfile by viewModel.userProfile
     val pathService: UserProfileService = RetrofitClient.userProfileService
     val profileId by sessionManager.profileId.collectAsState(initial = null)
     val factory = remember { PathSelectionViewModelFactory(pathService, sessionManager) }
@@ -326,7 +326,7 @@ fun FriendsSection() {
 
 
 @Composable
-fun AchievementsSection(userProfile: UserProfileData?) {
+fun AchievementsSection(userProfile: UserProfile?) {
     // Header
     Row(
         modifier = Modifier.fillMaxWidth(),

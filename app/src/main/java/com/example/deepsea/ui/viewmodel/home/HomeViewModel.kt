@@ -6,7 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.dto.UserProgressDto
+import com.example.deepsea.data.model.daily.DayStreakRequest
 import com.example.deepsea.repository.CourseRepository
 import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.UnitData
@@ -16,6 +18,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 sealed class CourseUiState {
     object Loading : CourseUiState()
@@ -323,22 +327,51 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
                 _totalXp.value = _totalXp.value + earnedXp
                 Log.d("HomeViewModel", "Unit $unitId completed, total XP now: ${_totalXp.value}")
 
-                // Update section progress after completing a unit
-                updateSectionProgress()
+                // Update streak if this is the first activity today
+                updateDailyStreak()
 
-                // In a real app, you would send this update to the server
-                // courseRepository.updateUserProgress(...)
+                // Update section progress
+                updateSectionProgress()
             }
         }
     }
 
     fun updateDailyStreak() {
         viewModelScope.launch {
-            _dailyStreak.value = _dailyStreak.value + 1
-            Log.d("HomeViewModel", "Daily streak updated to ${_dailyStreak.value}")
+            try {
+                // Fetch user profile to get last login
+                val userProgressResult = courseRepository.getUserProgress(currentUserId)
+                val userProgress = userProgressResult.getOrNull()
 
-            // In a real app, you would send this update to the server
-            // courseRepository.updateUserStreak(...)
+                val lastLogin = userProgress?.lastLogin?.let {
+                    LocalDate.parse(it.toString(), DateTimeFormatter.ISO_LOCAL_DATE)
+                } ?: LocalDate.now().minusDays(1)
+
+                val today = LocalDate.now()
+                val newStreak = when {
+                    lastLogin == today.minusDays(1) -> _dailyStreak.value + 1 // Continue streak
+                    lastLogin == today -> _dailyStreak.value // Same day, no change
+                    else -> 1 // Reset streak
+                }
+
+                // Update local streak
+                _dailyStreak.value = newStreak
+                Log.d("HomeViewModel", "Daily streak updated to $newStreak")
+
+                // Call API to update streak
+                val response = RetrofitClient.userProfileService.updateDayStreak(
+                    userId = currentUserId,
+                    dayStreakRequest = DayStreakRequest(newStreak)
+                )
+
+                if (response.isSuccessful) {
+                    Log.d("HomeViewModel", "Streak updated on server: $newStreak")
+                } else {
+                    Log.e("HomeViewModel", "Failed to update streak on server: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error updating streak: ${e.message}", e)
+            }
         }
     }
 

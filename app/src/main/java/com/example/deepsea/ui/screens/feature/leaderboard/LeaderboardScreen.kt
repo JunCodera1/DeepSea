@@ -10,7 +10,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -34,7 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deepsea.R
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UserProfile
 import com.example.deepsea.ui.viewmodel.leaderboard.LeaderboardViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
@@ -330,7 +329,7 @@ fun FilteredLeaderboardList(
                         profilePicture = R.drawable.avatar_placeholder
                     )
                 }
-                !isLeaderboardEntry && item is UserProfileData -> {
+                !isLeaderboardEntry && item is UserProfile -> {
                     LeaderboardEntryItem(
                         rank = index + 1,
                         username = item.username,

@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 
-data class UserProfileData(
+data class UserProfile(
     val name: String,
     val username: String,
     val joinDate: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")),
@@ -18,6 +18,7 @@ data class UserProfileData(
     val dayStreak: Int,
     val totalXp: Int,
     val currentLeague: String,
+    val lastLogin: String? = null,
     val topFinishes: Int,
     val friends: Set<Int?> = setOf(null)
 )

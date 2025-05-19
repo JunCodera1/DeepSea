@@ -1,6 +1,7 @@
 package com.example.deepsea.ui.viewmodel.learn
 
 import android.app.Application
+import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -72,7 +73,7 @@ class WordBuildingViewModel(
                 }
                 ttsInitialized = true
                 setupTTSListener()
-                loadExercise() // Load exercise after TTS is initialized
+                loadExercise()
             } else {
                 Log.e("TTS", "Initialization failed")
                 _errorMessage.value = "Failed to initialize TTS"
@@ -208,21 +209,25 @@ class WordBuildingViewModel(
         val isCorrect = selectedSentence == correctAnswer
         _isAnswerCorrect.value = isCorrect
 
+        Log.d("ViewModel", "Checking answer: selected='$selectedSentence', correct='$correctAnswer', isCorrect=$isCorrect, progress=$_userProgress.value")
+
         if (isCorrect) {
-            _userProgress.value = (_userProgress.value + 0.1f).coerceAtMost(1f)
+            _userProgress.value = 1f
+            Log.d("ViewModel", "Answer correct, progress set to 1.0")
         } else {
             _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
             viewModelScope.launch {
                 try {
-                    val userId = 1L // Replace with actual user ID from auth system
+                    val sharedPreferences = getApplication<Application>().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                    val userId = sharedPreferences.getLong("user_id", 1L)
                     mistakeRepository.saveMistake(
                         userId = userId,
                         word = _currentExercise.value?.sourceText ?: "",
                         correctAnswer = correctAnswer,
                         userAnswer = selectedSentence,
-                        lessonId = null // Set lessonId if available
+                        lessonId = null
                     )
-                    Log.d("ViewModel", "Mistake saved successfully")
+                    Log.d("ViewModel", "Mistake saved successfully for userId: $userId")
                 } catch (e: Exception) {
                     Log.e("ViewModel", "Failed to save mistake: ${e.message}")
                     _errorMessage.value = "Failed to save mistake: ${e.message}"

@@ -1,6 +1,6 @@
 package com.example.deepsea.utils
 
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UserProfile
 import com.example.deepsea.ui.screens.feature.leaderboard.LeagueTier
 
 /**
@@ -32,7 +32,7 @@ object LeagueUtils {
      * @param users List of user profiles
      * @return Map of league tiers to lists of users in that tier
      */
-    fun groupUsersByLeague(users: List<UserProfileData>): Map<LeagueTier, List<UserProfileData>> {
+    fun groupUsersByLeague(users: List<UserProfile>): Map<LeagueTier, List<UserProfile>> {
         return users.groupBy { getLeagueTierForXp(it.totalXp) }
     }
 
@@ -42,7 +42,7 @@ object LeagueUtils {
      * @param leagueTier The league tier to filter by
      * @return List of users in the specified league
      */
-    fun getUsersForLeague(users: List<UserProfileData>, leagueTier: LeagueTier): List<UserProfileData> {
+    fun getUsersForLeague(users: List<UserProfile>, leagueTier: LeagueTier): List<UserProfile> {
         return users.filter { getLeagueTierForXp(it.totalXp) == leagueTier }
     }
 }

@@ -1,7 +1,6 @@
-@file:OptIn(ExperimentalSharedTransitionApi::class)
-
 package com.example.deepsea.ui
 
+import android.annotation.SuppressLint
 import android.app.Application
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -97,11 +96,16 @@ import com.example.deepsea.utils.LearningSessionManager
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
 import timber.log.Timber
+import com.example.deepsea.repository.CourseRepository
+import com.example.deepsea.ui.viewmodel.home.HomeViewModel
+import com.example.deepsea.ui.viewmodel.home.HomeViewModelFactory
 
 // CompositionLocal for SharedTransitionScope
+@OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 val LocalNavAnimatedVisibilityScope = compositionLocalOf<androidx.compose.animation.AnimatedVisibilityScope?> { null }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DeepSeaApp() {
     val navController = rememberDeepSeaNavController().navController
@@ -299,9 +303,17 @@ fun NavGraphBuilder.setupRoutes(navController: NavHostController) {
 }
 
 // Home Routes
+@SuppressLint("UnrememberedGetBackStackEntry")
 fun NavGraphBuilder.homeRoutes(navController: NavHostController) {
     composable("home") {
-        HomeScreen(navController = navController)
+        // Create HomeViewModel, scoped to the "home" destination
+        val homeViewModel: HomeViewModel = viewModel(
+            factory = HomeViewModelFactory(CourseRepository(RetrofitClient.courseApiService))
+        )
+        HomeScreen(
+            navController = navController,
+            viewModel = homeViewModel
+        )
     }
 
     composable("home/daily") {
@@ -333,9 +345,14 @@ fun NavGraphBuilder.homeRoutes(navController: NavHostController) {
     }
 
     composable("home/streak") {
+        // Reuse HomeViewModel from the "home" destination
+        val homeViewModel: HomeViewModel = viewModel(
+            navController.getBackStackEntry("home"),
+            factory = HomeViewModelFactory(CourseRepository(RetrofitClient.courseApiService))
+        )
         StreakScreen(
-            currentStreak = 5,
-            onDismissRequest = { navController.navigate("home") }
+            homeViewModel = homeViewModel,
+            onDismissRequest = { navController.popBackStack() }
         )
     }
 
@@ -361,15 +378,21 @@ fun NavGraphBuilder.homeRoutes(navController: NavHostController) {
 }
 
 // Learning Routes
+@SuppressLint("UnrememberedGetBackStackEntry")
 fun NavGraphBuilder.learningRoutes(navController: NavHostController) {
     composable(
         route = "learning_session/{lessonId}",
         arguments = listOf(navArgument("lessonId") { type = NavType.LongType })
     ) { backStackEntry ->
         val lessonId = backStackEntry.arguments?.getLong("lessonId") ?: 1L
+        val homeViewModel: HomeViewModel = viewModel(
+            navController.getBackStackEntry("home"),
+            factory = HomeViewModelFactory(CourseRepository(RetrofitClient.courseApiService))
+        )
         LearningSessionManager(
             lessonId = lessonId,
             navController = navController,
+            homeViewModel = homeViewModel, // SỬA: Truyền HomeViewModel
             onComplete = {}
         )
     }
@@ -564,6 +587,7 @@ private fun checkIfImportantRoute(currentRoute: String?): Boolean {
             currentRoute != "daily-goal-selection" &&
             currentRoute != "path_selection" &&
             currentRoute != "home/streak" &&
+            currentRoute != "listen-screen" &&
             currentRoute?.startsWith("learning_session") != true &&
             currentRoute?.startsWith("lesson_completed") != true
 }

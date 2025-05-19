@@ -230,7 +230,6 @@ fun TopBar(
     }
 }
 
-
 @Composable
 fun BarIcon(@DrawableRes icon: Int, text: String? = null, saturation: Float = 1f, onClick: (() -> Unit)? = null) {
     Row(

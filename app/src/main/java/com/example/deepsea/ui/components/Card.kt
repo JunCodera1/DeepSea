@@ -1,10 +1,6 @@
 package com.example.deepsea.ui.components
 
-import UserProfileViewModel
 import android.content.res.Configuration
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,7 +30,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -64,13 +59,12 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.deepsea.R
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UserProfile
 import com.example.deepsea.ui.screens.feature.profile.StatisticItem
 import com.example.deepsea.ui.screens.feature.daily.LanguageProgress
 import com.example.deepsea.ui.screens.feature.game.Player
 import com.example.deepsea.ui.screens.feature.daily.getLanguageLevel
 import com.example.deepsea.ui.theme.DeepSeaTheme
-import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
@@ -151,7 +145,7 @@ fun InviteFriendsCard() {
 
 @Composable
 fun UserBasicInfoCard(
-    userProfile: UserProfileData?) {
+    userProfile: UserProfile?) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -282,7 +276,7 @@ fun UserBasicInfoCard(
 
 
 @Composable
-fun StatisticsCard(userProfile: UserProfileData?) {
+fun StatisticsCard(userProfile: UserProfile?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),

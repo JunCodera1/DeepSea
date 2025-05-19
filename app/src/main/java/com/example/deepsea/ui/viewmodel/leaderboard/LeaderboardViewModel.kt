@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.leaderboard.LeaderboardEntry
 import com.example.deepsea.data.model.leaderboard.LeaderboardRankResponse
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UserProfile
 import com.example.deepsea.ui.screens.feature.leaderboard.LeagueTier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,8 +18,8 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
     private val _topLeaderboardState = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
     val topLeaderboardState: StateFlow<List<LeaderboardEntry>> = _topLeaderboardState.asStateFlow()
 
-    private val _allUsersState = MutableStateFlow<List<UserProfileData>>(emptyList())
-    val allUsersState: StateFlow<List<UserProfileData>> = _allUsersState.asStateFlow()
+    private val _allUsersState = MutableStateFlow<List<UserProfile>>(emptyList())
+    val allUsersState: StateFlow<List<UserProfile>> = _allUsersState.asStateFlow()
 
     // New state for filtered users by league
     private val _filteredUsersState = MutableStateFlow<List<Any>>(emptyList())
@@ -50,8 +50,8 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
     private val _topLeaderboard = mutableListOf<LeaderboardEntry>()
     val topLeaderboard: List<LeaderboardEntry> get() = _topLeaderboard
 
-    private val _allUsers = mutableListOf<UserProfileData>()
-    val allUsers: List<UserProfileData> get() = _allUsers
+    private val _allUsers = mutableListOf<UserProfile>()
+    val allUsers: List<UserProfile> get() = _allUsers
 
     private val _userRank = mutableMapOf<Long, LeaderboardRankResponse>()
     val userRank: Map<Long, LeaderboardRankResponse> get() = _userRank
@@ -84,7 +84,7 @@ class LeaderboardViewModel(private val userProfileService: UserProfileService) :
             _errorMessage.value = null
 
             try {
-                val response: List<UserProfileData> = userProfileService.getAllUsersSortedByXp()
+                val response: List<UserProfile> = userProfileService.getAllUsersSortedByXp()
                 _allUsers.clear()
                 _allUsers.addAll(response)
                 _allUsersState.value = response

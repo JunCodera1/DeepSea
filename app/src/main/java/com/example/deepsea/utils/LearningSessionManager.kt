@@ -2,6 +2,7 @@ package com.example.deepsea.utils
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import com.example.deepsea.ui.screens.feature.learn.MatchingPairsScreen
 import com.example.deepsea.ui.screens.feature.learn.MatchingPairsViewModel
 import com.example.deepsea.ui.screens.feature.learn.QuizImageScreen
 import com.example.deepsea.ui.screens.feature.learn.WordBuildingScreen
+import com.example.deepsea.ui.viewmodel.home.HomeViewModel
 import com.example.deepsea.ui.viewmodel.learn.LearningViewModel
 import com.example.deepsea.ui.viewmodel.learn.LessonViewModel
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
@@ -61,6 +63,7 @@ fun LearningSessionManager(
     modifier: Modifier = Modifier,
     lessonId: Long,
     navController: NavController,
+    homeViewModel: HomeViewModel,
     onComplete: () -> Unit
 ) {
     val navControllerLocal = rememberNavController()
@@ -118,6 +121,7 @@ fun LearningSessionManager(
             progress = 0f
         )
         startTime = System.currentTimeMillis()
+        Log.d("LearningSessionManager", "Initialized session with $screenCount screens")
     }
 
     // Update LessonResult
@@ -146,7 +150,7 @@ fun LearningSessionManager(
                             )
                         }
                         ScreenType.QUIZ_IMAGE -> viewModel<LearningViewModel>(
-                            factory = LearningViewModel.Factory(context,lessonId)
+                            factory = LearningViewModel.Factory(context, lessonId)
                         )
                         ScreenType.MATCHING_PAIRS -> viewModel<MatchingPairsViewModel>()
                         else -> null
@@ -161,21 +165,27 @@ fun LearningSessionManager(
                             val totalProgress = (sessionState.currentScreenIndex * screenProgress) + (newProgress * screenProgress)
                             sessionState = sessionState.copy(progress = totalProgress.coerceIn(0f, 1f))
                             updateLessonResult(totalProgress)
+                            Log.d("LearningSessionManager", "Updated session progress: $totalProgress")
                         },
                         onNextScreen = {
+                            Log.d("LearningSessionManager", "Navigating to next screen: ${sessionState.currentScreenIndex + 1}, totalScreens: ${sessionState.totalScreens}")
                             val nextIndex = sessionState.currentScreenIndex + 1
                             if (nextIndex < sessionState.totalScreens) {
                                 sessionState = sessionState.copy(currentScreenIndex = nextIndex)
-                                navControllerLocal.navigate("learning_screen/$nextIndex") {
-                                    popUpTo(navControllerLocal.graph.startDestinationId) {
-                                        inclusive = false
+                                try {
+                                    navControllerLocal.navigate("learning_screen/$nextIndex") {
+                                        popUpTo(navControllerLocal.graph.startDestinationId) {
+                                            inclusive = false
+                                        }
+                                        launchSingleTop = true
                                     }
-                                    launchSingleTop = true
+                                    Log.d("LearningSessionManager", "Navigation successful to screen $nextIndex")
+                                } catch (e: Exception) {
+                                    Log.e("LearningSessionManager", "Navigation failed: ${e.message}")
                                 }
                             } else {
                                 coroutineScope.launch {
                                     saveSessionProgress(lessonId, sessionState)
-                                    // Calculate final time
                                     val elapsedMillis = if (isPaused) {
                                         (pausedTime - startTime)
                                     } else {
@@ -185,14 +195,12 @@ fun LearningSessionManager(
                                     val finalTime = "${elapsedSeconds / 60}:${(elapsedSeconds % 60).toString().padStart(2, '0')}"
                                     lessonResult = lessonResult.copy(time = finalTime)
 
-                                    // Save LessonResult
                                     lessonViewModel.saveLessonResult(
                                         xp = lessonResult.xp,
                                         time = lessonResult.time,
                                         accuracy = lessonResult.accuracy
                                     )
 
-                                    // Call /api/lessons/{id}/complete
                                     try {
                                         val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
                                         val userId = sharedPreferences.getLong("user_id", 1L)
@@ -204,12 +212,13 @@ fun LearningSessionManager(
                                                 timeTaken = lessonResult.time
                                             )
                                         )
+                                        homeViewModel.updateDailyStreak()
+                                        Log.d("LearningSessionManager", "Streak updated for userId: $userId")
                                     } catch (e: Exception) {
-                                        println("Failed to complete lesson: ${e.message}")
+                                        Log.e("LearningSessionManager", "Failed to complete lesson: ${e.message}")
                                         Toast.makeText(context, "Failed to complete lesson: ${e.message}", Toast.LENGTH_SHORT).show()
                                     }
 
-                                    // Navigate to LessonCompletedScreen
                                     navController.navigate("lesson_completed/${lessonResult.xp}/${lessonResult.time}/${lessonResult.accuracy}/$lessonId") {
                                         popUpTo(navController.graph.startDestinationId) {
                                             inclusive = true
@@ -238,7 +247,6 @@ fun LearningSessionManager(
         }
     }
 }
-
 
 data class SessionState(
     val totalScreens: Int = 0,
@@ -322,18 +330,18 @@ fun LearningScreenWrapper(
             ScreenType.WORD_BUILDING -> {
                 val wordBuildingViewModel = viewModel as WordBuildingViewModel
                 WordBuildingScreen(
-                    viewModel = wordBuildingViewModel,  // Pass the existing viewModel instance
+                    viewModel = wordBuildingViewModel,
                     onNavigateToSettings = onBack,
                     onComplete = {
                         onUpdateProgress(1f)
                         onNextScreen()
                     },
-                    onBackClick = {
-
-                    }
+                    onBackClick = onBack
                 )
                 LaunchedEffect(wordBuildingViewModel.userProgress.collectAsState().value) {
-                    onUpdateProgress(wordBuildingViewModel.userProgress.value)
+                    val progress = wordBuildingViewModel.userProgress.value
+                    Log.d("LearningScreenWrapper", "Updating progress: $progress")
+                    onUpdateProgress(progress)
                 }
             }
             ScreenType.LANGUAGE_LISTENING -> LanguageListeningScreen(
@@ -360,6 +368,6 @@ private suspend fun saveSessionProgress(lessonId: Long, sessionState: SessionSta
     try {
         RetrofitClient.sessionApiService.saveSession(sessionData)
     } catch (e: Exception) {
-        println("Failed to save session: ${e.message}")
+        Log.e("LearningSessionManager", "Failed to save session: ${e.message}")
     }
 }

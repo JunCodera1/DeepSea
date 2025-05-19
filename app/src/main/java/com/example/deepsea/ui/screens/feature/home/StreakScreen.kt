@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.R
+import com.example.deepsea.ui.viewmodel.home.CourseUiState
+import com.example.deepsea.ui.viewmodel.home.HomeViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -37,12 +39,17 @@ import java.util.*
 
 @Composable
 fun StreakScreen(
-    currentStreak: Int = 1,
+    homeViewModel: HomeViewModel,
     onDismissRequest: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     val today = LocalDate.now()
     val currentYearMonth = remember { mutableStateOf(YearMonth.now()) }
+    val currentStreak by homeViewModel.dailyStreak.collectAsState()
+    val userProfile by homeViewModel.uiState.collectAsState() // Get user profile from uiState
+
+    // Extract streakHistory from userProfile
+    val streakHistory = (userProfile as? CourseUiState.Success)?.userProgress?.streakHistory ?: emptyList()
 
     Column(
         modifier = Modifier
@@ -50,19 +57,13 @@ fun StreakScreen(
             .background(Color.White)
             .verticalScroll(scrollState)
     ) {
-        // Top App Bar
         StreakTopBar(onDismissRequest)
-
-        // Main content
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Streak Header with flame icon and count
             StreakHeader(currentStreak)
-
-            // Streak Calendar
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,7 +77,6 @@ fun StreakScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    // Month navigation
                     MonthSelector(
                         currentYearMonth = currentYearMonth.value,
                         onPreviousMonth = {
@@ -86,25 +86,17 @@ fun StreakScreen(
                             currentYearMonth.value = currentYearMonth.value.plusMonths(1)
                         }
                     )
-
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    // Days of week header
                     DaysOfWeekHeader()
-
-                    // Calendar days
                     CalendarDays(
                         yearMonth = currentYearMonth.value,
                         today = today,
-                        activeDay = today.dayOfMonth
+                        activeDay = today.dayOfMonth,
+                        streakHistory = streakHistory // Pass streak history
                     )
                 }
             }
-
-            // Streak Challenge
             StreakChallengeSection()
-
-            // Streak Society
             StreakSocietySection()
         }
     }
@@ -288,7 +280,8 @@ fun DaysOfWeekHeader() {
 fun CalendarDays(
     yearMonth: YearMonth,
     today: LocalDate,
-    activeDay: Int
+    activeDay: Int,
+    streakHistory: List<LocalDate> // Add streak history parameter
 ) {
     val firstDay = yearMonth.atDay(1).dayOfWeek.value
     val daysInMonth = yearMonth.lengthOfMonth()
@@ -297,7 +290,7 @@ fun CalendarDays(
     Column(modifier = Modifier.fillMaxWidth()) {
         var dayCounter = 1
         val totalSlots = ((firstDay - 1) % 7) + daysInMonth
-        val rows = (totalSlots + 6) / 7 // Calculate needed rows
+        val rows = (totalSlots + 6) / 7
 
         for (row in 0 until rows) {
             Row(
@@ -311,12 +304,12 @@ fun CalendarDays(
                     val offset = (firstDay - 1) % 7
 
                     if (dayIndex <= offset || dayIndex > daysInMonth + offset) {
-                        // Empty space
                         Box(modifier = Modifier.size(36.dp))
                     } else {
                         val day = dayIndex - offset
+                        val currentDate = yearMonth.atDay(day)
                         val isToday = isCurrentMonth && day == today.dayOfMonth
-                        val isActive = isCurrentMonth && day <= activeDay
+                        val isActive = streakHistory.contains(currentDate)
 
                         Box(
                             modifier = Modifier

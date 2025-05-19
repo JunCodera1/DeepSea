@@ -5,7 +5,7 @@ import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.course.language.LanguageOptionRequest
 import com.example.deepsea.data.model.survey.SurveyOption
 import com.example.deepsea.data.model.survey.SurveyOptionRequest
-import com.example.deepsea.data.model.user.UserProfileData
+import com.example.deepsea.data.model.user.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -13,7 +13,7 @@ import javax.inject.Inject
 class UserProfileRepository @Inject constructor(
     private val userProfileService: UserProfileService
 ) {
-    suspend fun getUserProfile(userId: Long): Result<UserProfileData> {
+    suspend fun getUserProfile(userId: Long): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = userProfileService.getUserProfile(userId)
@@ -30,7 +30,7 @@ class UserProfileRepository @Inject constructor(
     suspend fun updateUserSurveySelections(
         userId:Long? ,
         surveySelections: Set<SurveyOption>
-    ): UserProfileData {
+    ): UserProfile {
         return withContext(Dispatchers.IO) {
             val request = SurveyOptionRequest(userId = userId, selectedOptions =  surveySelections)
             userProfileService.saveSurveySelections(request)
@@ -41,7 +41,7 @@ class UserProfileRepository @Inject constructor(
     suspend fun updateUserLanguageSelections(
         userId:Long? ,
         languageSelections: Set<LanguageOption>
-    ): UserProfileData {
+    ): UserProfile {
         return withContext(Dispatchers.IO) {
             val request = LanguageOptionRequest(userId = userId, selectedOptions =  languageSelections)
             userProfileService.saveLanguageSelections(request)
