@@ -26,12 +26,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.deepsea.data.model.exercise.WordPair
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import android.util.Log
+import timber.log.Timber
 
 @Composable
 fun MatchingPairsScreen(
-    viewModel: MatchingPairsViewModel = viewModel(),
+    viewModel: MatchingPairsViewModel, // SỬA: Xóa khởi tạo mặc định
     onNavigateToSettings: () -> Unit = {},
     onComplete: () -> Unit
 ) {
@@ -44,6 +48,12 @@ fun MatchingPairsScreen(
     val isCorrectMatch by viewModel.isCorrectMatch.collectAsState()
     val selectedEnglishWord by viewModel.selectedEnglishWord.collectAsState()
     val selectedJapaneseWord by viewModel.selectedJapaneseWord.collectAsState()
+
+    // Thêm log để gỡ lỗi
+    LaunchedEffect(progress, englishWords) {
+        Timber.tag("MatchingPairsScreen")
+            .d("Progress: $progress, isGameCompleted: ${viewModel.isGameCompleted()}")
+    }
 
     // Simulate audio completion
     LaunchedEffect(isAudioPlaying) {
@@ -65,6 +75,7 @@ fun MatchingPairsScreen(
     LaunchedEffect(englishWords) {
         if (viewModel.isGameCompleted()) {
             delay(500)
+            Log.d("MatchingPairsScreen", "Game completed, calling onComplete")
             onComplete()
         }
     }
@@ -75,7 +86,7 @@ fun MatchingPairsScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Top Bar with Settings and Progress (unchanged)
+            // Top Bar with Settings and Progress
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -202,7 +213,7 @@ fun MatchingPairsScreen(
             }
         }
 
-        // Feedback Overlay (unchanged)
+        // Feedback Overlay
         AnimatedVisibility(
             visible = showFeedback,
             enter = fadeIn(),
@@ -252,7 +263,7 @@ fun WordCard(
         modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
-            .alpha(if (isMatched) 0.5f else 1.0f) // Fade matched cards
+            .alpha(if (isMatched) 0.5f else 1.0f)
             .clickable(onClick = onClick, enabled = !isMatched),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
@@ -288,12 +299,17 @@ fun WordCard(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MatchingPairsScreenPreview() {
-    MaterialTheme {
-        Surface {
-            MatchingPairsScreen(onComplete = {})
-        }
-    }
-}
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun MatchingPairsScreenPreview() {
+//    MaterialTheme {
+//        Surface {
+//            MatchingPairsScreen(
+//                viewModel = FakeMatchingPairsViewModel(),
+//                onComplete = {}
+//            )
+//        }
+//    }
+//}

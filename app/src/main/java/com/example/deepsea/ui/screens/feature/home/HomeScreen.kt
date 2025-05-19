@@ -151,15 +151,24 @@ fun HomeScreen(
                         TopBar(
                             sectionIndex = currentSectionIndex,
                             units = currentUnits,
-                            visibleUnitIndex = visibleUnitIndices.getOrDefault(currentSectionIndex, 0),
+                            visibleUnitIndex = visibleUnitIndices.getOrDefault(
+                                currentSectionIndex,
+                                0
+                            ),
                             navController = navController,
                             onExpandClick = {
                                 isHeaderExpanded = true
-                                viewModel.updateCurrentUnit(visibleUnitIndices.getOrDefault(currentSectionIndex, 0))
+                                viewModel.updateCurrentUnit(
+                                    visibleUnitIndices.getOrDefault(
+                                        currentSectionIndex,
+                                        0
+                                    )
+                                )
                             },
                             isExpanded = false,
                             sectionData = currentSection,
-                            sections = sections
+                            sections = sections,
+                            homeViewModel = viewModel
                         )
                     }
                 ) { paddingValues ->

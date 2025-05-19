@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,7 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.text.TitleText
+import com.example.deepsea.ui.viewmodel.home.HomeViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
@@ -66,41 +68,34 @@ fun TopBar(
     sectionData: SectionData,
     visibleUnitIndex: Int = 0,
     navController: NavController,
-    onExpandClick: () -> Unit = {}, // Callback for expand click
-    isExpanded: Boolean = false, // Expanded state
+    homeViewModel: HomeViewModel, // Add HomeViewModel parameter
+    onExpandClick: () -> Unit = {},
+    isExpanded: Boolean = false,
     sections: List<SectionData> = listOf(sectionData)
 ) {
     val coroutineScope = rememberCoroutineScope()
-
-    // Find index of current section in the sections list
     val initialPage = sections.indexOf(sectionData).takeIf { it >= 0 } ?: 0
-
-    // Set up pager state for horizontal swiping between sections
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         pageCount = { sections.size }
     )
-
-    // Keep track of which tab is selected (overview or units)
     var selectedTab by remember { mutableStateOf(0) }
-
     val systemUiController = rememberSystemUiController()
     val showStreakDialog = remember { mutableStateOf(false) }
-    val showGemsDialog = remember { mutableStateOf(false) } // State for gems navigation
-    val showHeartsDialog = remember { mutableStateOf(false) } // State for hearts navigation
+    val showGemsDialog = remember { mutableStateOf(false) }
+    val showHeartsDialog = remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-
     val currentUnit = units.getOrNull(visibleUnitIndex)
     val animatedColor by animateColorAsState(
         targetValue = currentUnit?.color ?: Color.Gray,
         animationSpec = tween(durationMillis = 600)
     )
     val darkerColor = currentUnit?.darkerColor ?: Color.DarkGray
+    val streak by homeViewModel.dailyStreak.collectAsState() // Observe streak
 
     systemUiController.setStatusBarColor(animatedColor)
     systemUiController.setNavigationBarColor(Color.White)
 
-    // Handle navigation for streak, gems, and hearts
     LaunchedEffect(showStreakDialog.value, showGemsDialog.value, showHeartsDialog.value) {
         when {
             showStreakDialog.value -> {
@@ -189,20 +184,20 @@ fun TopBar(
 
                 BarIcon(
                     icon = R.drawable.ic_fire,
-                    text = "1",
+                    text = streak.toString(), // Use dynamic streak
                     onClick = { showStreakDialog.value = true }
                 )
 
                 BarIcon(
                     icon = R.drawable.ic_gem,
                     text = "505",
-                    onClick = { showGemsDialog.value = true } // Navigate to gems screen
+                    onClick = { showGemsDialog.value = true }
                 )
 
                 BarIcon(
                     icon = R.drawable.ic_heart,
                     text = "5",
-                    onClick = { showHeartsDialog.value = true } // Navigate to hearts screen
+                    onClick = { showHeartsDialog.value = true }
                 )
             }
 

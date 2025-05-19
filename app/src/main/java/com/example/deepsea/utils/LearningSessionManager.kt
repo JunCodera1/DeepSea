@@ -55,6 +55,7 @@ import com.example.deepsea.ui.viewmodel.learn.LearningViewModel
 import com.example.deepsea.ui.viewmodel.learn.LessonViewModel
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModel
 import com.example.deepsea.ui.viewmodel.learn.WordBuildingViewModelFactory
+import com.example.deepsea.ui.viewmodel.learn.MatchingPairsViewModelFactory
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -73,13 +74,14 @@ fun LearningSessionManager(
     val lessonViewModel: LessonViewModel = viewModel(factory = LessonViewModel.LessonViewModelFactory())
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Time tracking
+    val sectionId = ((lessonId - 1) / 5) + 1
+    val unitId = lessonId
+
     var startTime by remember { mutableStateOf(System.currentTimeMillis()) }
     var pausedTime by remember { mutableStateOf(0L) }
     var isPaused by remember { mutableStateOf(false) }
     var lessonResult by remember { mutableStateOf(LessonResult(xp = 0, time = "0:00", accuracy = 100)) }
 
-    // Pause/resume functions
     fun pauseSession() {
         if (!isPaused) {
             isPaused = true
@@ -95,7 +97,6 @@ fun LearningSessionManager(
         }
     }
 
-    // Lifecycle observer for pause/resume
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -110,7 +111,6 @@ fun LearningSessionManager(
         }
     }
 
-    // Initialize session
     LaunchedEffect(Unit) {
         val screenCount = Random.nextInt(3, 5)
         val screens = generateRandomScreens(screenCount)
@@ -124,7 +124,6 @@ fun LearningSessionManager(
         Log.d("LearningSessionManager", "Initialized session with $screenCount screens")
     }
 
-    // Update LessonResult
     fun updateLessonResult(progress: Float) {
         val xp = (progress * 100).toInt()
         val accuracy = (progress * 100).toInt()
@@ -152,9 +151,12 @@ fun LearningSessionManager(
                         ScreenType.QUIZ_IMAGE -> viewModel<LearningViewModel>(
                             factory = LearningViewModel.Factory(context, lessonId)
                         )
-                        ScreenType.MATCHING_PAIRS -> viewModel<MatchingPairsViewModel>()
+                        ScreenType.MATCHING_PAIRS -> viewModel<MatchingPairsViewModel>(
+                            factory = MatchingPairsViewModelFactory(sectionId, unitId)
+                        )
                         else -> null
                     }
+                    Log.d("LearningSessionManager", "Created ViewModel for screenType: $screenType, index: $index")
                     LearningScreenWrapper(
                         sessionState = sessionState,
                         lessonId = lessonId,

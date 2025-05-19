@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
-class MatchingPairsViewModel : ViewModel() {
+class MatchingPairsViewModel(
+    private val sectionId: Long,
+    private val unitId: Long
+) : ViewModel() {
     private val _englishWords = MutableStateFlow<List<WordPair>>(emptyList())
     val englishWords: StateFlow<List<WordPair>> = _englishWords.asStateFlow()
 
@@ -39,7 +42,7 @@ class MatchingPairsViewModel : ViewModel() {
     val selectedJapaneseWord: StateFlow<WordPair?> = _selectedJapaneseWord.asStateFlow()
 
     init {
-        fetchWordPairs(sectionId = 1, unitId = 1) // Example: Fetch for Section 1, Unit 1
+        fetchWordPairs(sectionId, unitId)
     }
 
     private fun fetchWordPairs(sectionId: Long, unitId: Long) {
