@@ -1,5 +1,6 @@
 package com.example.deepsea.ui.screens.feature.learn
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 class MatchingPairsViewModel(
     private val sectionId: Long,
@@ -41,6 +43,12 @@ class MatchingPairsViewModel(
     private val _selectedJapaneseWord = MutableStateFlow<WordPair?>(null)
     val selectedJapaneseWord: StateFlow<WordPair?> = _selectedJapaneseWord.asStateFlow()
 
+    // Thêm để theo dõi độ chính xác
+    private val _correctAnswers = MutableStateFlow(0)
+    private val _totalAttempts = MutableStateFlow(0)
+    private val _accuracy = MutableStateFlow(0f)
+    val accuracy: StateFlow<Float> = _accuracy.asStateFlow()
+
     init {
         fetchWordPairs(sectionId, unitId)
     }
@@ -50,10 +58,9 @@ class MatchingPairsViewModel(
             try {
                 val wordPairs = RetrofitClient.learningApiService.getMatchingPairs(sectionId, unitId)
                 _englishWords.value = wordPairs
-                _japaneseWords.value = wordPairs.shuffled() // Shuffle Japanese words for display
-                _progress.value = 0f // Reset progress
+                _japaneseWords.value = wordPairs.shuffled()
+                _progress.value = 0f
             } catch (e: Exception) {
-                // Handle network errors (e.g., show error message)
                 e.printStackTrace()
             }
         }
@@ -80,11 +87,13 @@ class MatchingPairsViewModel(
         val japanese = _selectedJapaneseWord.value
 
         if (english != null && japanese != null) {
+            _totalAttempts.value += 1
             val isCorrect = english.id == japanese.id
             _isCorrectMatch.value = isCorrect
             _showFeedback.value = true
 
             if (isCorrect) {
+                _correctAnswers.value += 1
                 _englishWords.value = _englishWords.value.map {
                     if (it.id == english.id) it.copy(isMatched = true, isSelected = false) else it
                 }
@@ -95,6 +104,15 @@ class MatchingPairsViewModel(
             } else {
                 _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
             }
+
+            // Cập nhật độ chính xác
+            _accuracy.value = if (_totalAttempts.value > 0) {
+                (_correctAnswers.value.toFloat() / _totalAttempts.value) * 100
+            } else {
+                0f
+            }
+            Timber.tag("MatchingPairsViewModel")
+                .d("Match checked: Correct=$isCorrect, Correct answers: ${_correctAnswers.value}, Attempts: ${_totalAttempts.value}, Accuracy: ${_accuracy.value}%")
 
             _selectedEnglishWord.value = null
             _selectedJapaneseWord.value = null

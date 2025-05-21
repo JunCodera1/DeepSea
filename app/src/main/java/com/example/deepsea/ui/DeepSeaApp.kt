@@ -196,6 +196,44 @@ fun NavGraphBuilder.welcomeRoutes(
         )
     }
 
+    composable("login") {
+        LaunchedEffect(Unit) {
+            authViewModel.resetSkipAutoNavigation()
+        }
+        LoginPage(
+            deepseaNavController = navController,
+            authViewModel = authViewModel,
+            onLoginSuccess = {
+                Timber.d("Login success, navigating to home")
+                navController.navigate("home") {
+                    popUpTo("welcome") { inclusive = true }
+                }
+            },
+            onSignInClick = { email, password ->
+                Timber.d("Attempting login")
+                authViewModel.login(email, password, navController)
+            }
+        )
+    }
+
+    composable("signup") {
+        SignupPage(
+            navController = navController,
+            onSignUpClick = { name, username, email, password, avatar ->
+                Timber.d("Attempting signup with name: $name")
+                authViewModel.signup(name, username, email, password, avatar)
+            },
+            onSignInClick = { navController.navigate("${MainDestinations.LOGIN_ROUTE}/0") },
+            authViewModel = authViewModel,
+            onRegisterSuccess = {
+                Timber.d("Registration success, navigating to home")
+                navController.navigate("home") {
+                    popUpTo("welcome") { inclusive = true }
+                }
+            }
+        )
+    }
+
     composable(
         route = "${MainDestinations.LOGIN_ROUTE}/{${MainDestinations.LOGIN_ID_KEY}}?origin={${MainDestinations.ORIGIN}}",
         arguments = listOf(

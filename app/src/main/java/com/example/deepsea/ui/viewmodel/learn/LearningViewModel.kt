@@ -47,7 +47,7 @@ class LearningViewModel(
     val options: StateFlow<List<VocabularyItem>> = _options
 
     private val _hearts = MutableStateFlow(5)
-    var hearts: StateFlow<Int> = _hearts
+    val hearts: StateFlow<Int> = _hearts
 
     private val _progress = MutableStateFlow(0f)
     val progress: StateFlow<Float> = _progress
@@ -60,6 +60,12 @@ class LearningViewModel(
 
     private val _isAudioPlaying = MutableStateFlow(false)
     val isAudioPlaying: StateFlow<Boolean> = _isAudioPlaying.asStateFlow()
+
+    // Thêm để theo dõi độ chính xác
+    private val _correctAnswers = MutableStateFlow(0)
+    private val _totalQuestions = MutableStateFlow(0)
+    private val _accuracy = MutableStateFlow(0f)
+    val accuracy: StateFlow<Float> = _accuracy.asStateFlow()
 
     private var textToSpeech: TextToSpeech? = null
     private var ttsInitialized = false
@@ -74,10 +80,8 @@ class LearningViewModel(
     private var currentIndex = 0
     private var totalWords = 10
 
-    // Current user
     private val _currentUser = MutableStateFlow<User?>(null)
 
-    // Thêm thuộc tính và functions mới để lưu trữ lỗi
     private val _isSavingMistake = MutableStateFlow(false)
     val isSavingMistake: StateFlow<Boolean> = _isSavingMistake.asStateFlow()
 
@@ -87,17 +91,16 @@ class LearningViewModel(
     init {
         initTextToSpeech()
         loadLesson()
-        loadCurrentUser() // Add this function to load the current user
+        loadCurrentUser()
     }
 
-    // Add this function to load the current user
     private fun loadCurrentUser() {
         viewModelScope.launch {
             try {
-                userProfileRepository.getUserProfile(1) // Replace with actual user ID source
+                userProfileRepository.getUserProfile(1)
                     .onSuccess { profileData ->
                         _currentUser.value = User(
-                            id = 1, // Replace with actual user ID source
+                            id = 1,
                             username = profileData.username,
                             profileData = profileData
                         )
@@ -184,6 +187,7 @@ class LearningViewModel(
         vocabularyItems.clear()
         vocabularyItems.addAll(words.shuffled())
         totalWords = vocabularyItems.size
+        _totalQuestions.value = totalWords // Cập nhật tổng số câu hỏi
         if (vocabularyItems.isNotEmpty()) {
             loadNextWord()
         }
@@ -252,11 +256,20 @@ class LearningViewModel(
         val current = currentWord.value ?: return
         if (isAnswerCorrect(selectedOption)) {
             _isAnswerCorrect.value = true
+            _correctAnswers.value += 1
         } else {
-            saveUserMistake(current.native, current.english, selectedOption)
             _isAnswerCorrect.value = false
+            saveUserMistake(current.native, current.english, selectedOption)
             decreaseHearts()
         }
+        // Cập nhật độ chính xác
+        _accuracy.value = if (_totalQuestions.value > 0) {
+            (_correctAnswers.value.toFloat() / _totalQuestions.value) * 100
+        } else {
+            0f
+        }
+        updateProgress()
+        Log.d("LearningViewModel", "Answer checked: Correct=${_isAnswerCorrect.value}, Correct answers: ${_correctAnswers.value}, Accuracy: ${_accuracy.value}%")
     }
 
     fun loadQuestionById(id: Long) {
@@ -275,7 +288,6 @@ class LearningViewModel(
         viewModelScope.launch {
             try {
                 _isSavingMistake.value = true
-
                 val currentUser = _currentUser.value
                 if (currentUser != null) {
                     mistakeRepository.saveMistake(

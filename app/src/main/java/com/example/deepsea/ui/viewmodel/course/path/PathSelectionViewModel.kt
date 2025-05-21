@@ -9,7 +9,10 @@ import com.example.deepsea.data.api.UserProfileService
 import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.course.path.PathOption
 import com.example.deepsea.data.model.course.path.PathOptionRequest
+import com.example.deepsea.utils.Resource
 import com.example.deepsea.utils.SessionManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -18,20 +21,25 @@ class PathSelectionViewModel(
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    var userPaths by mutableStateOf<Map<LanguageOption, PathOption>>(emptyMap())
-        private set
+    private val _userPaths = MutableStateFlow<Resource<Map<LanguageOption, PathOption>>>(Resource.Loading())
+    val userPaths: StateFlow<Resource<Map<LanguageOption, PathOption>>> = _userPaths
 
     private val selectedPaths = mutableMapOf<LanguageOption, PathOption>()
 
     val currentSelections: Map<LanguageOption, PathOption>
-        get() = selectedPaths
+        get() = selectedPaths.toMap()
 
     suspend fun fetchPaths(userId: Long) {
-        val responseList = pathService.getUserPaths(userId)
-        val fetchedPaths = responseList.associate { it.language to (it.path ?: PathOption.BEGINNER) }
-        userPaths = fetchedPaths
-        selectedPaths.clear()
-        selectedPaths.putAll(fetchedPaths)
+        try {
+            _userPaths.value = Resource.Loading()
+            val responseList = pathService.getUserPaths(userId)
+            val fetchedPaths = responseList.associate { it.language to (it.path ?: PathOption.BEGINNER) }
+            selectedPaths.clear()
+            selectedPaths.putAll(fetchedPaths)
+            _userPaths.value = Resource.Success(fetchedPaths)
+        } catch (e: Exception) {
+            _userPaths.value = Resource.Error("Failed to fetch paths: ${e.message}")
+        }
     }
 
 
@@ -41,14 +49,20 @@ class PathSelectionViewModel(
 
     fun getSelectedPath(language: LanguageOption): PathOption? = selectedPaths[language]
 
-    fun saveAllPaths() {
+    fun saveAllPaths(onError: (String) -> Unit = {}, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
-            val profileId = sessionManager.profileId.first() ?: return@launch
-            selectedPaths.forEach { (language, path) ->
-                pathService.savePath(PathOptionRequest(profileId, language, path))
+            try {
+                val profileId = sessionManager.profileId.first() ?: return@launch
+                selectedPaths.forEach { (language, path) ->
+                    pathService.savePath(PathOptionRequest(profileId, language, path))
+                }
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.message ?: "Unexpected error")
             }
         }
     }
+
 
 }
 

@@ -6,19 +6,26 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.ui.LocalNavAnimatedVisibilityScope
@@ -51,9 +58,6 @@ fun LoginPage(
     onLoginSuccess: () -> Unit,
     authViewModel: AuthViewModel
 ) {
-    // Lấy scope của transition
-    LocalSharedTransitionScope.current ?: error("No SharedTransitionScope found")
-    LocalNavAnimatedVisibilityScope.current ?: error("No NavAnimatedVisibilityScope found")
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
@@ -77,7 +81,6 @@ fun LoginPage(
     // Facebook Callback Manager
     val callbackManager = remember { CallbackManager.Factory.create() }
 
-    // Xử lý kết quả đăng nhập từ Google
     // Xử lý kết quả đăng nhập từ Google
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -133,7 +136,6 @@ fun LoginPage(
             object : FacebookCallback<LoginResult> {
                 override fun onSuccess(result: LoginResult) {
                     result.accessToken.token?.let { token ->
-                        // Gọi viewModel để xử lý đăng nhập với Facebook
                         authViewModel.signInWithFacebook(token, navController = deepseaNavController)
                     }
                 }
@@ -156,104 +158,288 @@ fun LoginPage(
     var password by remember { mutableStateOf("") }
 
     DeepSeaTheme {
-        Image(
-            painter = backgroundPainter,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        Box(
             modifier = Modifier.fillMaxSize()
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
+            // Background with gradient overlay
             Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "App logo",
-                modifier = Modifier.size(200.dp),
-                contentScale = ContentScale.Fit
+                painter = backgroundPainter,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LoginTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeHolder = "Enter your email",
-                label = "Email"
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Blue.copy(alpha = 0.3f),
+                                Color.Blue.copy(alpha = 0.6f),
+                                Color.Blue.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LoginTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeHolder = "Enter your password",
-                label = "Password",
-                isPassword = true
-            )
-
-            TextButton(
-                modifier = Modifier.align(Alignment.End),
-                onClick = {
-                    deepseaNavController.navigate("forgot-password")
-                }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Forgot password?")
-            }
+                // App branding section
+                Card(
+                    modifier = Modifier.padding(vertical = 32.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.95f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "App logo",
+                            modifier = Modifier.size(120.dp),
+                            contentScale = ContentScale.Fit
+                        )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-            DeepSeaButton(
-                onClick = { onSignInClick(email, password) },
-                modifier = Modifier.width(90.dp),
-            ) {
-                Text("Login")
-            }
+                        Text(
+                            text = "DeepSea",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1565C0),
+                            textAlign = TextAlign.Center
+                        )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            DeepSeaDivider(Modifier.align(Alignment.CenterHorizontally))
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                ImageButton(
-                    image = painterResource(id = R.drawable.facebook_icon),
-                    text = "",
-                    onClick = {
-                        // Xử lý đăng nhập Facebook
-                        LoginManager.getInstance().logInWithReadPermissions(
-                            context as ActivityComponentActivity,
-                            callbackManager,
-                            listOf("public_profile", "email")
+                        Text(
+                            text = "Dive into Learning",
+                            fontSize = 16.sp,
+                            color = Color(0xFF666666),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                ImageButton(
-                    image = painterResource(id = R.drawable.google_icon),
-                    text = "",
-                    onClick = {
-                        // Xử lý đăng nhập Google
-                        val signInIntent = googleSignInClient.signInIntent
-                        googleSignInLauncher.launch(signInIntent)
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            TextButton(
-                onClick = {
-                    deepseaNavController.navigate("signup")
                 }
-            ) {
-                Text("Don't have account? Sign Up.")
+
+                // Welcome message
+                Text(
+                    text = "Welcome Back!",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = "Continue your learning journey",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                )
+
+                // Login form card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.95f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LoginTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            placeHolder = "Enter your email",
+                            label = "Email"
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        LoginTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            placeHolder = "Enter your password",
+                            label = "Password",
+                            isPassword = true
+                        )
+
+                        TextButton(
+                            modifier = Modifier.align(Alignment.End),
+                            onClick = {
+                                deepseaNavController.navigate("forgot-password")
+                            }
+                        ) {
+                            Text(
+                                "Forgot password?",
+                                color = Color(0xFF1565C0)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = { onSignInClick(email, password) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                "Sign In",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Divider(
+                                modifier = Modifier.weight(1f),
+                                color = Color.Gray.copy(alpha = 0.4f)
+                            )
+                            Text(
+                                "or continue with",
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                            Divider(
+                                modifier = Modifier.weight(1f),
+                                color = Color.Gray.copy(alpha = 0.4f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    LoginManager.getInstance().logInWithReadPermissions(
+                                        context as ActivityComponentActivity,
+                                        callbackManager,
+                                        listOf("public_profile", "email")
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color(0xFF1877F2)
+                                )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.facebook_icon),
+                                        contentDescription = "Facebook",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "Facebook",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    val signInIntent = googleSignInClient.signInIntent
+                                    googleSignInLauncher.launch(signInIntent)
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color(0xFFDB4437)
+                                )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.google_icon),
+                                        contentDescription = "Google",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "Google",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Sign up link
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.9f)
+                    )
+                ) {
+                    TextButton(
+                        onClick = {
+                            deepseaNavController.navigate("signup")
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            "Don't have an account? ",
+                            color = Color.Gray
+                        )
+                        Text(
+                            "Sign Up",
+                            color = Color(0xFF1565C0),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                // Error message
+                if (showError) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.Red.copy(alpha = 0.1f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = Color.Red,
+                            modifier = Modifier.padding(16.dp),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
             }
         }
     }

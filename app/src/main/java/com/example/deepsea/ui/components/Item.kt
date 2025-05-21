@@ -273,7 +273,7 @@ fun StatItem(
 
         Text(
             text = label,
-            fontSize = 14.sp,
+            fontSize = 10.sp,
             color = Color.Gray
         )
     }

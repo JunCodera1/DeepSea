@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,7 +61,10 @@ import com.example.deepsea.ui.components.StatisticsCard
 import com.example.deepsea.ui.components.UserBasicInfoCard
 import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModel
 import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModelFactory
+import com.example.deepsea.utils.Resource
 import com.example.deepsea.utils.SessionManager
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.forEach
 
 @Composable
 fun ProfilePage(
@@ -385,10 +389,12 @@ fun AchievementsSection(userProfile: UserProfile?) {
 
 @Composable
 fun LanguageFlags(
-    userPaths: Map<LanguageOption, PathOption>,
+    userPaths: StateFlow<Resource<Map<LanguageOption, PathOption>>>,
     onAddLanguage: (String) -> Unit
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val userPathsState by userPaths.collectAsState()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -401,25 +407,35 @@ fun LanguageFlags(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            userPaths.forEach { (langOption, pathOption) ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(
-                        painter = painterResource(id = langOption.flagResId),
-                        contentDescription = langOption.displayName,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = langOption.displayName,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = pathOption.name,
-                        fontSize = 10.sp,
-                        color = Color(0xFF4DB6FF),
-                        fontWeight = FontWeight.Medium
-                    )
+            when (val result = userPathsState) {
+                is Resource.Loading -> {
+                    CircularProgressIndicator()
+                }
+                is Resource.Success -> {
+                    result.data!!.forEach { (langOption, pathOption) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Image(
+                                painter = painterResource(id = langOption.flagResId),
+                                contentDescription = langOption.displayName,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = langOption.displayName,
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = pathOption.name,
+                                fontSize = 10.sp,
+                                color = Color(0xFF4DB6FF),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    Text(text = "Error")
                 }
             }
 
@@ -443,7 +459,14 @@ fun LanguageFlags(
             }
         }
     }
+
+    // Optional: Add language dialog
+    if (showLanguageDialog) {
+        // You can show a dialog here, e.g.:
+        // LanguageSelectionDialog(onConfirm = { selected -> onAddLanguage(selected) })
+    }
 }
+
 
 
 

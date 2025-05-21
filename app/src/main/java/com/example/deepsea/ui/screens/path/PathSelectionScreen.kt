@@ -41,9 +41,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deepsea.R
 import com.example.deepsea.data.api.UserProfileService
+import com.example.deepsea.data.model.course.language.LanguageOption
 import com.example.deepsea.data.model.course.path.PathOption
 import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModel
 import com.example.deepsea.ui.viewmodel.course.path.PathSelectionViewModelFactory
+import com.example.deepsea.utils.Resource
 import com.example.deepsea.utils.SessionManager
 
 @Composable
@@ -154,8 +156,12 @@ fun PathSelectionFlowPage(
         }
     }
 
-    val userPaths = viewModel.userPaths
-    val selectedLanguages = userPaths.keys.toList()
+    val userPathsResource by viewModel.userPaths.collectAsState()
+
+    val selectedLanguages = when (userPathsResource) {
+        is Resource.Success<Map<LanguageOption, PathOption>> -> userPathsResource.data?.keys?.toList() ?: emptyList()
+        else -> emptyList()
+    }
 
     var currentIndex by remember { mutableStateOf(0) }
     val currentLanguage = selectedLanguages.getOrNull(currentIndex)

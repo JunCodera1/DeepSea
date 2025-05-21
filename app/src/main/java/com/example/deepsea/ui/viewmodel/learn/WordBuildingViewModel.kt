@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.Locale
 import java.util.UUID
 
@@ -26,7 +27,7 @@ class WordBuildingViewModel(
     private val _currentExercise = MutableStateFlow<TranslationExercise?>(null)
     val currentExercise: StateFlow<TranslationExercise?> = _currentExercise.asStateFlow()
 
-    private val _userProgress = MutableStateFlow(0.3f)
+    private val _userProgress = MutableStateFlow(0f)
     val userProgress: StateFlow<Float> = _userProgress.asStateFlow()
 
     private val _hearts = MutableStateFlow(2)
@@ -46,6 +47,12 @@ class WordBuildingViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // Thêm để theo dõi độ chính xác
+    private val _correctAnswers = MutableStateFlow(0)
+    private val _totalQuestions = MutableStateFlow(0)
+    private val _accuracy = MutableStateFlow(0f)
+    val accuracy: StateFlow<Float> = _accuracy.asStateFlow()
 
     private var textToSpeech: TextToSpeech? = null
     private var ttsInitialized = false
@@ -68,14 +75,14 @@ class WordBuildingViewModel(
             if (status == TextToSpeech.SUCCESS) {
                 val result = textToSpeech?.setLanguage(Locale.JAPANESE)
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e("TTS", "Japanese language not supported, falling back to default")
+                    Timber.tag("TTS").e("Japanese language not supported, falling back to default")
                     textToSpeech?.setLanguage(Locale.US)
                 }
                 ttsInitialized = true
                 setupTTSListener()
                 loadExercise()
             } else {
-                Log.e("TTS", "Initialization failed")
+                Timber.tag("TTS").e("Initialization failed")
                 _errorMessage.value = "Failed to initialize TTS"
             }
         }
@@ -115,17 +122,21 @@ class WordBuildingViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                Log.d("ViewModel", "Attempting to load exercise from API")
+                Timber.tag("WordBuildingViewModel").d("Attempting to load exercise from API")
                 val response = apiService.getTranslationExercise()
                 _currentExercise.value = response
                 _selectedWords.value = emptyList()
                 _isAnswerCorrect.value = null
-                Log.d("ViewModel", "Successfully loaded exercise: ${response.sourceText}")
+                _totalQuestions.value += 1 // Tăng số câu hỏi
+                Timber.tag("WordBuildingViewModel")
+                    .d("Successfully loaded exercise: ${response.sourceText}, Total questions: ${_totalQuestions.value}")
             } catch (e: Exception) {
-                Log.e("ViewModel", "Error loading exercise: ${e.message}")
+                Timber.tag("WordBuildingViewModel").e("Error loading exercise: ${e.message}")
                 _errorMessage.value = "Failed to load exercise: ${e.message}"
                 _currentExercise.value = createFallbackExercise()
-                Log.d("ViewModel", "Fallback exercise loaded: ${createFallbackExercise().sourceText}")
+                _totalQuestions.value += 1
+                Timber.tag("WordBuildingViewModel")
+                    .d("Fallback exercise loaded: ${createFallbackExercise().sourceText}")
             } finally {
                 _isLoading.value = false
             }
@@ -208,12 +219,14 @@ class WordBuildingViewModel(
         val correctAnswer = _currentExercise.value?.targetText ?: ""
         val isCorrect = selectedSentence == correctAnswer
         _isAnswerCorrect.value = isCorrect
-
-        Log.d("ViewModel", "Checking answer: selected='$selectedSentence', correct='$correctAnswer', isCorrect=$isCorrect, progress=$_userProgress.value")
+        Timber.tag("WordBuildingViewModel")
+            .d("Checking answer: selected='$selectedSentence', correct='$correctAnswer', isCorrect=$isCorrect")
 
         if (isCorrect) {
-            _userProgress.value = 1f
-            Log.d("ViewModel", "Answer correct, progress set to 1.0")
+            _correctAnswers.value += 1
+            _userProgress.value = _correctAnswers.value.toFloat() / _totalQuestions.value
+            Timber.tag("WordBuildingViewModel")
+                .d("Answer correct, Correct answers: ${_correctAnswers.value}, Progress: ${_userProgress.value}")
         } else {
             _hearts.value = (_hearts.value - 1).coerceAtLeast(0)
             viewModelScope.launch {
@@ -227,13 +240,21 @@ class WordBuildingViewModel(
                         userAnswer = selectedSentence,
                         lessonId = null
                     )
-                    Log.d("ViewModel", "Mistake saved successfully for userId: $userId")
+                    Timber.tag("WordBuildingViewModel").d("Mistake saved for userId: $userId")
                 } catch (e: Exception) {
-                    Log.e("ViewModel", "Failed to save mistake: ${e.message}")
+                    Timber.tag("WordBuildingViewModel").e("Failed to save mistake: ${e.message}")
                     _errorMessage.value = "Failed to save mistake: ${e.message}"
                 }
             }
         }
+
+        // Cập nhật độ chính xác
+        _accuracy.value = if (_totalQuestions.value > 0) {
+            (_correctAnswers.value.toFloat() / _totalQuestions.value) * 100
+        } else {
+            0f
+        }
+        Timber.tag("WordBuildingViewModel").d("Accuracy updated: ${_accuracy.value}%")
     }
 
     override fun onCleared() {

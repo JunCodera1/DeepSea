@@ -20,38 +20,31 @@ class UserProfileViewModel : ViewModel() {
     val profileResource: State<Resource<UserProfile>> = _profileResource
 
     fun fetchUserProfile(userId: Long?) {
+        if (userId == null) {
+            _profileResource.value = Resource.Error("Invalid user ID.", _userProfile.value)
+            return
+        }
+
         viewModelScope.launch {
             try {
                 _profileResource.value = Resource.Loading(_userProfile.value)
-
                 val data = RetrofitClient.userProfileService.getUserProfileById(userId)
                 _userProfile.value = data
                 _profileResource.value = Resource.Success(data)
-            } catch (e: ConnectException) {
-                // Connection error (server unreachable)
-                _profileResource.value = Resource.Error(
-                    "Unable to connect to server. Please check your connection.",
-                    _userProfile.value
-                )
-            } catch (e: SocketTimeoutException) {
-                // Timeout error
-                _profileResource.value = Resource.Error(
-                    "Connection timed out. Please try again later.",
-                    _userProfile.value
-                )
-            } catch (e: IOException) {
-                // Network error
-                _profileResource.value = Resource.Error(
-                    "Network error: ${e.message}",
-                    _userProfile.value
-                )
             } catch (e: Exception) {
-                // General exception
-                _profileResource.value = Resource.Error(
-                    "An error occurred: ${e.message}",
-                    _userProfile.value
-                )
+                handleException(e)
             }
         }
     }
+
+    private fun handleException(e: Exception) {
+        val message = when (e) {
+            is ConnectException -> "Unable to connect to server. Please check your connection."
+            is SocketTimeoutException -> "Connection timed out. Please try again later."
+            is IOException -> "Network error: ${e.message}"
+            else -> "An error occurred: ${e.message}"
+        }
+        _profileResource.value = Resource.Error(message, _userProfile.value)
+    }
+
 }

@@ -6,7 +6,6 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -47,6 +46,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -103,7 +103,6 @@ import kotlinx.coroutines.delay
 import kotlin.io.path.moveTo
 
 @Composable
-
 fun DeepSeaButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -242,7 +241,6 @@ fun DeepSeaFAButton(
     }
 }
 
-
 private val ButtonShape = RoundedCornerShape(percent = 50)
 
 @Preview("default", "round")
@@ -285,24 +283,21 @@ fun ImageButton(
             .heightIn(min = 48.dp)
             .widthIn(min = 120.dp),
     ) {
-
-            Image(
-                painter = image,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text, fontSize = 16.sp)
-
+        Image(
+            painter = image,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text, fontSize = 16.sp)
     }
 }
-
 
 @Composable
 fun SelectableStarButton(
     colorMain: Color = FeatherGreen,
-    colorDark : Color = FeatherGreenDark,
-    onStarClicked: (coordinateInRoot: Float, isInteractive : Boolean) -> Unit,
+    colorDark: Color = FeatherGreenDark,
+    onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit,
     isInitial: Boolean = false,
 ) {
     var isClicked by remember {
@@ -459,8 +454,8 @@ fun SelectableStarButton(
 fun StarButton(
     isCompleted: Boolean = false,
     isUnlocked: Boolean = false,
-    colorMain: Color = if (isCompleted) FeatherGreen else Gray,
-    colorDark: Color = if (isCompleted) FeatherGreenDark else GrayDark,
+    colorMain: Color = if (isCompleted || isUnlocked) FeatherGreen else Gray,
+    colorDark: Color = if (isCompleted || isUnlocked) FeatherGreenDark else GrayDark,
     onStarClicked: (coordinateInRoot: Float, isInteractive: Boolean) -> Unit,
     onLockedStarClicked: () -> Unit = {} // New parameter for locked star click
 ) {

@@ -226,9 +226,14 @@ fun HomeScreen(
                                     }
                                 )
                             },
-                            onStarComplete = { unitId, starIndex -> // Added onStarComplete parameter
+                            onStarComplete = { unitId, starIndex ->
                                 viewModel.completeStar(unitId, starIndex)
-                            }
+                                // Force refresh home screen
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                            },
+                            homeViewModel = viewModel
                         )
                     }
                 }

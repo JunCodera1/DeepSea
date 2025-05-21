@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.deepsea.ui.components.RewardTreasureDialog
+import com.example.deepsea.utils.allQuestions
 
 // Game states
 enum class GameState {
@@ -99,136 +100,6 @@ fun GameScreen() {
         streakDays = playerStreak
     )
 
-    // Danh sách câu hỏi mở rộng với nhiều ngôn ngữ và độ khó khác nhau
-    val allQuestions = listOf(
-        // QUIZ - JAPANESE
-        Question(
-            id = 1,
-            text = "What is the Japanese word for 'house'?",
-            options = listOf("犬", "家", "車", "木"),
-            correctAnswer = 1,
-            gameMode = "QUIZ",
-            language = "JAPANESE",
-            explanation = "'家' (ie) means 'house'. '犬' (inu) is 'dog', '車' (kuruma) is 'car', '木' (ki) is 'tree'.",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 2,
-            text = "Which sentence is correct in Japanese?",
-            options = listOf("私は行きます学校。", "私は学校に行きます。", "私は行きます学校に。", "私は学校に行く。"),
-            correctAnswer = 1,
-            gameMode = "QUIZ",
-            language = "JAPANESE",
-            explanation = "'私は学校に行きます。' (Watashi wa gakkou ni ikimasu.) is correct, meaning 'I go to school.' The particle 'に' and verb order are proper.",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 3,
-            text = "What is the past tense of 'to eat' (食べる) in Japanese?",
-            options = listOf("食べました", "食べます", "食べられ", "食べている"),
-            correctAnswer = 0,
-            gameMode = "QUIZ",
-            language = "JAPANESE",
-            explanation = "'食べました' (tabemashita) is the polite past tense of 'to eat'. '食べます' is present/future, '食べられ' is passive, '食べている' is present continuous.",
-            difficulty = DifficultyLevel.MEDIUM
-        ),
-        Question(
-            id = 4,
-            text = "What is the Japanese word for 'thank you'?",
-            options = listOf("お願い", "ありがとう", "すみません", "おはよう"),
-            correctAnswer = 1,
-            gameMode = "QUIZ",
-            language = "JAPANESE",
-            explanation = "'ありがとう' (arigatou) means 'thank you'. 'お願い' (onegai) is 'please', 'すみません' (sumimasen) is 'excuse me', 'おはよう' (ohayou) is 'good morning'.",
-            difficulty = DifficultyLevel.EASY
-        ),
-
-        // SCRAMBLE
-        Question(
-            id = 5,
-            text = "Unscramble the letters to form a Japanese word for 'book': B-U-K-K-O",
-            options = listOf("Bukko", "Kobbu", "Honbu", "Hon"),
-            correctAnswer = 3,
-            gameMode = "SCRAMBLE",
-            language = "JAPANESE",
-            explanation = "'本' (hon) is the Japanese word for 'book', formed by unscrambling B-U-K-K-O (simplified as 'hon' in kana).",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 6,
-            text = "Unscramble T-O-M-O-D-A-C-H-I to form a Japanese word for 'friend':",
-            options = listOf("Tomodachi", "Chatomi", "Dachito", "Moticha"),
-            correctAnswer = 0,
-            gameMode = "SCRAMBLE",
-            language = "JAPANESE",
-            explanation = "'友達' (tomodachi) is the Japanese word for 'friend'.",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 7,
-            text = "Unscramble S-A-K-U-R-A to form a Japanese word:",
-            options = listOf("Sakura", "Rusaka", "Kusara", "Arasuk"),
-            correctAnswer = 0,
-            gameMode = "SCRAMBLE",
-            language = "JAPANESE",
-            explanation = "'桜' (sakura) means 'cherry blossom' in Japanese.",
-            difficulty = DifficultyLevel.MEDIUM
-        ),
-
-        // MATCH
-        Question(
-            id = 8,
-            text = "Match the English word to its Japanese meaning: 'Dog'",
-            options = listOf("猫", "犬", "鳥", "魚"),
-            correctAnswer = 1,
-            gameMode = "MATCH",
-            language = "JAPANESE",
-            explanation = "'犬' (inu) means 'dog' in Japanese. '猫' (neko) is 'cat', '鳥' (tori) is 'bird', '魚' (sakana) is 'fish'.",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 9,
-            text = "Match the English word to its Japanese meaning: 'Cat'",
-            options = listOf("犬", "猫", "鳥", "魚"),
-            correctAnswer = 1,
-            gameMode = "MATCH",
-            language = "JAPANESE",
-            explanation = "'猫' (neko) means 'cat' in Japanese. '犬' (inu) is 'dog', '鳥' (tori) is 'bird', '魚' (sakana) is 'fish'.",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 10,
-            text = "Match the English word to its Japanese meaning: 'Water'",
-            options = listOf("水", "雲", "火", "風"),
-            correctAnswer = 0,
-            gameMode = "MATCH",
-            language = "JAPANESE",
-            explanation = "'水' (mizu) means 'water' in Japanese. '雲' (kumo) is 'cloud', '火' (hi) is 'fire', '風' (kaze) is 'wind'.",
-            difficulty = DifficultyLevel.MEDIUM
-        ),
-
-        // DAILY CHALLENGE - Mix of modes
-        Question(
-            id = 11,
-            text = "Today's challenge: What is the Japanese word for 'goodbye'?",
-            options = listOf("こんにちは", "さようなら", "ありがとう", "おやすみ"),
-            correctAnswer = 1,
-            gameMode = "DAILY_CHALLENGE",
-            language = "JAPANESE",
-            explanation = "'さようなら' (sayounara) means 'goodbye' in Japanese.",
-            difficulty = DifficultyLevel.EASY
-        ),
-        Question(
-            id = 12,
-            text = "Today's challenge: Unscramble N-I-H-O-N to form a Japanese word for 'Japan':",
-            options = listOf("Nihon", "Honni", "Inhon", "Nonhi"),
-            correctAnswer = 0,
-            gameMode = "DAILY_CHALLENGE",
-            language = "JAPANESE",
-            explanation = "'日本' (nihon) is the Japanese word for 'Japan'.",
-            difficulty = DifficultyLevel.MEDIUM
-        )
-    )
 
     // Lọc câu hỏi theo chế độ và xử lý lỗi
     LaunchedEffect(selectedMode, selectedDifficulty) {
