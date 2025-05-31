@@ -160,7 +160,7 @@ fun ProfilePage(
 
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                InviteFriendsCard()
+                FriendSuggestionCard(sessionManager)
             }
 
             item {
@@ -466,18 +466,3 @@ fun LanguageFlags(
         // LanguageSelectionDialog(onConfirm = { selected -> onAddLanguage(selected) })
     }
 }
-
-
-
-
-// Example ViewModel class for reference
-/*
-class UserProfileViewModel : ViewModel() {
-    private val _userProfileData = mutableStateOf<UserProfileData?>(null)
-    val userProfileData: State<UserProfileData?> = _userProfileData
-
-    fun fetchUserProfile(userId: String) {
-        // Thực hiện fetch và cập nhật _userProfileData
-    }
-}
-*/

@@ -84,7 +84,6 @@ fun FriendSuggestionCard(
                         fontWeight = FontWeight.Medium,
                         fontSize = 16.sp
                     )
-                    FriendSuggestionCard(sessionManager = sessionManager)
                 }
 
                 TextButton(onClick = { viewModel.generateFriendSuggestions() }) {

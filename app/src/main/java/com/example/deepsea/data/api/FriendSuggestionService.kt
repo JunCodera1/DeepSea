@@ -13,7 +13,7 @@ interface FriendSuggestionService {
     /**
      * Get active friend suggestions for a user
      */
-    @GET("friend-suggestions/user/{userId}")
+    @GET("api/v1/friend-suggestions/user/{userId}")
     suspend fun getFriendSuggestions(
         @Path("userId") userId: Long?
     ): FriendSuggestionResponse
@@ -21,7 +21,7 @@ interface FriendSuggestionService {
     /**
      * Generate new friend suggestions for a user
      */
-    @POST("friend-suggestions/generate/{userId}")
+    @POST("api/v1/friend-suggestions/generate/{userId}")
     suspend fun generateFriendSuggestions(
         @Path("userId") userId: Long,
         @Query("maxSuggestions") maxSuggestions: Int = 5
@@ -30,7 +30,7 @@ interface FriendSuggestionService {
     /**
      * Follow a friend suggestion (add as friend)
      */
-    @POST("friend-suggestions/{suggestionId}/follow")
+    @POST("api/v1/friend-suggestions/{suggestionId}/follow")
     suspend fun followSuggestion(
         @Path("suggestionId") suggestionId: Long
     ): Map<String, Boolean>
@@ -38,7 +38,7 @@ interface FriendSuggestionService {
     /**
      * Dismiss a friend suggestion
      */
-    @POST("friend-suggestions/{suggestionId}/dismiss")
+    @POST("api/v1/friend-suggestions/{suggestionId}/dismiss")
     suspend fun dismissSuggestion(
         @Path("suggestionId") suggestionId: Long
     ): Map<String, Boolean>
