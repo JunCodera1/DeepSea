@@ -1,15 +1,14 @@
 package com.example.deepsea.ui.viewmodel.home
 
 import android.content.Context
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.deepsea.data.api.RetrofitClient
 import com.example.deepsea.data.dto.UserProgressDto
 import com.example.deepsea.data.model.daily.DayStreakRequest
-import com.example.deepsea.repository.CourseRepository
+import com.example.deepsea.data.repository.CourseRepository
 import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.UnitData
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -39,10 +39,10 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
     private val currentUserId: Long = 1L
 
     // Current indices - Changed to MutableState for Compose compatibility
-    private val _currentSectionIndex = mutableStateOf(0)
+    private val _currentSectionIndex = mutableIntStateOf(0)
     val currentSectionIndex = _currentSectionIndex
 
-    private val _currentUnitIndex = mutableStateOf(0)
+    private val _currentUnitIndex = mutableIntStateOf(0)
     val currentUnitIndex = _currentUnitIndex
 
     // Saved progress in each section
@@ -83,7 +83,7 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
             loadCourseData(it)
         } ?: run {
             _uiState.value = CourseUiState.Error("Context not initialized. Call initialize() first.")
-            Log.e("HomeViewModel", "Context not initialized. Call initialize() first.")
+            Timber.tag("HomeViewModel").e("Context not initialized. Call initialize() first.")
         }
     }
 
@@ -95,7 +95,7 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
         viewModelScope.launch {
             _uiState.value = CourseUiState.Loading
-            Log.d("HomeViewModel", "Starting to load course data")
+            Timber.tag("HomeViewModel").d("Starting to load course data")
 
             try {
                 // Get sections and units
@@ -103,61 +103,66 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
                 if (sectionsResult.isSuccess) {
                     val sections = sectionsResult.getOrNull() ?: emptyList()
-                    Log.d("HomeViewModel", "Loaded sections: ${sections.size}")
+                    Timber.tag("HomeViewModel").d("Loaded sections: ${sections.size}")
 
                     if (sections.isEmpty()) {
-                        Log.w("HomeViewModel", "Sections list is empty from API")
+                        Timber.tag("HomeViewModel").w("Sections list is empty from API")
                         useFallbackData()
                         return@launch
                     }
 
                     val units = sections.map { it.units }
-                    Log.d("HomeViewModel", "Units extracted from sections")
+                    Timber.tag("HomeViewModel").d("Units extracted from sections")
 
                     // Get user progress
                     val userProgressResult = courseRepository.getUserProgress(currentUserId)
                     val userProgress = userProgressResult.getOrNull()
 
                     if (userProgress != null) {
-                        Log.d("HomeViewModel", "User progress loaded successfully")
+                        Timber.tag("HomeViewModel").d("User progress loaded successfully")
                         // Update completed units
-                        _completedUnits.value = userProgress.completedUnits?.toSet() ?: emptySet()
-                        Log.d("HomeViewModel", "Completed units: ${_completedUnits.value.size}")
+                        _completedUnits.value = userProgress.completedUnits.toSet()
+                        Timber.tag("HomeViewModel")
+                            .d("Completed units: ${_completedUnits.value.size}")
 
                         // Load completed stars from user progress if available
                         // In a real app, this would come from the API
                         loadCompletedStars()
 
                         // Update XP and streak
-                        _totalXp.value = userProgress.totalXp ?: 0
-                        _dailyStreak.value = userProgress.dailyStreak ?: 0
+                        _totalXp.value = userProgress.totalXp
+                        _dailyStreak.value = userProgress.dailyStreak
 
                         // Find the appropriate section and unit
                         try {
                             // Extract section ID from "Section X: Title" format or use sectionId directly
                             val sectionIndex = findSectionIndex(sections, userProgress.currentSectionId)
                             if (sectionIndex != -1) {
-                                _currentSectionIndex.value = sectionIndex
-                                Log.d("HomeViewModel", "Set current section index to $sectionIndex")
+                                _currentSectionIndex.intValue = sectionIndex
+                                Timber.tag("HomeViewModel")
+                                    .d("Set current section index to $sectionIndex")
                             } else {
-                                Log.w("HomeViewModel", "Could not find matching section for ID ${userProgress.currentSectionId}")
+                                Timber.tag("HomeViewModel")
+                                    .w("Could not find matching section for ID ${userProgress.currentSectionId}")
                             }
 
                             // Similarly for unit index
                             if (sectionIndex != -1 && sectionIndex < units.size) {
                                 val unitIndex = findUnitIndex(units[sectionIndex], userProgress.currentUnitId)
                                 if (unitIndex != -1) {
-                                    _currentUnitIndex.value = unitIndex
-                                    Log.d("HomeViewModel", "Set current unit index to $unitIndex")
+                                    _currentUnitIndex.intValue = unitIndex
+                                    Timber.tag("HomeViewModel")
+                                        .d("Set current unit index to $unitIndex")
                                 } else {
-                                    Log.w("HomeViewModel", "Could not find matching unit for ID ${userProgress.currentUnitId}")
+                                    Timber.tag("HomeViewModel")
+                                        .w("Could not find matching unit for ID ${userProgress.currentUnitId}")
                                 }
                             }
                         } catch (e: Exception) {
-                            Log.e("HomeViewModel", "Error setting indices from user progress", e)
+                            Timber.tag("HomeViewModel").e(e, "Error setting indices from user progress")
                         }
                     } else {
-                        Log.w("HomeViewModel", "User progress could not be loaded")
+                        Timber.tag("HomeViewModel").w("User progress could not be loaded")
                     }
 
                     _uiState.value = CourseUiState.Success(
@@ -165,16 +170,17 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
                         units = units,
                         userProgress = userProgress
                     )
-                    Log.d("HomeViewModel", "UI state updated with loaded data")
+                    Timber.tag("HomeViewModel").d("UI state updated with loaded data")
 
                     // Calculate section progress after UI state is updated
                     updateSectionProgress()
                 } else {
-                    Log.w("HomeViewModel", "Failed to load sections from API: ${sectionsResult.exceptionOrNull()?.message}")
+                    Timber.tag("HomeViewModel")
+                        .w("Failed to load sections from API: ${sectionsResult.exceptionOrNull()?.message}")
                     useFallbackData()
                 }
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Exception during data loading", e)
+                Timber.tag("HomeViewModel").e(e, "Exception during data loading")
                 useFallbackData()
             }
         }
@@ -197,11 +203,11 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
         }
 
         _completedStars.value = starsMap
-        Log.d("HomeViewModel", "Loaded completed stars: $starsMap")
+        Timber.tag("HomeViewModel").d("Loaded completed stars: $starsMap")
     }
 
     private fun useFallbackData() {
-        Log.d("HomeViewModel", "Using fallback data")
+        Timber.tag("HomeViewModel").d("Using fallback data")
         val fallbackSections = courseRepository.getFallbackSectionData()
         val fallbackUnits = fallbackSections.map { it.units }
 
@@ -229,7 +235,7 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
         }
 
         _sectionProgress.value = progressMap
-        Log.d("HomeViewModel", "Section progress updated: $progressMap")
+        Timber.tag("HomeViewModel").d("Section progress updated: $progressMap")
     }
 
     private fun extractSectionId(sectionTitle: String): Long? {
@@ -281,18 +287,19 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
     }
 
     fun updateCurrentSection(index: Int) {
-        _currentSectionIndex.value = index
-        Log.d("HomeViewModel", "Current section updated to $index")
+        _currentSectionIndex.intValue = index
+        Timber.tag("HomeViewModel").d("Current section updated to $index")
     }
 
     fun updateCurrentUnit(index: Int) {
-        _currentUnitIndex.value = index
-        Log.d("HomeViewModel", "Current unit updated to $index")
+        _currentUnitIndex.intValue = index
+        Timber.tag("HomeViewModel").d("Current unit updated to $index")
     }
 
     fun completeStar(unitId: Long, starIndex: Int, earnedXp: Int = 5) {
         viewModelScope.launch {
-            Log.d("HomeViewModel", "Completing star $starIndex for unit $unitId with $earnedXp XP")
+            Timber.tag("HomeViewModel")
+                .d("Completing star $starIndex for unit $unitId with $earnedXp XP")
 
             val currentStarsMap = _completedStars.value.toMutableMap()
             val unitStars = currentStarsMap[unitId]?.toMutableSet() ?: mutableSetOf()
@@ -304,7 +311,8 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
                 // Add XP
                 _totalXp.value = _totalXp.value + earnedXp
-                Log.d("HomeViewModel", "Star $starIndex of unit $unitId completed, total XP now: ${_totalXp.value}")
+                Timber.tag("HomeViewModel")
+                    .d("Star $starIndex of unit $unitId completed, total XP now: ${_totalXp.value}")
 
                 // If all stars for this unit are completed, mark the unit as completed
                 if (unitStars.size == 5) { // Assuming 5 stars per unit
@@ -319,13 +327,14 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
     fun completeUnit(unitId: Long, earnedXp: Int = 10) {
         viewModelScope.launch {
-            Log.d("HomeViewModel", "Completing unit $unitId with $earnedXp XP")
+            Timber.tag("HomeViewModel").d("Completing unit $unitId with $earnedXp XP")
             val currentCompleted = _completedUnits.value.toMutableSet()
             if (!currentCompleted.contains(unitId)) {
                 currentCompleted.add(unitId)
                 _completedUnits.value = currentCompleted
                 _totalXp.value = _totalXp.value + earnedXp
-                Log.d("HomeViewModel", "Unit $unitId completed, total XP now: ${_totalXp.value}")
+                Timber.tag("HomeViewModel")
+                    .d("Unit $unitId completed, total XP now: ${_totalXp.value}")
 
                 // Update streak if this is the first activity today
                 updateDailyStreak()
@@ -356,7 +365,7 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
 
                 // Update local streak
                 _dailyStreak.value = newStreak
-                Log.d("HomeViewModel", "Daily streak updated to $newStreak")
+                Timber.tag("HomeViewModel").d("Daily streak updated to $newStreak")
 
                 // Call API to update streak
                 val response = RetrofitClient.userProfileService.updateDayStreak(
@@ -365,12 +374,13 @@ class HomeViewModel(private val courseRepository: CourseRepository) : ViewModel(
                 )
 
                 if (response.isSuccessful) {
-                    Log.d("HomeViewModel", "Streak updated on server: $newStreak")
+                    Timber.tag("HomeViewModel").d("Streak updated on server: $newStreak")
                 } else {
-                    Log.e("HomeViewModel", "Failed to update streak on server: ${response.message()}")
+                    Timber.tag("HomeViewModel")
+                        .e("Failed to update streak on server: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Error updating streak: ${e.message}", e)
+                Timber.tag("HomeViewModel").e(e, "Error updating streak: ${e.message}")
             }
         }
     }

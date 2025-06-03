@@ -1,9 +1,9 @@
-package com.example.deepsea.repository
+package com.example.deepsea.data.repository
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
-import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.deepsea.R
 import com.example.deepsea.data.api.CourseApiService
@@ -14,10 +14,11 @@ import com.example.deepsea.ui.components.SectionData
 import com.example.deepsea.ui.components.UnitData
 import com.example.deepsea.ui.theme.*
 import retrofit2.Response
+import timber.log.Timber
 import java.io.IOException
 
 class CourseRepository(private val courseApiService: CourseApiService) {
-    val UnitColors = mapOf(
+    val unitColors = mapOf(
         "#Purple80" to Purple80,
         "#PurpleGrey80" to PurpleGrey80,
         "#Pink80" to Pink80,
@@ -125,8 +126,8 @@ class CourseRepository(private val courseApiService: CourseApiService) {
         "#Green" to Green
     )
 
-    fun getUnitColor(colorName: String): androidx.compose.ui.graphics.Color {
-        return UnitColors[colorName] ?: FunctionalGrey // fallback nếu không tìm thấy
+    fun getUnitColor(colorName: String): Color {
+        return unitColors[colorName] ?: FunctionalGrey // fallback nếu không tìm thấy
     }
 
     // Helper function to safely make API calls
@@ -136,11 +137,11 @@ class CourseRepository(private val courseApiService: CourseApiService) {
             if (response.isSuccessful) {
                 Result.success(response.body()!!)
             } else {
-                Log.e("API_ERROR", "Error: ${response.code()} - ${response.message()}")
+                Timber.tag("API_ERROR").e("Error: ${response.code()} - ${response.message()}")
                 Result.failure(IOException("API call failed with error code: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e("API_ERROR", "Exception during API call", e)
+            Timber.tag("API_ERROR").e(e, "Exception during API call")
             Result.failure(e)
         }
     }
@@ -182,10 +183,11 @@ class CourseRepository(private val courseApiService: CourseApiService) {
                 Result.failure(sectionsResult.exceptionOrNull() ?: IOException("Failed to fetch sections"))
             }
         } catch (e: Exception) {
-            Log.e("REPO_ERROR", "Exception in getAllSections", e)
+            Timber.tag("REPO_ERROR").e(e, "Exception in getAllSections")
             Result.failure(e)
         }
     }
+    @SuppressLint("DiscouragedApi")
     @Composable
     fun getDrawableResIdByName(name: String): Int {
         val context = LocalContext.current
@@ -199,10 +201,10 @@ class CourseRepository(private val courseApiService: CourseApiService) {
     }
 
     // Improved utility function to convert hex string to Color
-    private fun convertHexToColor(hexColor: String?): androidx.compose.ui.graphics.Color {
+    private fun convertHexToColor(hexColor: String?): Color {
         // Early return if hexColor is null or blank
         if (hexColor.isNullOrBlank()) {
-            Log.e("COLOR_CONVERT", "Hex color is null or blank")
+            Timber.tag("COLOR_CONVERT").e("Hex color is null or blank")
             return FunctionalGrey
         }
 
@@ -213,10 +215,10 @@ class CourseRepository(private val courseApiService: CourseApiService) {
             // Check if it's a valid hex color format
             if (!normalized.matches(Regex("^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$"))) {
                 // If not a valid hex, check if it's a named color
-                if (UnitColors.containsKey(normalized)) {
-                    return UnitColors[normalized]!!
+                if (unitColors.containsKey(normalized)) {
+                    return unitColors[normalized]!!
                 }
-                Log.e("COLOR_CONVERT", "Invalid hex color format: $hexColor")
+                Timber.tag("COLOR_CONVERT").e("Invalid hex color format: $hexColor")
                 return FunctionalGrey
             }
 
@@ -228,12 +230,12 @@ class CourseRepository(private val courseApiService: CourseApiService) {
                 6 -> {
                     // RGB format
                     val colorInt = colorStr.toLong(16).toInt()
-                    androidx.compose.ui.graphics.Color(colorInt or 0xFF000000.toInt())
+                    Color(colorInt or 0xFF000000.toInt())
                 }
                 8 -> {
                     // ARGB format
                     val colorLong = colorStr.toLong(16)
-                    androidx.compose.ui.graphics.Color(
+                    Color(
                         alpha = ((colorLong shr 24) and 0xFF) / 255f,
                         red = ((colorLong shr 16) and 0xFF) / 255f,
                         green = ((colorLong shr 8) and 0xFF) / 255f,
@@ -241,17 +243,17 @@ class CourseRepository(private val courseApiService: CourseApiService) {
                     )
                 }
                 else -> {
-                    Log.e("COLOR_CONVERT", "Unexpected color format length: $colorStr")
+                    Timber.tag("COLOR_CONVERT").e("Unexpected color format length: $colorStr")
                     FunctionalGrey
                 }
             }
         } catch (e: Exception) {
-            Log.e("COLOR_CONVERT", "Failed to convert hex color: $hexColor", e)
+            Timber.tag("COLOR_CONVERT").e(e, "Failed to convert hex color: $hexColor")
             return FunctionalGrey
         }
     }
 
-    private fun resolveColor(input: String?): androidx.compose.ui.graphics.Color {
+    private fun resolveColor(input: String?): Color {
         return convertHexToColor(input)
     }
 
