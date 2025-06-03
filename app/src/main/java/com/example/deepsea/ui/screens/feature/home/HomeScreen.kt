@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.repository.CourseRepository
+import com.example.deepsea.data.repository.CourseRepository
 import com.example.deepsea.ui.components.TopBar
 import com.example.deepsea.ui.viewmodel.home.CourseUiState
 import com.example.deepsea.ui.viewmodel.home.HomeViewModel

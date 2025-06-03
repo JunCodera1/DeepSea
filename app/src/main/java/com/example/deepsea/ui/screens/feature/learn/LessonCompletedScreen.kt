@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,9 +34,7 @@ import com.example.deepsea.ui.theme.YellowPrimary
 import com.example.deepsea.R
 import androidx.navigation.compose.rememberNavController
 import com.example.deepsea.data.api.RetrofitClient
-import com.example.deepsea.data.api.UserProfileService
-import com.example.deepsea.data.repository.UserProfileRepository
-import com.example.deepsea.repository.CourseRepository
+import com.example.deepsea.data.repository.CourseRepository
 import com.example.deepsea.ui.viewmodel.home.HomeViewModel
 import com.example.deepsea.ui.viewmodel.home.HomeViewModelFactory
 import com.example.deepsea.ui.viewmodel.learn.LessonViewModel

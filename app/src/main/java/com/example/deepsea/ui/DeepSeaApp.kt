@@ -96,7 +96,7 @@ import com.example.deepsea.utils.LearningSessionManager
 import com.example.deepsea.utils.SessionManager
 import com.example.deepsea.utils.UserState
 import timber.log.Timber
-import com.example.deepsea.repository.CourseRepository
+import com.example.deepsea.data.repository.CourseRepository
 import com.example.deepsea.ui.viewmodel.home.HomeViewModel
 import com.example.deepsea.ui.viewmodel.home.HomeViewModelFactory
 
